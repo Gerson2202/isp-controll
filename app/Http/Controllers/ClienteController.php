@@ -1,0 +1,96 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Cliente;
+use App\Models\Ticket;
+use Illuminate\Http\Request;
+
+class ClienteController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index()
+    {
+        //
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        return view('clientes.create');
+    }
+
+    public function search()
+    {
+        return view('clientes.search');
+    }
+
+    // Funcion para mostrar clientes sin ip asignadas 
+    public function asignarIPindex()
+    {
+       // Obtener todos los clientes donde el campo 'ip' sea nulo y que tengan un contrato asignado
+            $clientes = Cliente::whereNull('ip')
+            ->whereHas('contratos')  // Asegurarse de que el cliente tenga un contrato
+            ->get();
+
+        // Retornar la vista con los clientes
+        return view('clientes.asignar_ip', compact('clientes'));
+    }
+
+     // Vista para asignar IP a un cliente en particular 
+
+    public function asignarIpCliente($id_cliente)
+    {
+       $cliente= Cliente::findOrFail($id_cliente);
+       return view('clientes.asignaripshow', compact('cliente'));
+    }
+    
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        //
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        $cliente = Cliente::findOrFail($id);        
+        // Obtener los tickets del cliente
+        $tickets = $cliente->tickets;
+        // Contar el total de tickets abiertos
+        $totalTicketsAbiertos = $cliente->tickets()->where('estado', 'abierto')->count();
+        return view('clientes.show', compact('cliente','tickets','totalTicketsAbiertos'));
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Cliente $cliente)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, Cliente $cliente)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Cliente $cliente)
+    {
+        //
+    }
+}
