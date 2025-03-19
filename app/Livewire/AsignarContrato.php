@@ -30,12 +30,7 @@ class AsignarContrato extends Component
         $this->nodos = Nodo::all();   // Cargamos todos los nodos disponibles
     }
 
-     // Método para manejar el cambio de nodo  
-     public function nuevofuction()
-    {
-
-        dd('hola');
-    }
+   
      public function changeNode()
      {
          // Obtener los planes asociados al nodo seleccionado

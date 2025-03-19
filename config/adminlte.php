@@ -398,12 +398,28 @@ return [
             'icon'   => 'fas fa-ticket-alt', // Icono de FontAwesome
         ],
     
-        // Botón para Inventario
-        [
-            'text'   => 'Inventario',
-            'route'  => 'inventarioIndex', // Nombre de la ruta
-            'icon'   => 'fas fa-box', // Icono de FontAwesome
+         // Seccion Inventario
+      [
+        'text'    => 'Inventario', // Texto principal
+        'icon'    => 'fas fa-box', // Icono principal
+        'submenu' => [
+            [
+                'text' => 'Agregar Modelo',
+                'route' => 'ModeloIndex', // Ruta para agregar cliente
+                'icon' => 'fas fa-plus', // Icono para agregar
+            ],
+            [
+                'text' => 'Agregar equipo',
+                'route' => 'inventarioIndex', // Ruta para agregar cliente
+                'icon' => 'fas fa-plus-circle', // Icono para agregar
+            ],
+            [
+                 'text' => 'Ver equipos',
+                 'route' => 'poolIndex', // Ruta para ver clientes
+                 'icon' => 'fas fa-eye', // Icono para listar
+            ],
         ],
+    ],
     
         // Botón para Fotos de Tickets
         [

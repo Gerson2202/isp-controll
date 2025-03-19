@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('inventarios', function (Blueprint $table) {
+        Schema::create('modelos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('modelo_id')->nullable()->constrained('modelos')->onDelete('cascade');
-            $table->string('mac');
-            $table->text('descripcion');
-            $table->foreignId('cliente_id')->nullable()->constrained('clientes')->onDelete('cascade');
+            $table->string('nombre'); 
+            $table->string('foto')->nullable(); // Esto debería ser un path a la imagen
             $table->timestamps();
         });
     }
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('inventarios');
+        Schema::dropIfExists('modelos');
     }
 };
