@@ -59,4 +59,11 @@ Route::post('guardar-contrato', [ContratoController::class, 'guardarContrato'])-
 // ---Vista Gestionar Pooles--
 Route::get('/pooles', [PoolController::class, 'index'])->name('poolIndex');
 
+// Rutas para inventarios
+// ---Vista para formulario--
+Route::get('/Inventario', [InventarioController::class, 'index'])->name('inventarioIndex');
+Route::get('/Modelo', [InventarioController::class, 'ModeloIndex'])->name('ModeloIndex');
+
+Route::get('/equipos/{id}', [InventarioController::class, 'show'])->name('equipos.show');
+
 });

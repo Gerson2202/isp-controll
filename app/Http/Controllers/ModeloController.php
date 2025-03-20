@@ -2,23 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Inventario;
+use App\Models\Modelo;
 use Illuminate\Http\Request;
 
-class InventarioController extends Controller
+class ModeloController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        return view('inventario.index');
+        //
     }
 
-    public function ModeloIndex()
-    {
-        return view('inventario.modeloIndex');
-    }
     /**
      * Show the form for creating a new resource.
      */
@@ -38,17 +34,15 @@ class InventarioController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show(Modelo $modelo)
     {
-        $inventario = Inventario::with('modelo')->findOrFail($id); // Carga el equipo con su modelo
-         return view('inventario.show', compact('inventario')); // Pasa la variable a la vista
-        
+        //
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Inventario $inventario)
+    public function edit(Modelo $modelo)
     {
         //
     }
@@ -56,7 +50,7 @@ class InventarioController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Inventario $inventario)
+    public function update(Request $request, Modelo $modelo)
     {
         //
     }
@@ -64,7 +58,7 @@ class InventarioController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Inventario $inventario)
+    public function destroy(Modelo $modelo)
     {
         //
     }
