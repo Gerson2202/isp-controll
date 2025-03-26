@@ -26,7 +26,13 @@ class InventarioController extends Controller
     {
         //
     }
-
+    // Enlistar equipos
+    public function list()
+    {
+        // Obtener todos los inventarios con sus relaciones de nodo y cliente
+        $inventarios = Inventario::with(['nodo', 'cliente','modelo'])->get();
+        return view('inventario.list',compact('inventarios'));
+    }
     /**
      * Store a newly created resource in storage.
      */
@@ -42,7 +48,7 @@ class InventarioController extends Controller
     {
         $inventario = Inventario::with('modelo')->findOrFail($id); // Carga el equipo con su modelo
          return view('inventario.show', compact('inventario')); // Pasa la variable a la vista
-        
+
     }
 
     /**

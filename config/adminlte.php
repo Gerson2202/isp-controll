@@ -415,7 +415,7 @@ return [
             ],
             [
                  'text' => 'Ver equipos',
-                 'route' => 'poolIndex', // Ruta para ver clientes
+                 'route' => 'inventarioList', // Ruta para ver clientes
                  'icon' => 'fas fa-eye', // Icono para listar
             ],
         ],

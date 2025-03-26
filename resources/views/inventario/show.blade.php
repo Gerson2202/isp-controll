@@ -21,6 +21,7 @@
         <p><strong>Modelo:</strong> {{ $inventario->modelo->nombre }}</p>
         <p><strong>MAC Address:</strong> {{ $inventario->mac }}</p>
         <p><strong>Descripción:</strong> {{ $inventario->descripcion }}</p>
+        <p> {{ $inventario->descripcion }}</p>
     
         @if (!empty($inventario->modelo->foto) && file_exists(public_path('storage/' . $inventario->modelo->foto)))
             <img src="{{ asset('storage/' . $inventario->modelo->foto) }}" alt="Foto del modelo" class="img-fluid">

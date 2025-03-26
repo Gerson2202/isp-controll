@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('mac');
             $table->text('descripcion');
             $table->foreignId('cliente_id')->nullable()->constrained('clientes')->onDelete('cascade');
+            $table->foreignId('nodo_id')->nullable()->constrained('nodos')->onDelete('cascade');
             $table->timestamps();
         });
     }

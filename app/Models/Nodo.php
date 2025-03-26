@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Nodo extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'nombre', 'ip', 'latitud', 'longitud', 'puerto_api','user','pass',
     ];
@@ -26,4 +28,10 @@ class Nodo extends Model
      {
          return $this->hasMany(Pool::class);
      }
+
+   // Relación de uno a muchos (Un nodo tiene muchos inventarios)
+   public function inventarios()
+   {
+       return $this->hasMany(Inventario::class, 'nodo_id');  // Un nodo tiene muchos inventarios
+   }
 }

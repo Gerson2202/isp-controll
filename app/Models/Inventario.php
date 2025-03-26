@@ -19,4 +19,10 @@ class Inventario extends Model
     {
         return $this->belongsTo(Modelo::class, 'modelo_id'); // 'modelo_id' es la clave foránea
     }
+
+    // Relación inversa (Un inventario pertenece a un nodo)
+    public function nodo()
+    {
+        return $this->belongsTo(Nodo::class, 'nodo_id');  // Un inventario pertenece a un nodo
+    }
 }

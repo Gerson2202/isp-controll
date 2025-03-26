@@ -63,7 +63,7 @@ Route::get('/pooles', [PoolController::class, 'index'])->name('poolIndex');
 // ---Vista para formulario--
 Route::get('/Inventario', [InventarioController::class, 'index'])->name('inventarioIndex');
 Route::get('/Modelo', [InventarioController::class, 'ModeloIndex'])->name('ModeloIndex');
-
+Route::get('/equiposlist', [InventarioController::class, 'list'])->name('inventarioList');
 Route::get('/equipos/{id}', [InventarioController::class, 'show'])->name('equipos.show');
 
 });
