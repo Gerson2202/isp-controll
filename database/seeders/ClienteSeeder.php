@@ -14,6 +14,6 @@ class ClienteSeeder extends Seeder
     public function run(): void
     {
       // Crear 500 registros utilizando el factory
-      Cliente::factory()->count(10)->create();
+      Cliente::factory()->count(100)->create();
     }
 }

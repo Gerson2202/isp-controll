@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Inventario extends Model
 {
     protected $fillable = [
-        'modelo_id', 'mac', 'descripcion', 'foto', 'cliente_id'
+        'modelo_id', 'mac', 'descripcion', 'foto', 'cliente_id','nodo_id'
     ];
 
     public function cliente()
