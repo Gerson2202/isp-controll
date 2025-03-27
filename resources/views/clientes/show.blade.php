@@ -144,10 +144,25 @@
                <a href="" class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i> Contract-10_12_2014.docx</a>
             </li>
             </ul>
-            <div class="text-center mt-5 mb-3">
-            <a href="#" class="btn btn-sm btn-primary">Add files</a>
-            <a href="#" class="btn btn-sm btn-warning">Report contact</a>
-            </div>
+            <hr>
+            <h5 class="mt-5 text-success text-center"><strong>Equipos Asignados</strong> <h5>
+               <br>
+               @foreach ($inventarios as $inventario)
+                  <ul class="list-unstyled">
+                     <li  class="text-secondary" ><strong>Modelo:</strong>{{$inventario->modelo->nombre}}  </li>
+                     <li  class="text-secondary" ><strong>Mac: </strong>{{$inventario->mac}}  </li>
+                     @if (!empty($inventario->modelo->foto) && file_exists(public_path('storage/' . $inventario->modelo->foto)))
+                        <div class="text mt-3">
+                            <img src="{{ asset('storage/' . $inventario->modelo->foto) }}" alt="Foto del modelo" class="img-thumbnail" style="max-width: 150px;">
+                        </div>
+                    @else
+                        <p class="text-muted">No hay imagen disponible.</p>
+                    @endif
+                  </ul>
+                  <hr>
+               @endforeach
+               
+               
          </div>
       </div>
       </div>

@@ -30,16 +30,16 @@
                     @endif
                 </p>
                 
-                @if (!empty($inventario->modelo->foto) && file_exists(public_path('storage/' . $inventario->modelo->foto)))
-                    <div class="text mt-3">
-                        <img src="{{ asset('storage/' . $inventario->modelo->foto) }}" alt="Foto del modelo" class="img-thumbnail" style="max-width: 150px;">
-                    </div>
+                    @if (!empty($inventario->modelo->foto) && file_exists(public_path('storage/' . $inventario->modelo->foto)))
+                        <div class="text mt-3">
+                            <img src="{{ asset('storage/' . $inventario->modelo->foto) }}" alt="Foto del modelo" class="img-thumbnail" style="max-width: 150px;">
+                        </div>
+                    @else
+                        <p class="text-muted">No hay imagen disponible.</p>
+                    @endif
                 @else
-                    <p class="text-muted">No hay imagen disponible.</p>
+                    <p class="text-danger">No se encontró el inventario.</p>
                 @endif
-            @else
-                <p class="text-danger">No se encontró el inventario.</p>
-            @endif
         </div>
     
         <!-- Modal -->

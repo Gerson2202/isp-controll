@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cliente;
+use App\Models\Inventario;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 
@@ -62,12 +63,15 @@ class ClienteController extends Controller
      */
     public function show($id)
     {
+        $inventarios = Inventario::where('cliente_id', $id)
+        ->get();
+        // Obtener los tickets del cliente
         $cliente = Cliente::findOrFail($id);        
         // Obtener los tickets del cliente
         $tickets = $cliente->tickets;
         // Contar el total de tickets abiertos
         $totalTicketsAbiertos = $cliente->tickets()->where('estado', 'abierto')->count();
-        return view('clientes.show', compact('cliente','tickets','totalTicketsAbiertos'));
+        return view('clientes.show', compact('cliente','tickets','totalTicketsAbiertos','inventarios'));
     }
 
     /**
