@@ -9,6 +9,8 @@ use App\Http\Controllers\FotoTicketController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\NodoController;
 use App\Http\Controllers\PoolController;
+use App\Http\Controllers\VisitaController;
+use App\Livewire\AgendarVisita;
 
 Route::get('/', function () {
     return view('welcome');
@@ -40,7 +42,7 @@ Route::get('/planes/create', [PlanController::class, 'create'])->name('planesCre
 
 // Rutas para Tickets
 Route::get('/tickets', [TicketController::class, 'index'])->name('ticketsIndex');
-
+Route::get('/tickets/{ticket}/edit', [TicketController::class, 'edit'])->name('tickets.edit');
 // Rutas para Fotos de Tickets
 Route::get('/fotos-tickets', [FotoTicketController::class, 'index'])->name('fotosTicketsIndex');
 
@@ -65,5 +67,8 @@ Route::get('/Inventario', [InventarioController::class, 'index'])->name('inventa
 Route::get('/Modelo', [InventarioController::class, 'ModeloIndex'])->name('ModeloIndex');
 Route::get('/equiposlist', [InventarioController::class, 'list'])->name('inventarioList');
 Route::get('/equipos/{id}', [InventarioController::class, 'show'])->name('equipos.show');
+
+// Route::get('/agendar-visita', AgendarVisita::class)->name('agendar.visita');
+Route::get('/calendario', [VisitaController::class, 'index'])->name('calendarioIndex');
 
 });

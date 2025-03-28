@@ -64,4 +64,17 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // Relación: Un usuario puede estar asignado a muchos tickets
+    public function tickets()
+    {
+        return $this->belongsToMany(Ticket::class, 'ticket_usuario');
+    }
+
+    public function visitas()
+    {
+        return $this->belongsToMany(Visita::class, 'visita_user');
+    }
+   
+
 }

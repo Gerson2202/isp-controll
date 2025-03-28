@@ -14,4 +14,9 @@ class Ticket extends Model
     {
         return $this->belongsTo(Cliente::class);
     }
+    // Relación: Un ticket puede ser asignado a muchos usuarios
+    public function usuarios()
+    {
+        return $this->belongsToMany(User::class, 'ticket_usuario');
+    }
 }

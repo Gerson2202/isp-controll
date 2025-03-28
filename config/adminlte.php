@@ -298,7 +298,8 @@ return [
     |
     */
 
-    'menu' => [
+    'menu' => 
+[
         // Navbar items:
         [
             'type' => 'navbar-search',
@@ -391,15 +392,8 @@ return [
         ],
     ],
     
-        // Botón para Tickets
-        [
-            'text'   => 'Tickets',
-            'route'  => 'ticketsIndex', // Nombre de la ruta
-            'icon'   => 'fas fa-ticket-alt', // Icono de FontAwesome
-        ],
-    
-         // Seccion Inventario
-      [
+     // Seccion Inventario
+    [
         'text'    => 'Inventario', // Texto principal
         'icon'    => 'fas fa-box', // Icono principal
         'submenu' => [
@@ -421,19 +415,49 @@ return [
         ],
     ],
     
-        // Botón para Fotos de Tickets
-        [
-            'text'   => 'Nodos',
-            'route'  => 'nodosIndex', // Nombre de la ruta
-            'icon'   => 'fas fa-camera', // Icono de FontAwesome
+    // Botón para Fotos de Tickets
+    [
+            'text'    => 'Tickets', // Texto principal
+            'icon'    => 'fas fa-ticket-alt', // Icono principal
+            'submenu' => [
+                [
+                    'text' => 'Tickets Abiertos',
+                    'route' => 'ticketsIndex', // Ruta para agregar cliente
+                    'icon' => 'fas fa-bolt', // Icono para agregar
+                ],
+                [
+                    'text' => 'Historial de tickets',
+                    'route' => 'inventarioIndex', // Ruta para agregar cliente
+                    'icon' => 'fas fa-history', // Icono para agregar
+                ],
+                
+            ],
+    ],
+    // Botón Programacion
+    [
+        'text'    => 'Calendario', // Texto principal
+        'icon'    => 'fas fa-calendar', // Icono principal
+        'submenu' => [
+            [
+                'text' => 'Ver calendario',
+                'route' => 'calendarioIndex', // Ruta para agregar cliente
+                'icon' => 'fas fa-calendar-check', // Icono para agregar
+            ],
+            [
+                'text' => 'Visitas sin programar',
+                'route' => 'inventarioIndex', // Ruta para agregar cliente
+                'icon' => 'fas fa-list-alt', // Icono para agregar
+            ],
+            
         ],
-        // Botón para Fotos de Tickets
-        [
+    ],
+        // Botón de monitoreo
+    [
             'text'   => 'Monitoreo de Consumo',
             'route'  => 'MonitoreoIndex', // Nombre de la ruta
             'icon'   => 'fas fa-camera', // Icono de FontAwesome
-        ],
     ],
+],
 
     /*
     |--------------------------------------------------------------------------

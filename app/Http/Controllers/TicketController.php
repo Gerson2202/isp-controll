@@ -12,7 +12,8 @@ class TicketController extends Controller
      */
     public function index()
     {
-        //
+        
+        return view('tickets.index');
     }
 
     /**
@@ -44,7 +45,9 @@ class TicketController extends Controller
      */
     public function edit(Ticket $ticket)
     {
-        //
+        $ticketId=$ticket;
+        // print $ticketId;
+        return view('tickets.edit',compact('ticketId'));
     }
 
     /**

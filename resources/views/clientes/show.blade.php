@@ -31,7 +31,7 @@
    </div>
    <div class="card-body">
        <!-- Nav tabs -->
-       <ul class="nav nav-tabs" id="clienteTabs" role="tablist">
+       <ul class="nav nav-tabs card-header-tabs" id="clienteTabs" role="tablist">
            <li class="nav-item">
                <a class="nav-link active" id="info-tab" data-toggle="tab" href="#info" role="tab">Información</a>
            </li>
