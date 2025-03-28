@@ -66,7 +66,8 @@ class ClienteController extends Controller
         $inventarios = Inventario::where('cliente_id', $id)
         ->get();
         // Obtener los tickets del cliente
-        $cliente = Cliente::findOrFail($id);        
+        $cliente = Cliente::with('contrato.plan')->find($id);
+       
         // Obtener los tickets del cliente
         $tickets = $cliente->tickets;
         // Contar el total de tickets abiertos

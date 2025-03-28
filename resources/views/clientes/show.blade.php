@@ -9,165 +9,160 @@
 @stop
 
 @section('content')
-   <div class="card">
-      <div class="card-header">
-      <h3 class="card-title">Informacion del Cliente</h3>
+<div class="card">
+   <div class="card-header">
+       <h3 class="card-title">Informacion del Cliente</h3>
+       <div class="card-tools">
+           <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+               <i class="fas fa-minus"></i>
+           </button>
+           <button type="button" class="btn btn-tool" data-card-widget="remove" title="Remove">
+               <i class="fas fa-times"></i>
+           </button>
+       </div>
+       @if (session()->has('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+       @endif
+   </div>
+   <div class="card-body">
+       <!-- Nav tabs -->
+       <ul class="nav nav-tabs" id="clienteTabs" role="tablist">
+           <li class="nav-item">
+               <a class="nav-link active" id="info-tab" data-toggle="tab" href="#info" role="tab">Información</a>
+           </li>
+           <li class="nav-item">
+               <a class="nav-link" id="equipos-tab" data-toggle="tab" href="#equipos" role="tab">Ver Equipos Asignados</a>
+           </li>
+           <li class="nav-item">
+            <a class="nav-link" id="nueva-pestana-tab" data-toggle="pill" href="#nueva-pestana" role="tab">Modificar estado</a>
+        </li>
+       </ul>
+       
+       <!-- Tab panes -->
+       <div class="tab-content mt-3">
+           <div class="tab-pane fade show active" id="info" role="tabpanel">
+               <div class="row">
+                  <div class="col-lg-4">
+                     <h3 class="text-primary"><i class="fas fa-paint-brush"></i> {{$cliente->nombre}}</h3>
+                     <p class="text-muted">{{$cliente->descripcion}}</p>
+                     <h5 class="mt-5 text-center text-muted"><strong>Datos personales</strong></h5>
+                     <ul class="list-unstyled">
+                         <li class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Cedula:</strong> {{$cliente->cedula}}</li>
+                         <li class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Telefono:</strong> {{$cliente->telefono}}</li>
+                         <li class="btn-link text-secondary"><i class="far fa-fw fa-envelope"></i><strong> Correo:</strong> {{$cliente->correo}}</li>
+                         <li class="btn-link text-secondary"><i class="far fa-fw fa-image"></i><strong> Direccion:</strong> {{$cliente->direccion}}</li>
+                     </ul>
+                     <hr>
+                     <h5 class="mt-5 text-center text-muted"><strong>Datos De red </strong></h5>
+                     <ul class="list-unstyled">
+                        @if ($cliente->ip == null)
+                         <li class=" text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Nodo:</strong>No disponible</li>
+                         <li class=" text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Ip:</strong>No disponible</li>
 
-      <div class="card-tools">
-         <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-            <i class="fas fa-minus"></i>
-         </button>
-         <button type="button" class="btn btn-tool" data-card-widget="remove" title="Remove">
-            <i class="fas fa-times"></i>
-         </button>
-      </div>
-      </div>
-      <div class="card-body" style="display: block;">
-      <div class="row">
-         <div class="col-12 col-md-12 col-lg-8 order-2 order-md-2">
-            <div class="row">
-               <div class="col-12 col-sm-4">
-                  @if ($cliente->estado=='suspendido')
-                  <div class="info-box bg-light border border-danger">
-                     <div class="info-box-content">
-                     <span class="info-box-text text-center text-muted">Estado Actual</span>
-                     <span class="info-box-number text-center text-muted mb-0">Suspedido</span>
-                     </div>
-                  </div>
-                  @else
-                     <div class="info-box bg-light border border-success">
-                        <div class="info-box-content">
-                        <span class="info-box-text text-center text-muted">Estado Actual</span>
-                        <span class="info-box-number text-center text-muted mb-0">Activo</span>
+                        @else
+                         <li class=" text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Nodo:</strong> cucuta</li>
+                         <li class=" text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Ip:</strong> {{$cliente->ip}}</li>
+
+                        @endif
+                        
+                     </ul>
+                 </div>
+                   <div class="col-lg-8">
+                       <div class="row">
+                        <div class="col-sm-4">
+                           @php
+                               // Definir clases según el estado
+                               $colorClass = [
+                                   'activo' => 'border-success text-success',
+                                   'suspendido' => 'border-warning text-warning',
+                                   'cortado' => 'border-danger text-danger'
+                               ];
+                               
+                               $estado = strtolower($cliente->estado); // Convertir a minúsculas por seguridad
+                               $classes = $colorClass[$estado] ?? 'border-secondary text-secondary'; // Asignar clases de borde y texto
+                           @endphp
+                       
+                           <div class="info-box bg-light border {{ explode(' ', $classes)[0] }}">
+                               <div class="info-box-content">
+                                   <span class="info-box-text text-center text-muted">Estado Actual</span>
+                                   <span class="info-box-number text-center {{ explode(' ', $classes)[1] }} mb-0">
+                                       {{ ucfirst($cliente->estado) }}
+                                   </span>
+                               </div>
+                           </div>
+                       </div>
+                       
+                        <div class="col-sm-4">
+                           <div class="info-box bg-light border border-info">
+                                   <div class="info-box-content">
+                                       <span class="info-box-text text-center text-muted">Plan actual</span>
+                                       @if ($cliente->contrato==null)
+                                          <span class="info-box-number text-center text-muted mb-0">Sin contrato asignado</span>
+
+                                       @else
+                                          <span class="info-box-number text-center text-muted mb-0">{{ $cliente->contrato->plan->nombre}}</span>
+ 
+                                       @endif
+                                   </div>
+                           </div>
                         </div>
-                     </div>
-                  @endif
+                        <div class="col-sm-4">
+                           <div class="info-box bg-light border border-success">
+                                   <div class="info-box-content">
+                                       <span class="info-box-text text-center text-muted">Tickets Abiertos</span>
+                                       <span class="info-box-number text-center text-muted mb-0">{{$totalTicketsAbiertos}}</span>
+                                   </div>
+                           </div>
+                        </div>
+                       </div>
+                       <hr>
+                       <h4><strong>Crear Ticket</strong></h4>
+                       @livewire('crear-ticket', ['cliente_id' => $cliente->id])
+                   </div>
                   
                </div>
-               <div class="col-12 col-sm-4">
-                  <div class="info-box bg-light border border-info">
-                     <div class="info-box-content">
-                     <span class="info-box-text text-center text-muted">Plan actual</span>
-                     <span class="info-box-number text-center text-muted mb-0">10 Megas</span>
-                     </div>
-                  </div>
-               </div>
-               <div class="col-12 col-sm-4">
-                  <div class="info-box bg-light border border-success">
-                     <div class="info-box-content">
-                     <span class="info-box-text text-center text-muted">Tickets Abiertos</span>
-                     <span class="info-box-number text-center text-muted mb-0">{{$totalTicketsAbiertos}}</span>
-                     </div>
-                  </div>
-               </div>
-            </div>
-            <hr>
-            <div class="row">
-            <div class="col-12">
-               <h4><strong>Crear Ticket</strong></h4>
-                  <div class="post">
-                  <div class="user-block">
-                     {{-- <img class="img-circle img-bordered-sm" src="../../dist/img/user1-128x128.jpg" alt="user image"> --}}
-                     {{-- <span class="username">
-                        <a href="#">Crear Ticket</a>
-                     </span> --}}
-                     {{-- <span class="description">Shared publicly - 7:45 PM today</span> --}}
-                  </div>
-                  {{-- Componente livwriew para crear-ticket --}}
-                  @livewire('crear-ticket', ['cliente_id' => $cliente->id])
-                  {{-- FIN Componente livwriew para crear-ticket --}}
-                  </div>
-
-                  {{-- <div class="post clearfix">
-                     <div class="user-block">
-                        <img class="img-circle img-bordered-sm" src="../../dist/img/user7-128x128.jpg" alt="User Image">
-                        <span class="username">
-                           <a href="#">Sarah Ross</a>
-                        </span>
-                        <span class="description">Sent you a message - 3 days ago</span>
-                     </div>
-                     <!-- /.user-block -->
-                     <p>
-                        Lorem ipsum represents a long-held tradition for designers,
-                        typographers and the like. Some people hate it and argue for
-                        its demise, but others ignore.
-                     </p>
-                     <p>
-                        <a href="#" class="link-black text-sm"><i class="fas fa-link mr-1"></i> Demo File 2</a>
-                     </p>
-                  </div> --}}
-
-                  <div class="post">
-                  <div class="user-block">
-                     <img class="img-circle img-bordered-sm" src="../../dist/img/user1-128x128.jpg" alt="user image">
-                     <span class="username">
-                        <a href="#">Jonathan Burke Jr.</a>
-                     </span>
-                     <span class="description">Shared publicly - 5 days ago</span>
-                  </div>
-                  <!-- /.user-block -->
-                  <p>
-                     Lorem ipsum represents a long-held tradition for designers,
-                     typographers and the like. Some people hate it and argue for
-                     its demise, but others ignore.
-                  </p>
-
-                  <p>
-                     <a href="#" class="link-black text-sm"><i class="fas fa-link mr-1"></i> Demo File 1 v1</a>
-                  </p>
-                  </div>
-            </div>
-            </div>
-         </div>
-         <div class="col-12 col-md-12 col-lg-4 order-1 order-md-1">
-            <h3 class="text-primary"><i class="fas fa-paint-brush"></i>{{$cliente->nombre}}</h3>
-            <p class="text-muted">{{$cliente->descripcion}}</p>
-            <br>
-            <div class="text-muted">
-            <p class="text-sm">Client Company
-               <b class="d-block">Deveint Inc</b>
-            </p>
-            <p class="text-sm">Project Leader
-               <b class="d-block">Tony Chicken</b>
-            </p>
-            </div>
-
-            <h5 class="mt-5 text-muted"><strong>Datos personales</strong> <h5>
-            <ul class="list-unstyled">
-            <li  class="btn-link text-secondary" ><i class="far fa-fw fa-file-word"></i><strong>cedula:</strong>{{$cliente->cedula}}  </li>
-            <li  class="btn-link text-secondary" ><i class="far fa-fw fa-file-word"></i><strong>Telefono: </strong>{{$cliente->telefono}}  </li>
-            <li  class="btn-link text-secondary" ><i class="far fa-fw fa-envelope"></i><strong>Correo: </strong>{{$cliente->correo}}</li>
-            <li  class="btn-link text-secondary" ><i class="far fa-fw fa-image"></i><strong>Direccion: </strong>{{$cliente->direccion}}</li>
-
-           
-            <li>
-               <a href="" class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i> Contract-10_12_2014.docx</a>
-            </li>
-            </ul>
-            <hr>
-            <h5 class="mt-5 text-success text-center"><strong>Equipos Asignados</strong> <h5>
+           </div>
+           {{-- Tab equipos asigandos --}}
+           <div class="tab-pane fade" id="equipos" role="tabpanel">
+               <h5 class="mt-3 text-success text-center"><strong>Equipos Asignados</strong></h5>
                <br>
-               @foreach ($inventarios as $inventario)
-                  <ul class="list-unstyled">
-                     <li  class="text-secondary" ><strong>Modelo:</strong>{{$inventario->modelo->nombre}}  </li>
-                     <li  class="text-secondary" ><strong>Mac: </strong>{{$inventario->mac}}  </li>
-                     @if (!empty($inventario->modelo->foto) && file_exists(public_path('storage/' . $inventario->modelo->foto)))
-                        <div class="text mt-3">
-                            <img src="{{ asset('storage/' . $inventario->modelo->foto) }}" alt="Foto del modelo" class="img-thumbnail" style="max-width: 150px;">
-                        </div>
-                    @else
-                        <p class="text-muted">No hay imagen disponible.</p>
-                    @endif
-                  </ul>
-                  <hr>
-               @endforeach
-               
-               
-         </div>
-      </div>
-      </div>
-      <!-- /.card-body -->
+               <div class="row">
+                  @foreach ($inventarios as $inventario)
+                      <div class="col-md-6"> <!-- 2 columnas por fila en pantallas medianas y grandes -->
+                          <div class="card border-info mb-3">
+                              <div class="card-body">
+                                  <h5 class="card-title"><strong>Modelo:</strong> {{$inventario->modelo->nombre}}</h5>
+                                  <p class="card-text"><strong>Mac:</strong> {{$inventario->mac}}</p>
+                                  @if (!empty($inventario->modelo->foto) && file_exists(public_path('storage/' . $inventario->modelo->foto)))
+                                      <div class="text-center">
+                                          <img src="{{ asset('storage/' . $inventario->modelo->foto) }}" alt="Foto del modelo" class="img-thumbnail" style="max-width: 150px;">
+                                      </div>
+                                  @else
+                                      <p class="text-muted">No hay imagen disponible.</p>
+                                  @endif
+                              </div>
+                          </div>
+                      </div>
+                  @endforeach
+              </div>
+              
+           
+           </div>
+
+           <!-- NUEVA PESTAÑA -->
+             <div class="tab-pane fade" id="nueva-pestana" role="tabpanel">
+               @livewire('actualizar-estado-cliente', ['cliente' => $cliente])
+             </div>
+       </div>
    </div>
+</div>
+
+
 
    {{-- SECCION DE TicketS Creados --}}
    <div class="card">

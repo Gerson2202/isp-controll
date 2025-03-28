@@ -38,7 +38,10 @@ class Cliente extends Model
      {
          return $this->hasMany(Contrato::class);
      }
-
+     public function contrato()
+     {
+         return $this->hasOne(Contrato::class); // Un cliente tiene un contrato
+     }
      // Relación con Pool
     public function pool()
     {
