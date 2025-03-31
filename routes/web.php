@@ -70,5 +70,11 @@ Route::get('/equipos/{id}', [InventarioController::class, 'show'])->name('equipo
 
 // Route::get('/agendar-visita', AgendarVisita::class)->name('agendar.visita');
 Route::get('/calendario', [VisitaController::class, 'index'])->name('calendarioIndex');
+Route::get('/events', [VisitaController::class, 'getEvents'])->name('events.index');
+
+// Ruta para editar la visita
+Route::get('/visitas/{visita_id}/edit', [VisitaController::class, 'edit'])->name('visitas.edit');
+Route::put('/visitas/{visita_id}', [VisitaController::class, 'update'])->name('visitas.update');
+
 
 });
