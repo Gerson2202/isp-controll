@@ -94,6 +94,8 @@ class VisitaController extends Controller
     // Funcion para enviar a cola de programacion
     public function enviarACola(Request $request, $id)
     {
+
+        
         // Obtener la visita por su ID
         $visita = Visita::findOrFail($id);
     
@@ -122,26 +124,40 @@ class VisitaController extends Controller
     // Actualizar la visita
     public function update(Request $request, $visita_id)
     {
-       
-        $request->validate([
-            'fecha_inicio' => 'required|date',
-            'fecha_cierre' => 'required|date',
-            'descripcion' => 'nullable|string',
-            'estado' => 'required|string',
-            'solucion' => 'nullable|string',
-        ]);
+        // Validar las fechas y los demás campos
+        // $request->validate([
+        //     'fecha_inicio' => 'required|date',
+        //     'fecha_cierre' => 'required|date',
+        //     'descripcion' => 'nullable|string',
+        //     'estado' => 'required|string',
+        //     'solucion' => 'nullable|string',
+        // ]);
 
         // Buscar la visita y actualizarla
         $visita = Visita::find($visita_id);
-
+        return $visita;
         if (!$visita) {
-            return redirect()->route('events.index')->with('error', 'Visita no encontrada.');
+            return redirect()->route('calendarioIndex')->with('error', 'Visita no encontrada.');
+        }
+
+        // Convertir las fechas a objetos Carbon para poder manipularlas
+        $fecha_inicio = Carbon::parse($request->fecha_inicio);
+        $fecha_cierre = Carbon::parse($request->fecha_cierre);
+
+        // Validar que la fecha de inicio no sea igual a la fecha de cierre
+        if ($fecha_inicio->equalTo($fecha_cierre)) {
+            return redirect()->back()->with('error', 'La fecha de inicio no puede ser la misma que la fecha de cierre.');
+        }
+
+        // Validar que la fecha de cierre no sea menor que la fecha de inicio
+        if ($fecha_cierre->lt($fecha_inicio)) {
+            return redirect()->back()->with('error', 'La fecha de cierre no puede ser menor que la fecha de inicio.');
         }
 
         // Actualizamos los campos de la visita
         $visita->update([
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_cierre' => $request->fecha_cierre,
+            'fecha_inicio' => $fecha_inicio->format('Y-m-d H:i:s'), // Aseguramos que el formato es correcto
+            'fecha_cierre' => $fecha_cierre->format('Y-m-d H:i:s'), // Aseguramos que el formato es correcto
             'descripcion' => $request->descripcion,
             'estado' => $request->estado,
             'solucion' => $request->solucion,

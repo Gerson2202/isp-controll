@@ -11,8 +11,14 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
+            @if (session()->has('error'))
+                <div class="alert alert-danger">
+                    {{ session('error') }}
+                </div>
+            @endif
+            
 
-            <!-- Formulario para editar el ticket -->
+         <!-- Formulario para editar el ticket -->
             <form wire:submit.prevent="updateTicket">
                 <div class="mb-3">
                     <label for="tipo_reporte" class="form-label">Tipo de Reporte</label>

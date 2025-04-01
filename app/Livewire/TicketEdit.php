@@ -23,19 +23,9 @@ class TicketEdit extends Component
     public $descripcion;
     public $ticket_id;
     public $estadoVisita = 'pendiente'; // Estado por defecto
-
-    // Método para actualizar la fecha de cierre automáticamente
-    public function updatedFechaInicio($value)
-    {
-        // Si la fecha de inicio es válida
-        if ($value) {
-            $fecha_inicio = new \DateTime($value);
-            $fecha_inicio->modify('+2 hours'); // Aumentar 2 horas
-
-            // Establecer la fecha de cierre
-            $this->fecha_cierre = $fecha_inicio->format('Y-m-d\TH:i');
-        }
-    }
+    public $isModalOpen = false; // Propiedad para controlar la apertura del modal
+    
+    
     public function mount($ticketId)
     {
         // Cargar el ticket basado en el ID pasado como parámetro
@@ -84,13 +74,25 @@ class TicketEdit extends Component
     public function agendar()
     {
         // Convertir las fechas a un formato que FullCalendar entienda
-        $fecha_inicio = Carbon::parse($this->fecha_inicio)->format('Y-m-d H:i:s');
-        $fecha_cierre = Carbon::parse($this->fecha_cierre)->format('Y-m-d H:i:s');
+        $fecha_inicio = Carbon::parse($this->fecha_inicio);
+        $fecha_cierre = Carbon::parse($this->fecha_cierre);
     
-        // Crear la visita
+        // Validar que la fecha de inicio no sea igual a la fecha de cierre
+        if ($fecha_inicio->equalTo($fecha_cierre)) {
+            session()->flash('error', 'La fecha de inicio no puede ser la misma que la fecha de cierre.');
+            return;  // Detener la ejecución si las fechas son iguales
+        }
+    
+        // Validar que la fecha de cierre no sea menor que la fecha de inicio
+        if ($fecha_cierre->lt($fecha_inicio)) {
+            session()->flash('error', 'La fecha de cierre no puede ser menor a la fecha de inicio.');
+            return;  // Detener la ejecución si la fecha de cierre es menor
+        }
+    
+        // Crear la visita si las validaciones son correctas
         Visita::create([
-            'fecha_inicio' => $fecha_inicio,
-            'fecha_cierre' => $fecha_cierre,
+            'fecha_inicio' => $fecha_inicio->format('Y-m-d H:i:s'),
+            'fecha_cierre' => $fecha_cierre->format('Y-m-d H:i:s'),
             'descripcion' => $this->descripcion,
             'ticket_id' => $this->ticket->id,
             'estado' => $this->estadoVisita,
@@ -102,8 +104,10 @@ class TicketEdit extends Component
         ]);
     
         // Redirigir a la vista del calendario
-        return redirect()->route('calendarioIndex'); // Asegúrate de tener esta ruta definida
+        return redirect()->route('calendarioIndex');  // Asegúrate de tener esta ruta definida
     }
+    
+
 
 
     public function render()

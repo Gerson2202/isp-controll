@@ -62,7 +62,7 @@
         </div>
        </div>
     </div>
-    <script>
+    {{-- <script>
         // Obtener el campo de "Fecha de Inicio" y "Fecha de Cierre"
         const fechaInicioInput = document.getElementById('fecha_inicio');
         const fechaCierreInput = document.getElementById('fecha_cierre');
@@ -83,5 +83,5 @@
                 fechaCierreInput.value = fechaCierreFormateada;
             }
         });
-    </script>
+    </script> --}}
 @stop
