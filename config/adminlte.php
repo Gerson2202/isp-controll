@@ -445,7 +445,7 @@ return [
             ],
             [
                 'text' => 'Visitas sin programar',
-                'route' => 'inventarioIndex', // Ruta para agregar cliente
+                'route' => 'visitas.cola', // Ruta para agregar cliente
                 'icon' => 'fas fa-list-alt', // Icono para agregar
             ],
             

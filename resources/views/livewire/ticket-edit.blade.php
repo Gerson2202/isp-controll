@@ -39,10 +39,52 @@
 
             <!-- Botón para agendar visita (Solo visible si no está actualizado) -->
             @if(!$isUpdated)
-                <form wire:submit.prevent="agendarVisita" class="mt-3">
-                    <button type="submit" class="btn btn-warning">Agendar Visita al Sitio</button>
-                </form>
+                
+                     <!-- Botón para abrir el modal -->
+                <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#agendarModal">
+                    Agendar Visita
+                </button>
+               
             @endif
         </div>
     </div>
+    <div>
+       
+    
+        <!-- Modal -->
+        <div class="modal fade" id="agendarModal" tabindex="-1" aria-labelledby="agendarModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="agendarModalLabel">Agendar Visita</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form wire:submit.prevent="agendar">
+                            <div class="mb-3">
+                                <label for="fecha_inicio" class="form-label">Fecha de Inicio</label>
+                                <input type="datetime-local" wire:model="fecha_inicio" class="form-control" id="fecha_inicio" required>
+                                @error('fecha_inicio') <span class="text-danger">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="mb-3">
+                                <label for="fecha_cierre" class="form-label">Fecha de Cierre</label>
+                                <input type="datetime-local" wire:model="fecha_cierre" class="form-control" id="fecha_cierre" required>
+                                @error('fecha_cierre') <span class="text-danger">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <input type="text" wire:model="descripcion" class="form-control" id="descripcion">
+                                @error('descripcion') <span class="text-danger">{{ $message }}</span> @enderror
+                            </div>
+                           
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-primary">Registrar Visita</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
 </div>

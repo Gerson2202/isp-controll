@@ -75,6 +75,8 @@ Route::get('/events', [VisitaController::class, 'getEvents'])->name('events.inde
 // Ruta para editar la visita
 Route::get('/visitas/{visita_id}/edit', [VisitaController::class, 'edit'])->name('visitas.edit');
 Route::put('/visitas/{visita_id}', [VisitaController::class, 'update'])->name('visitas.update');
-
-
+// Ruta para enviar a cola de programación (actualiza los campos a null)
+Route::put('/visitas/{visita}/enviar-a-cola', [VisitaController::class, 'enviarACola'])->name('enviarACola');
+// Ruta para ver las visitas sin programar
+Route::get('/visitas/cola', [VisitaController::class, 'colaDeProgramacion'])->name('visitas.cola');
 });

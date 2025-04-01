@@ -18,9 +18,10 @@ class VisitaController extends Controller
 
     public function getEvents(Request $request)
     {
-        // Obtén las visitas junto con el ticket y cliente relacionado
-        $events = Visita::with(['ticket', 'ticket.cliente']) // Eager load 'ticket' y 'cliente' relacionado
-            ->get(); // Obtén todos los registros de visitas
+        $events = Visita::with(['ticket', 'ticket.cliente'])
+            ->whereNotNull('fecha_inicio')  // Asegurarte de que 'fecha_inicio' no sea nulo
+            ->whereNotNull('fecha_cierre')  // Asegurarte de que 'fecha_cierre' no sea nulo
+            ->get();
 
         // Transforma los eventos para que sean compatibles con FullCalendar
         $formattedEvents = $events->map(function($event) {
@@ -44,7 +45,8 @@ class VisitaController extends Controller
             $situacion = $event->ticket ? $event->ticket->situacion : 'Sin situación';
             $cliente = $event->ticket->cliente ? $event->ticket->cliente->nombre : 'Sin cliente';
             $estado = $event->estado;
-
+            $solucion= $event->solucion ?? 'No se ha solucionado';
+            
             return [
                 'title' => $tipoReporte, // Mostrar el tipo_reporte en el título
                 'start' => $event->fecha_inicio,
@@ -57,7 +59,7 @@ class VisitaController extends Controller
                 'cliente' => $cliente,  // Nombre del cliente
                 'estado' => $estado,  // estado de la visita  
                 'visita_id' => $event->id,  // Asegúrate de incluir el ID de la visita
-                
+                'solucion' => $solucion, 
             ];
         });
 
@@ -66,30 +68,61 @@ class VisitaController extends Controller
     // Mostrar el formulario de edición
     public function edit($visita_id)
     {
-        {
-            $visita = Visita::findOrFail($visita_id); // Encuentra la visita por ID
-        
-            // Verificar si las fechas son instancias de Carbon, si no lo son, convertirlas
-            if (is_string($visita->fecha_inicio)) {
-                $visita->fecha_inicio = Carbon::parse($visita->fecha_inicio); // Convierte la fecha a Carbon si es una cadena
-            }
-        
-            if (is_string($visita->fecha_cierre)) {
-                $visita->fecha_cierre = Carbon::parse($visita->fecha_cierre); // Convierte la fecha a Carbon si es una cadena
-            }
-        
-            // Ahora las fechas son instancias de Carbon y puedes formatearlas
-            $visita->fecha_inicio = $visita->fecha_inicio->format('Y-m-d\TH:i'); // Formato adecuado para datetime-local
-            $visita->fecha_cierre = $visita->fecha_cierre->format('Y-m-d\TH:i'); // Formato adecuado para datetime-local
-        
-            // Pasar la visita a la vista
-            return view('visitas.edit', compact('visita'));
+        $visita = Visita::findOrFail($visita_id); // Encuentra la visita por ID
+    
+        // Verificar si las fechas son null, si son null, no hacer nada, y si no lo son, convertirlas a Carbon
+        if ($visita->fecha_inicio && is_string($visita->fecha_inicio)) {
+            $visita->fecha_inicio = Carbon::parse($visita->fecha_inicio); // Convierte la fecha a Carbon si es una cadena
         }
+        
+        if ($visita->fecha_cierre && is_string($visita->fecha_cierre)) {
+            $visita->fecha_cierre = Carbon::parse($visita->fecha_cierre); // Convierte la fecha a Carbon si es una cadena
+        }
+    
+        // Si las fechas no son nulas, las formateamos
+        if ($visita->fecha_inicio) {
+            $visita->fecha_inicio = $visita->fecha_inicio->format('Y-m-d\TH:i'); // Formato adecuado para datetime-local
+        }
+    
+        if ($visita->fecha_cierre) {
+            $visita->fecha_cierre = $visita->fecha_cierre->format('Y-m-d\TH:i'); // Formato adecuado para datetime-local
+        }
+    
+        // Pasar la visita a la vista
+        return view('visitas.edit', compact('visita'));
+    }
+    // Funcion para enviar a cola de programacion
+    public function enviarACola(Request $request, $id)
+    {
+        // Obtener la visita por su ID
+        $visita = Visita::findOrFail($id);
+    
+        // Establecer los campos 'fecha_inicio' y 'fecha_cierre' a null
+        $visita->fecha_inicio = null;
+        $visita->fecha_cierre = null;
+    
+        // Guardar los cambios
+        $visita->save();
+    
+        // Redirigir al calendario
+        return redirect()->route('calendarioIndex')->with('success', 'Visita enviada a la cola de programación.');
+    }
+    
+    public function colaDeProgramacion()
+    {
+        // Obtener las visitas que están en cola (fecha_inicio y fecha_cierre son null)
+        $visitasEnCola = Visita::whereNull('fecha_inicio')
+            ->whereNull('fecha_cierre')
+            ->get();
+
+        // Pasar las visitas a la vista
+        return view('visitas.tablaVisitasEncola', compact('visitasEnCola'));
     }
 
     // Actualizar la visita
     public function update(Request $request, $visita_id)
     {
+       
         $request->validate([
             'fecha_inicio' => 'required|date',
             'fecha_cierre' => 'required|date',
@@ -115,7 +148,7 @@ class VisitaController extends Controller
         ]);
 
         // Redirigir con éxito
-        return redirect()->route('events.index')->with('success', 'Visita actualizada con éxito.');
+        return redirect()->route('calendarioIndex')->with('success', 'Visita actualizada con éxito.');
     }
     public function create()
     {

@@ -15,6 +15,15 @@
     <div class="card">
             <div class="card-header">
                 <h5>Programador de actividades</h5>
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
+
             </div>
             <div class="card-body">
                 <div id="calendar"></div> <!-- Aquí se mostrará el calendario -->
@@ -38,6 +47,7 @@
                 <p><strong>Cliente:</strong> <span id="cliente"></span></p>
                 <p><strong>Fecha de Inicio:</strong> <span id="fechaInicio"></span></p>
                 <p><strong>Fecha de Cierre:</strong> <span id="fechaCierre"></span></p>
+                <p><strong>Solucion:</strong> <span id="solucion"></span></p>
             </div>
             <div class="modal-footer">
                 <!-- Botón Cerrar -->
@@ -87,7 +97,7 @@
                 $('#cliente').text(event.cliente);
                 $('#fechaInicio').text(event.start.format('DD/MM/YYYY HH:mm'));
                 $('#fechaCierre').text(event.end.format('DD/MM/YYYY HH:mm'));
-
+                $('#solucion').text(event.solucion);
                 // Asignar la URL de edición con el visita_id
                 var editUrl = '/visitas/' + event.visita_id + '/edit'; // Aquí usamos visita_id
                 $('#editButton').attr('href', editUrl); // Establece correctamente el href del botón Editar
