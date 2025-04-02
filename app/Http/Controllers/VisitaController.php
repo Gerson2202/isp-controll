@@ -30,7 +30,7 @@ class VisitaController extends Controller
                 case 'Pendiente':
                     $color = 'green';  // Color verde
                     break;
-                case 'En Progreso':
+                case 'En progreso';
                     $color = 'blue';  // Color azul
                     break;
                 case 'Completada':
@@ -134,12 +134,11 @@ class VisitaController extends Controller
         // ]);
 
         // Buscar la visita y actualizarla
-        $visita = Visita::find($visita_id);
-        return $visita;
+         $visita = Visita::find($visita_id);
         if (!$visita) {
             return redirect()->route('calendarioIndex')->with('error', 'Visita no encontrada.');
         }
-
+        
         // Convertir las fechas a objetos Carbon para poder manipularlas
         $fecha_inicio = Carbon::parse($request->fecha_inicio);
         $fecha_cierre = Carbon::parse($request->fecha_cierre);

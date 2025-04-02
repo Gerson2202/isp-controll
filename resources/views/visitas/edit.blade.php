@@ -4,6 +4,8 @@
 
 @section('content_header')
     <h1 class="ml-1">Editar Visita</h1>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
 @stop
 
 @section('content')
@@ -11,9 +13,17 @@
        <div class="card">
         <div class="card-header">
             <h5>Editar visita</h5>
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+        
+
         </div>
         <div class="card-body">
-            <form action="{{ route('visitas.update', $visita->ticket_id) }}" method="POST">
+            <form action="{{ route('visitas.update', $visita->id) }}" method="POST">
                 @csrf
                 @method('PUT')
             
@@ -62,26 +72,18 @@
         </div>
        </div>
     </div>
-    {{-- <script>
-        // Obtener el campo de "Fecha de Inicio" y "Fecha de Cierre"
-        const fechaInicioInput = document.getElementById('fecha_inicio');
-        const fechaCierreInput = document.getElementById('fecha_cierre');
-    
-        // Agregar un evento de escucha para detectar cambios en el campo "Fecha de Inicio"
-        fechaInicioInput.addEventListener('input', function() {
-            const fechaInicio = new Date(fechaInicioInput.value);
-    
-            // Verificar si la fecha de inicio es válida
-            if (!isNaN(fechaInicio.getTime())) {
-                // Sumar 2 horas a la fecha de inicio
-                fechaInicio.setHours(fechaInicio.getHours() + 2);
-    
-                // Formatear la nueva fecha de cierre como 'YYYY-MM-DDTHH:MM'
-                const fechaCierreFormateada = fechaInicio.toISOString().slice(0, 16);
-    
-                // Actualizar el valor del campo "Fecha de Cierre"
-                fechaCierreInput.value = fechaCierreFormateada;
-            }
-        });
-    </script> --}}
+@stop
+
+@section('css')
+    <!-- Puedes agregar estilos personalizados aquí si es necesario -->
+@stop
+
+@section('js')
+    @livewireScripts  <!-- Livewire debe cargarse antes que cualquier otro script -->
+    <!-- Agregar los scripts de Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Agregar SweetAlert2 desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Aquí incluye tus scripts personalizados -->
+    @stack('scripts')
 @stop
