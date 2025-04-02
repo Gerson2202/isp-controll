@@ -1,11 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Http\Request;
 use App\Models\Visita;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Validator;
 class VisitaController extends Controller
 {
     /**
@@ -15,56 +14,9 @@ class VisitaController extends Controller
     {
         return view('calendario.index');
     }
-    // Obtener los enventos para enviarlos a full calendar
-    public function getEvents(Request $request)
-    {
-        $events = Visita::with(['ticket', 'ticket.cliente'])
-            ->whereNotNull('fecha_inicio')  // Asegurarte de que 'fecha_inicio' no sea nulo
-            ->whereNotNull('fecha_cierre')  // Asegurarte de que 'fecha_cierre' no sea nulo
-            ->get();
+    
+    
 
-        // Transforma los eventos para que sean compatibles con FullCalendar
-        $formattedEvents = $events->map(function($event) {
-            // Asignar color según el estado
-            switch ($event->estado) {
-                case 'Pendiente':
-                    $color = 'green';  // Color verde
-                    break;
-                case 'En progreso':
-                    $color = 'blue';  // Color azul
-                    break;
-                case 'Completada':
-                    $color = 'gray';  // Color gris
-                    break;
-                default:
-                    $color = 'gray';  // Valor por defecto si no hay estado reconocido
-            }
-
-            // Obtener el tipo_reporte de la relación con Ticket
-            $tipoReporte = $event->ticket ? $event->ticket->tipo_reporte : 'Sin tipo de reporte';
-            $situacion = $event->ticket ? $event->ticket->situacion : 'Sin situación';
-            $cliente = $event->ticket->cliente ? $event->ticket->cliente->nombre : 'Sin cliente';
-            $estado = $event->estado;
-            $solucion= $event->solucion ?? 'No se ha solucionado';
-            
-            return [
-                'title' => $tipoReporte, // Mostrar el tipo_reporte en el título
-                'start' => $event->fecha_inicio,
-                'end' => $event->fecha_cierre,
-                'color' => $color,  // Asignar el color basado en el estado
-                'descripcion' => $event->descripcion,  // Información de la visita
-                'ticket_id' => $event->ticket_id,  // ID del ticket
-                'tipo_reporte' => $tipoReporte,  // Tipo de reporte
-                'situacion' => $situacion,  // Situación
-                'cliente' => $cliente,  // Nombre del cliente
-                'estado' => $estado,  // estado de la visita  
-                'visita_id' => $event->id,  // Asegúrate de incluir el ID de la visita
-                'solucion' => $solucion, 
-            ];
-        });
-
-        return response()->json($formattedEvents);
-    }
     // Mostrar el formulario de edición
     public function edit($visita_id)
     {
@@ -220,4 +172,7 @@ class VisitaController extends Controller
     {
         //
     }
+
+    
+
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\NodoController;
 use App\Http\Controllers\PoolController;
 use App\Http\Controllers\VisitaController;
 use App\Livewire\AgendarVisita;
+use GuzzleHttp\Psr7\Request;
 
 Route::get('/', function () {
     return view('welcome');
@@ -80,4 +81,45 @@ Route::put('/visitas/{visita}/enviar-a-cola', [VisitaController::class, 'enviarA
 // Ruta para ver las visitas sin programar
 Route::get('/visitas/cola', [VisitaController::class, 'colaDeProgramacion'])->name('visitas.cola');
 Route::put('/events/{id}', [VisitaController::class, 'updateEvent'])->name('events.update');
+
+
+// RUTAS PARA CALENDARIO
+// Ruta para consultar los eventos en el calendario(visitas)
+Route::get('/visitas/calendario', function() {
+    $visitas = App\Models\Visita::with(['ticket', 'ticket.cliente'])->get();
+    
+    return response()->json($visitas->map(function($visita) {
+        return [
+            'id' => $visita->id,
+            'title' => 'Ticket #' . $visita->ticket_id . ' - ' . optional($visita->ticket->cliente)->nombre ?? 'Sin cliente',
+            'start' => $visita->fecha_inicio,
+            'end' => $visita->fecha_cierre,
+            'descripcion' => $visita->descripcion,
+            'estado' => $visita->estado,
+            'ticket_id' => $visita->ticket_id,
+            'cliente_nombre' => optional($visita->ticket->cliente)->nombre ?? 'No especificado',
+            'cliente_id' => optional($visita->ticket->cliente)->id, // Nuevo campo
+            'color' => match($visita->estado) {
+                'Pendiente' => '#28A745',
+                'En progreso' => '#FFC107',
+                'Completada' => '#5A6268',
+                default => '#3AA8FF'
+            }
+        ];
+    }));
+})->name('visitas.calendario');
+
+// Ruta para modificar los eventos en el calendario(visitas)
+
+Route::patch('/visitas/{visita}/actualizar-fechas', function($visita) {
+    $visita = App\Models\Visita::findOrFail($visita);
+    
+    $visita->update([
+        'fecha_inicio' => request('fecha_inicio'),
+        'fecha_cierre' => request('fecha_cierre')
+    ]);
+
+    return response()->json(['success' => true]);
+})->middleware('auth');
+
 });

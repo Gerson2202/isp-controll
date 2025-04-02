@@ -18,7 +18,6 @@ return new class extends Migration
             $table->dateTime('fecha_cierre')->nullable();  // Fecha y hora de cierre
             $table->text('descripcion')->nullable();  // Descripción de la visita
             $table->text('solucion')->nullable();  // Descripción de la visita
-            $table->string('color')->nullable();
             $table->enum('estado', ['Pendiente', 'En progreso', 'Completada'])->default('Pendiente');  // Estado de la visita
             $table->timestamps();
         });
