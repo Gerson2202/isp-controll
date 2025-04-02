@@ -23,11 +23,9 @@
                         </button>
                     </div>
                 @endif
-
             </div>
             <div class="card-body">
                 <div id="calendar"></div> <!-- Aquí se mostrará el calendario -->
-
             </div>
     </div>
 </div>
@@ -63,12 +61,22 @@
 
 @section('css')
     <!-- Aquí puedes agregar tus estilos personalizados si es necesario -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 @stop
+
 
 @section('js')
     @livewireScripts  <!-- Livewire debe cargarse antes que cualquier otro script -->
+    
+    <!-- Agregar jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Agregar jQuery UI (necesario para el drag-and-drop en FullCalendar) -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
     <!-- Agregar los scripts de Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
     <!-- Agregar SweetAlert2 desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
@@ -78,38 +86,73 @@
     <!-- Agregar FullCalendar JS -->
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@3.2.0/dist/fullcalendar.min.js"></script>
     
-   <!-- Inicializar FullCalendar -->
+    <!-- Inicializar FullCalendar -->
    <script>
     $(document).ready(function() {
         $('#calendar').fullCalendar({
-            events: '{{ route('events.index') }}', // Ruta para obtener los eventos desde el controlador
-            header: {
-                left: 'prev,next today', // Botones de navegación
-                center: 'title', // Título del calendario
-                right: 'month,agendaWeek,agendaDay' // Botones de vista (mes, semana, día)
+            events: function(start, end, timezone, callback) {
+                $.ajax({
+                    url: '{{ route('events.index') }}',  // Ruta para obtener los eventos desde el controlador
+                    dataType: 'json',
+                    success: function(data) {
+                        // Asegúrate de que los eventos estén bien formateados antes de pasarlos a FullCalendar
+                        console.log(data);  // Para depurar la respuesta JSON
+                        callback(data);  // Pasa los eventos a FullCalendar
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error al cargar los eventos: ', error);
+                    }
+                });
             },
-             eventClick: function(event) {
+            header: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'month,agendaWeek,agendaDay'
+            },
+            droppable: true, // Permite arrastrar y soltar los eventos
+            editable: true,  // Habilita la edición de eventos (arrastrar y cambiar el tamaño)
+            eventDrop: function(event, delta, revertFunc) {
+                // Esta función se ejecuta cuando un evento es arrastrado a una nueva fecha
+                var newStart = event.start.format('YYYY-MM-DD HH:mm:ss');
+                var newEnd = event.end.format('YYYY-MM-DD HH:mm:ss');
+
+                // Enviar la nueva fecha al backend para actualizar el evento
+                $.ajax({
+                    url: '/events/' + event.visita_id,  // URL de la ruta para actualizar el evento
+                    type: 'PUT',
+                    data: {
+                        _token: '{{ csrf_token() }}',  // Necesario para la protección contra CSRF
+                        start: newStart,
+                        end: newEnd,
+                    },
+                    success: function(response) {
+                        console.log('Evento actualizado con éxito');
+                    },
+                    error: function(xhr, status, error) {
+                        revertFunc();  // Si hay un error, revertimos la acción de arrastre
+                        alert('Hubo un error al actualizar el evento');
+                    }
+                });
+            },
+            eventClick: function(event) {
                 // Llenar el modal con los datos del evento
                 $('#eventModalLabel').text('Detalles del Evento: ' + event.title);
-                $('#tipoReporte').text(event.tipo_reporte);
-                $('#situacion').text(event.situacion);
-                $('#descripcion').text(event.descripcion);
-                $('#cliente').text(event.cliente);
-                $('#fechaInicio').text(event.start.format('DD/MM/YYYY HH:mm'));
-                $('#fechaCierre').text(event.end.format('DD/MM/YYYY HH:mm'));
-                $('#solucion').text(event.solucion);
-                // Asignar la URL de edición con el visita_id
-                var editUrl = '/visitas/' + event.visita_id + '/edit'; // Aquí usamos visita_id
-                $('#editButton').attr('href', editUrl); // Establece correctamente el href del botón Editar
+                $('#tipoReporte').text(event.tipo_reporte || 'No disponible');
+                $('#situacion').text(event.situacion || 'No disponible');
+                $('#descripcion').text(event.descripcion || 'No disponible');
+                $('#cliente').text(event.cliente || 'No disponible');
+                $('#fechaInicio').text(moment(event.start).format('DD/MM/YYYY HH:mm'));
+                $('#fechaCierre').text(moment(event.end).format('DD/MM/YYYY HH:mm'));
+                $('#solucion').text(event.solucion || 'No se ha solucionado');
 
-                // Mostrar el modal
+                var editUrl = '/visitas/' + event.visita_id + '/edit';  // Aquí usamos visita_id
+                $('#editButton').attr('href', editUrl);  // Establece correctamente el href del botón Editar
                 $('#eventModal').modal('show');
-                }
-            });
+            },
+        });
     });
-    </script>
+</script>
 
 
-    
     @stack('scripts')
 @stop

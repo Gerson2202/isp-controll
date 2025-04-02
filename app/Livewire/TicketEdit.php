@@ -23,7 +23,6 @@ class TicketEdit extends Component
     public $descripcion;
     public $ticket_id;
     public $estadoVisita = 'pendiente'; // Estado por defecto
-    public $isModalOpen = false; // Propiedad para controlar la apertura del modal
     
     
     public function mount($ticketId)
@@ -79,14 +78,23 @@ class TicketEdit extends Component
     
         // Validar que la fecha de inicio no sea igual a la fecha de cierre
         if ($fecha_inicio->equalTo($fecha_cierre)) {
+            $this->dispatch('closeModal');
             session()->flash('error', 'La fecha de inicio no puede ser la misma que la fecha de cierre.');
+            // Emitir el evento para cerrar el modal después de mostrar el mensaje
+            $this->dispatch('closeModal');
+            // Recargar la página para evitar congelamiento
+            $this->redirect(request()->header('Referer'));  // Redirige a la misma página
             return;  // Detener la ejecución si las fechas son iguales
-        }
+            }
     
         // Validar que la fecha de cierre no sea menor que la fecha de inicio
         if ($fecha_cierre->lt($fecha_inicio)) {
             session()->flash('error', 'La fecha de cierre no puede ser menor a la fecha de inicio.');
-            return;  // Detener la ejecución si la fecha de cierre es menor
+            // Emitir el evento para cerrar el modal después de mostrar el mensaje
+            $this->dispatch('closeModal');
+            // Recargar la página para evitar congelamiento
+            $this->redirect(request()->header('Referer'));  // Redirige a la misma página
+            return;  // Detener la ejecución si las fechas son iguales
         }
     
         // Crear la visita si las validaciones son correctas

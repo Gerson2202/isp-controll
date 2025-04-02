@@ -12,12 +12,15 @@
                 </div>
             @endif
             @if (session()->has('error'))
-                <div class="alert alert-danger">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     {{ session('error') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
-            @endif
+           @endif
+        
             
-
          <!-- Formulario para editar el ticket -->
             <form wire:submit.prevent="updateTicket">
                 <div class="mb-3">
@@ -47,9 +50,9 @@
             @if(!$isUpdated)
                 
                      <!-- Botón para abrir el modal -->
-                <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#agendarModal">
-                    Agendar Visita
-                </button>
+                     <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#agendarModal">
+                        Agendar Visita
+                    </button>
                
             @endif
         </div>
@@ -92,5 +95,22 @@
             </div>
         </div>
     </div>
+    <script>
+        // Escuchar el evento 'showError' y mostrar el mensaje de error
+        Livewire.on('showError', message => {
+            // Mostrar el mensaje de error (aquí puedes usar una alerta o un modal)
+            alert(message);  // Puedes cambiar esto por algo más sofisticado
+            // O manejar el modal, como cerrarlo:
+            var modal = new bootstrap.Modal(document.getElementById('agendarModal'));
+            modal.hide();  // Cerrar el modal
+        });
+    
+        // Escuchar el evento 'showSuccess' y mostrar el mensaje de éxito
+        Livewire.on('showSuccess', message => {
+            // Mostrar el mensaje de éxito (similar al error, usando una alerta o modal)
+            alert(message);  // Muestra el mensaje de éxito
+        });
+    </script>
+    
     
 </div>

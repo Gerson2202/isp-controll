@@ -15,7 +15,7 @@ class VisitaController extends Controller
     {
         return view('calendario.index');
     }
-
+    // Obtener los enventos para enviarlos a full calendar
     public function getEvents(Request $request)
     {
         $events = Visita::with(['ticket', 'ticket.cliente'])
@@ -30,7 +30,7 @@ class VisitaController extends Controller
                 case 'Pendiente':
                     $color = 'green';  // Color verde
                     break;
-                case 'En progreso';
+                case 'En progreso':
                     $color = 'blue';  // Color azul
                     break;
                 case 'Completada':
@@ -168,6 +168,28 @@ class VisitaController extends Controller
     public function create()
     {
         //
+    }
+
+    public function updateEvent(Request $request, $id)
+    {
+        // Validar los datos recibidos
+        $validated = $request->validate([
+            'start' => 'required|date',
+            'end' => 'required|date',
+        ]);
+
+        // Obtener el evento de la base de datos
+        $event = Visita::findOrFail($id);
+
+        // Actualizar las fechas del evento
+        $event->fecha_inicio = Carbon::parse($validated['start']);
+        $event->fecha_cierre = Carbon::parse($validated['end']);
+        
+        // Guardar los cambios en la base de datos
+        $event->save();
+
+        // Retornar una respuesta JSON de éxito
+        return response()->json(['message' => 'Evento actualizado correctamente']);
     }
 
     /**
