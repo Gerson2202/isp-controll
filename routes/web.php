@@ -32,6 +32,8 @@ Route::get('/clientes', [ClienteController::class, 'index'])->name('clientesInde
 Route::get('/clientes/create', [ClienteController::class, 'create'])->name('clientesCreate');
 Route::get('/clientes/search', [ClienteController::class, 'search'])->name('clientesBuscar');
 Route::get('/clientes/{id}', [ClienteController::class, 'show'])->name('clientes.show');
+Route::put('/clientes/edit/{id}', [ClienteController::class, 'update'])->name('clientes.update');
+
 // Ruta para mostrar los clientes con IP nula
 Route::get('/cliente/asignarip', [ClienteController::class, 'asignarIPindex'])->name('asignarIPindex');
 // Ruta para mostrar el unico cliente y asigarle la ip
@@ -44,6 +46,8 @@ Route::get('/planes/create', [PlanController::class, 'create'])->name('planesCre
 // Rutas para Tickets
 Route::get('/tickets', [TicketController::class, 'index'])->name('ticketsIndex');
 Route::get('/tickets/{ticket}/edit', [TicketController::class, 'edit'])->name('tickets.edit');
+Route::get('/tickets/historial', [TicketController::class, 'Tablahistorial'])->name('tickets.historial');
+
 // Rutas para Fotos de Tickets
 Route::get('/fotos-tickets', [FotoTicketController::class, 'index'])->name('fotosTicketsIndex');
 

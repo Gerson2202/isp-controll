@@ -106,9 +106,12 @@ class TicketEdit extends Component
             'estado' => $this->estadoVisita,
         ]);
     
-        // Cambiar estado del ticket a cerrado
+        // Cambiar estados del ticket
         $this->ticket->update([
             'estado' => 'cerrado',
+            'solucion' => 'Se agendo visita',
+            'fecha_cierre' => now(), // Asignar la fecha actual al campo fecha_cierre
+
         ]);
     
         // Redirigir a la vista del calendario

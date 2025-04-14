@@ -23,7 +23,12 @@ class TicketController extends Controller
     {
         //
     }
-
+    
+    public function Tablahistorial()
+    {
+      
+        return view('tickets.historial');
+    }
     /**
      * Store a newly created resource in storage.
      */

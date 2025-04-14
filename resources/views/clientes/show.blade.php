@@ -51,12 +51,88 @@
                      <h3 class="text-primary"><i class="fas fa-paint-brush"></i> {{$cliente->nombre}}</h3>
                      <p class="text-muted">{{$cliente->descripcion}}</p>
                      <h5 class="mt-5 text-center text-muted"><strong>Datos personales</strong></h5>
-                     <ul class="list-unstyled">
-                         <li class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Cedula:</strong> {{$cliente->cedula}}</li>
-                         <li class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Telefono:</strong> {{$cliente->telefono}}</li>
-                         <li class="btn-link text-secondary"><i class="far fa-fw fa-envelope"></i><strong> Correo:</strong> {{$cliente->correo}}</li>
-                         <li class="btn-link text-secondary"><i class="far fa-fw fa-image"></i><strong> Direccion:</strong> {{$cliente->direccion}}</li>
-                     </ul>
+                     <div>
+                        <!-- Botón para abrir el modal -->
+                        <button class="btn btn-warning btn-sm mb-3" data-bs-toggle="modal" data-bs-target="#editClienteModal">
+                            <i class="fas fa-edit me-1"></i> Editar Información
+                        </button>
+                    
+                        <ul class="list-unstyled">
+                            <li class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Cedula:</strong> {{$cliente->cedula}}</li>
+                            <li class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Telefono:</strong> {{$cliente->telefono}}</li>
+                            <li class="btn-link text-secondary"><i class="far fa-fw fa-envelope"></i><strong> Correo:</strong> {{$cliente->correo}}</li>
+                            <li class="btn-link text-secondary"><i class="far fa-fw fa-image"></i><strong> Direccion:</strong> {{$cliente->direccion}}</li>
+                            <li class="btn-link text-secondary">
+                                <i class="fas fa-map-marker-alt me-2"></i><strong> Coordenada:</strong>
+                                @if($cliente->latitud && $cliente->longitud)
+                                <a href="https://www.google.com/maps?q={{ $cliente->latitud }},{{ $cliente->longitud }}" 
+                                   target="_blank" 
+                                   class="btn btn-sm btn-outline-info ms-2" 
+                                   title="Ver en Google Maps">
+                                    <i class="fas fa-map-marked-alt"></i> Ver en mapa
+                                </a>
+                            @endif
+                            </li>
+                        </ul>
+                    
+                        <!-- Modal de Edición -->
+                        <div class="modal fade" id="editClienteModal" tabindex="-1" aria-labelledby="editClienteModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="editClienteModalLabel">Editar Información del Cliente</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="{{ route('clientes.update', $cliente->id) }}" method="POST">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="cedula" class="form-label">Cédula</label>
+                                                        <input type="text" class="form-control" id="cedula" name="cedula" value="{{ $cliente->cedula }}">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="telefono" class="form-label">Teléfono</label>
+                                                        <input type="text" class="form-control" id="telefono" name="telefono" value="{{ $cliente->telefono }}">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="correo" class="form-label">Correo</label>
+                                                        <input type="email" class="form-control" id="correo" name="correo" value="{{ $cliente->correo }}">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="direccion" class="form-label">Dirección</label>
+                                                        <input type="text" class="form-control" id="direccion" name="direccion" value="{{ $cliente->direccion }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="latitud" class="form-label">Latitud</label>
+                                                        <input type="text" class="form-control" id="latitud" name="latitud" value="{{ $cliente->latitud }}">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="longitud" class="form-label">Longitud</label>
+                                                        <input type="text" class="form-control" id="longitud" name="longitud" value="{{ $cliente->longitud }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                      <hr>
                      <h5 class="mt-5 text-center text-muted"><strong>Datos De red </strong></h5>
                      <ul class="list-unstyled">

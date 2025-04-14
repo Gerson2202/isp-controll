@@ -86,9 +86,22 @@ class ClienteController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Cliente $cliente)
+    public function update(Request $request, $id)
     {
-        //
+        
+        $request->validate([
+            'cedula' => 'required|string|max:20',
+            'telefono' => 'required|string|max:20',
+            'correo' => 'required|email',
+            'direccion' => 'required|string',
+            'latitud' => 'nullable|numeric',
+            'longitud' => 'nullable|numeric',
+        ]);
+    
+        $cliente = Cliente::findOrFail($id);
+        $cliente->update($request->all());
+    
+        return redirect()->back()->with('success', 'Información del cliente actualizada correctamente');
     }
 
     /**

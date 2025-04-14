@@ -358,7 +358,7 @@ return [
     ],
 
       // Seccion Centro de Gestion
-      [
+    [
         'text'    => 'Centro de Gestion', // Texto principal
         'icon'    => 'fas fa-cogs', // Icono principal
         'submenu' => [
@@ -372,6 +372,11 @@ return [
                  'route' => 'poolIndex', // Ruta para ver clientes
                  'icon' => 'fa-exchange-alt', // Icono para listar
             ],
+            [
+                'text' => 'Gestionar Nodos',
+                'route' => 'nodosIndex', // Ruta para ver nodos 
+                'icon' => 'fas fa-broadcast-tower', // Icono para listar
+           ],
         ],
     ],
     // Botón para Planes con submenú
@@ -427,7 +432,7 @@ return [
                 ],
                 [
                     'text' => 'Historial de tickets',
-                    'route' => 'inventarioIndex', // Ruta para agregar cliente
+                    'route' => 'tickets.historial', // Ruta para agregar cliente
                     'icon' => 'fas fa-history', // Icono para agregar
                 ],
                 
