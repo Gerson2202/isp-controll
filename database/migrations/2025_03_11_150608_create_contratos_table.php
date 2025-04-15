@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('cliente_id')->constrained()->onDelete('cascade');
             $table->foreignId('plan_id')->constrained()->onDelete('cascade');
+            $table->string('tecnologia')->nullable();
             $table->date('fecha_inicio');
             $table->date('fecha_fin')->nullable();
             $table->decimal('precio', 8, 3);  // Monto de la factura o costo del plan

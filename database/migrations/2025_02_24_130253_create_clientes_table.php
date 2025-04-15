@@ -24,8 +24,7 @@ return new class extends Migration
             $table->string('punto_referencia')->nullable();
             $table->string('descripcion')->nullable();
             $table->foreignId('pool_id')->nullable()->constrained()->onDelete('cascade'); // Relación con el pool
-            // $table->foreignId('plan_id')->nullable()->constrained();
-            // $table->foreignId('nodo_id')->nullable()->constrained();
+           
             $table->string('estado')->nullable();
             $table->timestamps();  // created_at, updated_at
         });

@@ -145,4 +145,76 @@ class MikroTikService
         return (float)$bits / 1000000; // 1 Mbps = 1000000 bps
        
     }
+    
+    // FUNCIONES PARA CREAR COLAS PADRES
+// ----------------
+
+    public function crearColaPadre($nombrePlan, $subidaMbps, $bajadaMbps)
+    {
+        try {
+            $nombreCola = "PARENT-" . strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $nombrePlan), 0, 15));
+
+            // Verificar si la cola ya existe
+            $query = (new Query('/queue/simple/print'))
+                ->where('name', $nombreCola);
+
+            $existe = $this->client->query($query)->read();
+
+            if (!empty($existe)) {
+                throw new \Exception("La cola padre '{$nombreCola}' ya existe en este nodo");
+            }
+
+            // Crear la cola padre
+            $query = (new Query('/queue/simple/add'))
+                ->equal('name', $nombreCola)
+                ->equal('target', '10.100.0.1')
+                ->equal('max-limit', "{$subidaMbps}M/{$bajadaMbps}M")
+                ->equal('priority', '1/1')
+                ->equal('disabled', 'no');
+
+            $resultado = $this->client->query($query)->read();
+
+            if (empty($resultado)) {
+                throw new \Exception("No se recibió respuesta al crear la cola");
+            }
+
+            return [
+                'success' => true,
+                'message' => "Cola padre '{$nombreCola}' creada exitosamente",
+                'data' => $resultado
+            ];
+
+        } catch (ConnectException $e) {
+            Log::error("Error de conexión al crear cola: " . $e->getMessage());
+            throw new \Exception("No se pudo conectar al MikroTik: " . $e->getMessage());
+        } catch (BadCredentialsException $e) {
+            Log::error("Credenciales incorrectas al crear cola: " . $e->getMessage());
+            throw new \Exception("Credenciales incorrectas para el MikroTik");
+        } catch (\Exception $e) {
+            Log::error("Error al crear cola padre: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Verifica si una cola específica existe
+     *
+     * @param string $nombreCola
+     * @return bool
+     */
+    public function verificarColaExistente($nombreCola)
+    {
+        try {
+            $query = (new Query('/queue/simple/print'))
+                ->where('name', $nombreCola);
+
+            $resultado = $this->client->query($query)->read();
+
+            return !empty($resultado);
+        } catch (\Exception $e) {
+            Log::error("Error al verificar cola: " . $e->getMessage());
+            return false;
+        }
+    }
+
 }

@@ -1,5 +1,19 @@
 <div>
-
+    
+        <!-- Notificaciones -->
+        @if (session()->has('success'))
+            <div class="alert alert-success alert-dismissible fade show">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+    
+        @if ($errors->has('activation'))
+            <div class="alert alert-danger alert-dismissible fade show">
+                {{ $errors->first('activation') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
     <div class="card text-center">
         <div class="card-header">
             <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
@@ -37,17 +51,55 @@
                                         <h5 class="card-title">{{ $plan->nombre }} <strong>Nodo:{{ $plan->nodo ? $plan->nodo->nombre : 'Ninguno' }} </strong></h5>
                                     </div>
                                     <div class="card-body">
-                                        <p><strong>Descripción:</strong> {{ $plan->descripcion }}</p>
-                                        {{-- <p><strong>Precio:</strong> ${{ $plan->precio }}</p> --}}
-                                        <p><strong>Velocidad de bajada:</strong> {{ $plan->velocidad_bajada }} Mbps</p>
-                                        <p><strong>Velocidad de subida:</strong> {{ $plan->velocidad_subida }} Mbps</p>
+                                        <div class="row text-center">
+                                            <div class="col-6">
+                                                <i class="fas fa-upload text-primary"></i>
+                                                <h5>{{ $plan->velocidad_subida }} Mbps</h5>
+                                                <small>Subida</small>
+                                            </div>
+                                            <div class="col-6">
+                                                <i class="fas fa-download text-success"></i>
+                                                <h5>{{ $plan->velocidad_bajada }} Mbps</h5>
+                                                <small>Bajada</small>
+                                            </div>
+                                        </div>
+                                        
+                                        <hr>
+                                        
+                                        <p class="small"> <strong>Descripción: </strong>{{ $plan->descripcion }}</p>
                                         <p><strong>Rehuso:</strong> {{ $plan->rehuso }}</p>
-                                        {{-- <p><strong>Nodo:</strong> {{ $plan->nodo ? $plan->nodo->nombre : 'Ninguno' }}</p> --}}
                                     </div>
                                     <div class="card-footer">
-                                     <button wire:click="editPlan({{ $plan->id }})" class="btn btn-primary">Actualizar</button>
-                                     <button wire:click="deletePlan({{ $plan->id }})" class="btn btn-danger">Eliminar</button> 
-                                </div>
+                                        <div class="d-flex justify-content-between">
+                                            <div class="btn-group">
+                                                <button wire:click="editPlan({{ $plan->id }})" 
+                                                        class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button wire:click="deletePlan({{ $plan->id }})" 
+                                                        class="btn btn-sm btn-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                            @if($plan->nodo)
+                                            <button wire:click="activatePlan({{ $plan->id }})" 
+                                                    wire:loading.attr="disabled"
+                                                    class="btn btn-sm btn-{{ $currentPlanActivating == $plan->id ? 'warning' : 'success' }}">
+                                                @if($currentPlanActivating == $plan->id)
+                                                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                                                    Activando...
+                                                @else
+                                                    <i class="fas fa-power-off"></i> Activar
+                                                @endif
+                                            </button>
+                                            @else
+                                                <button class="btn btn-sm btn-secondary" disabled>
+                                                    <i class="fas fa-exclamation-circle"></i> Sin nodo
+                                                </button>
+                                            @endif
+                                        </div>
+                                        
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -133,9 +185,6 @@
         </div>
     </div>
     
-
-
-    
      
     <!-- Modal Editar Planes -->
     <div class="modal fade @if($showModal) show @endif" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style="display: @if($showModal) block @else none @endif;">
@@ -157,10 +206,6 @@
                             <label for="descripcion">Descripción</label>
                             <textarea class="form-control" id="descripcion" wire:model="descripcion"></textarea>
                         </div>
-                        {{-- <div class="form-group">
-                            <label for="precio">Precio</label>
-                            <input type="text" class="form-control" id="precio" wire:model="precio">
-                        </div> --}}
                         <div class="form-group">
                             <label for="velocidad_bajada">Velocidad de bajada</label>
                             <input type="number" class="form-control" id="velocidad_bajada" wire:model="velocidad_bajada">
@@ -213,14 +258,7 @@
                 });
         
             });
-        </script>
-
-       
-        
-        
+        </script>        
       @endpush
-      
-
-      <!-- Script de JavaScript para manejar el mensaje de éxito -->
-    
+      <!-- Script de JavaScript para manejar el mensaje de éxito -->  
 </div>

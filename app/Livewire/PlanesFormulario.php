@@ -4,11 +4,14 @@ namespace App\Livewire;
 
 use App\Models\Nodo;
 use App\Models\Plan;
+use App\Services\MikroTikService;
 use Livewire\Component;
+use Illuminate\Support\Facades\Log; // Importar la clase Log
 
 class PlanesFormulario extends Component
 {
-    
+    public $loadingActivation = false;
+    public $currentPlanActivating = null;
     public $showModal = false;
     public $plans;
     public $nodos;
@@ -142,4 +145,59 @@ class PlanesFormulario extends Component
     {
         return view('livewire.planes-formulario');
     }
+
+    // ----------
+
+    // Función para activar un plan en MikroTik
+    public function activatePlan($planId)
+{
+    $this->loadingActivation = true;
+    $this->currentPlanActivating = $planId;
+    $this->resetErrorBag(); // Limpiar errores anteriores
+    $this->clearSuccessMessage(); // Limpiar mensajes anteriores
+
+    try {
+        $plan = Plan::with('nodo')->findOrFail($planId);
+        
+        if (!$plan->nodo) {
+            $this->addError('activation', 'Este plan no tiene nodo asignado');
+            return;
+        }
+
+        $mikroTikService = new MikroTikService(
+            $plan->nodo->ip,
+            $plan->nodo->user,
+            $plan->nodo->pass,
+            $plan->nodo->puerto_api ?? 8728
+        );
+
+        // Verificar si la cola ya existe primero
+        $nombreCola = "PARENT-" . strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $plan->nombre), 0, 15));
+        $existe = $mikroTikService->verificarColaExistente($nombreCola);
+        
+        if ($existe) {
+            throw new \Exception("La cola padre '{$nombreCola}' ya existe en este nodo");
+        }
+
+        // Si no existe, crear la cola
+        $result = $mikroTikService->crearColaPadre(
+            $plan->nombre,
+            $plan->velocidad_subida,
+            $plan->velocidad_bajada
+        );
+
+        // Solo mostrar éxito si realmente se creó
+        if ($result) {
+            $this->successMessage = 'Cola padre creada exitosamente en el nodo '.$plan->nodo->nombre;
+            $this->dispatch('show-success-message');
+        }
+
+    } catch (\Exception $e) {
+        $this->addError('activation', 'Error al activar plan: '.$e->getMessage());
+        Log::error("Error al activar plan {$planId}: ".$e->getMessage());
+    } finally {
+        $this->loadingActivation = false;
+        $this->currentPlanActivating = null;
+    }
+}
 }
