@@ -4,73 +4,111 @@ namespace App\Livewire;
 
 use App\Models\Cliente;
 use App\Models\Contrato;
-use App\Models\Nodo;
 use App\Models\Plan;
+use App\Models\Pool;
+use App\Models\Nodo;
 use Livewire\Component;
 
 class AsignarIpCliente extends Component
 {
-
     public $cliente_id;
-    public $nodo;
     public $ip;
+    public $pool_id;
     public $cliente;
     public $contrato;
     public $plan;
-    public $nodos; // Propiedad pública para los nodos
-    
+    public $pools = [];
+    public $availableIps = [];
+    public $ipsUsadas = []; // IPs ya asignadas en el nodo
+
+    protected $rules = [
+        'ip' => 'required|ip|unique:clientes,ip',
+        'pool_id' => 'required|exists:pools,id',
+    ];
+
     public function mount($cliente_id)
     {
-        $this->cliente_id = $cliente_id; // Recibe el cliente_id
-        $this->loadClienteData(); // Carga los datos del cliente, contrato y plan
-        $this->nodos = Nodo::all(); // Carga todos los nodos disponibles
+        $this->cliente_id = $cliente_id;
+        $this->loadClienteData();
+        $this->loadUsedIps();
     }
-    // Método que se ejecuta cuando se selecciona el cliente
+
     public function loadClienteData()
     {
-        // Obtener el contrato y el plan asociado al cliente
-        $this->cliente = Cliente::find($this->cliente_id);
-        $this->contrato = Contrato::where('cliente_id', $this->cliente_id)->first();
-        if ($this->contrato) {
-            $this->plan = Plan::find($this->contrato->plan_id);
+        $this->cliente = Cliente::with(['contratos.plan.nodo.pools'])->find($this->cliente_id);
+        
+        if ($this->cliente) {
+            $this->contrato = $this->cliente->contratos->first();
+            $this->plan = $this->contrato->plan ?? null;
+            
+            if ($this->plan && $this->plan->nodo) {
+                $this->pools = $this->plan->nodo->pools()
+                    ->orderBy('nombre')
+                    ->get();
+            }
         }
+    }
+
+    // Cargar IPs usadas por otros clientes del mismo nodo
+    public function loadUsedIps()
+    {
+        if ($this->plan && $this->plan->nodo) {
+            $this->ipsUsadas = Cliente::whereHas('contratos.plan', function($query) {
+                    $query->where('nodo_id', $this->plan->nodo->id);
+                })
+                ->whereNotNull('ip')
+                ->where('id', '!=', $this->cliente_id) // Excluir al cliente actual
+                ->pluck('ip')
+                ->toArray();
+        }
+    }
+
+    public function updatedPoolId($value)
+    {
+        $this->reset('ip');
+        
+        if ($value) {
+            $pool = Pool::find($value);
+            $this->availableIps = $this->generateIpRange($pool->start_ip, $pool->end_ip);
+        }
+    }
+
+    private function generateIpRange($startIp, $endIp)
+    {
+        $start = ip2long($startIp);
+        $end = ip2long($endIp);
+        $range = [];
+
+        for ($ip = $start; $ip <= $end; $ip++) {
+            $range[] = long2ip($ip);
+        }
+
+        return $range;
     }
 
     public function asignarIp()
     {
-        $this->validate([
-            'ip' => 'required|ip|unique:clientes,ip', // Asegura que la IP sea única en la tabla clientes
-        ]);
+        $this->validate();
 
-        $cliente = Cliente::findOrFail($this->cliente_id);
-        $cliente->update(['ip' => $this->ip]);
+        // Validar que la IP no esté usada
+        if (in_array($this->ip, $this->ipsUsadas)) {
+            $this->addError('ip', 'Esta IP ya está en uso por otro cliente en el nodo.');
+            return;
+        }
 
-        $this->reset('ip');
-        session()->flash('message', 'IP asignada correctamente.');
-        return redirect()->route('asignarIPindex');
-
+        try {
+            $this->cliente->update([
+                'ip' => $this->ip,
+                'pool_id' => $this->pool_id
+            ]);
+            
+            session()->flash('success', 'IP asignado correctamente.');
+            return redirect()->route('asignarIPindex');
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'Ocurrió un error: ' . $e->getMessage());
+        }
     }
-    // Método para guardar la IP asignada
-    // public function asignarIp()
-    // {
-        
-    //     // Validar y guardar la IP (puedes agregar más validaciones si es necesario)
-    //     // Aquí, puedes integrar la lógica para asignar la IP al cliente en tu Mikrotik o en la base de datos.
-        
-    //     // Ejemplo de validación
-    //     $this->validate([
-    //         'ip' => 'required|ip',
-    //     ]);
-    //        // Crear el ticket
-    //     Cliente::update([
-    //         'ip' => $this->ip,
-    //     ]);
-    //     // Lógica de asignación aquí (por ejemplo, guardar en la base de datos o en Mikrotik)
-
-    //    // Redirigir o mostrar un mensaje de éxito
-    //    session()->flash('message', 'Ip  asignado correctamente.');
-    //    return redirect()->route('asignarIPindex');
-    // }
 
     public function render()
     {
