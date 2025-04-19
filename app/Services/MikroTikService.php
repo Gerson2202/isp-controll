@@ -152,8 +152,7 @@ class MikroTikService
     public function crearColaPadre($nombrePlan, $subidaMbps, $bajadaMbps)
     {
         try {
-            $nombreCola = "PARENT-" . strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $nombrePlan), 0, 15));
-
+            $nombreCola =$nombrePlan;
             // Verificar si la cola ya existe
             $query = (new Query('/queue/simple/print'))
                 ->where('name', $nombreCola);
@@ -216,5 +215,70 @@ class MikroTikService
             return false;
         }
     }
+
+    // Crear cola hija
+
+    public function crearColaHija($ipCliente, $nombrePlanPadre, $subidaMbps, $bajadaMbps, $rehuso = '1:1')
+    {
+        try {
+            $nombreColaHija = "CLIENTE-" . str_replace('.', '-', $ipCliente);
+            
+            // 1. Calcular limit-at según rehúso
+            $factorDivision = 1;
+            if ($rehuso === '1:4') {
+                $factorDivision = 4;
+            } elseif ($rehuso === '1:6') {
+                $factorDivision = 6;
+            }
+            
+            $subidaLimitAt = ceil($subidaMbps / $factorDivision);
+            $bajadaLimitAt = ceil($bajadaMbps / $factorDivision);
+    
+            // 2. Actualizar target en cola padre (primero para evitar problemas)
+            $this->actualizarTargetColaPadre($nombrePlanPadre, $ipCliente);
+            
+            // 3. Crear cola hija
+            $query = (new Query('/queue/simple/add'))
+                ->equal('name', $nombreColaHija)
+                ->equal('target', $ipCliente.'/32')
+                ->equal('parent', $nombrePlanPadre)
+                ->equal('max-limit', $subidaMbps.'M/'.$bajadaMbps.'M')
+                ->equal('limit-at', $subidaLimitAt.'M/'.$bajadaLimitAt.'M')
+                ->equal('disabled', 'no');
+    
+            return $this->client->query($query)->read();
+    
+        } catch (\Exception $e) {
+            throw new \Exception("Error al crear cola: " . $e->getMessage());
+        }
+    }
+    
+    private function actualizarTargetColaPadre($nombrePadre, $ipHija)
+    {
+        $query = (new Query('/queue/simple/print'))
+            ->where('name', $nombrePadre);
+        
+        $colaPadre = $this->client->query($query)->read();
+        
+        if (empty($colaPadre)) {
+            throw new \Exception("La cola padre '{$nombrePadre}' no existe");
+        }
+    
+        $targetActual = $colaPadre[0]['target'] ?? '';
+        $ipConMascara = $ipHija.'/32';
+        
+        if (strpos($targetActual, $ipConMascara) === false) {
+            $nuevoTarget = $targetActual 
+                ? $targetActual.','.$ipConMascara 
+                : $ipConMascara;
+            
+            $this->client->query(
+                (new Query('/queue/simple/set'))
+                ->equal('.id', $colaPadre[0]['.id'])
+                ->equal('target', $nuevoTarget)
+            )->read();
+        }
+    }
+
 
 }

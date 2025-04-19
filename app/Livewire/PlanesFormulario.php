@@ -172,7 +172,7 @@ class PlanesFormulario extends Component
         );
 
         // Verificar si la cola ya existe primero
-        $nombreCola = "PARENT-" . strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/', '', $plan->nombre), 0, 15));
+        $nombreCola = $plan->nombre;
         $existe = $mikroTikService->verificarColaExistente($nombreCola);
         
         if ($existe) {
