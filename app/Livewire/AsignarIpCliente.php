@@ -2,14 +2,11 @@
 
 namespace App\Livewire;
 
+use Illuminate\Support\Facades\Log; // Importar la clase Log
 use App\Models\Cliente;
-use App\Models\Contrato;
-use App\Models\Plan;
-use App\Models\Pool;
-use App\Models\Nodo;
 use App\Services\MikroTikService;
 use Livewire\Component;
-use Illuminate\Support\Facades\Log; // Importar la clase Log
+use App\Models\Pool;
 
 class AsignarIpCliente extends Component
 {
@@ -89,78 +86,79 @@ class AsignarIpCliente extends Component
     }
 
     public function asignarIp()
-{
-    $this->validate();
+    {
+        $this->validate();
 
-    // Validar que la IP no esté usada
-    if (in_array($this->ip, $this->ipsUsadas)) {
-        $this->addError('ip', 'Esta IP ya está en uso por otro cliente en el nodo.');
-        return;
-    }
-
-    try {
-        // Guardar la IP en el cliente
-        $this->cliente->update([
-            'ip' => $this->ip,
-            'pool_id' => $this->pool_id
-        ]);
-        
-        // Obtener datos necesarios para MikroTik
-        $clienteConRelaciones = $this->cliente->load('contrato.plan.nodo');
-        
-        // Llamar al método para crear cola hija
-        $this->crearColaHija($clienteConRelaciones, $this->ip);
-        
-        session()->flash('success', 'IP asignada correctamente y cola hija configurada en MikroTik.');
-        return redirect()->route('asignarIPindex');
-        
-    } catch (\Exception $e) {
-        session()->flash('error', 'Ocurrió un error: ' . $e->getMessage());
-    }
-}
-
-protected function crearColaHija($cliente, $ipAsignada)
-{
-   
-    try {
-        // Verificar que existan todas las relaciones necesarias
-        if (!$cliente->contrato || !$cliente->contrato->plan || !$cliente->contrato->plan->nodo) {
-            throw new \Exception("Faltan datos necesarios para configurar MikroTik");
+        // Validar que la IP no esté usada
+        if (in_array($this->ip, $this->ipsUsadas)) {
+            $this->addError('ip', 'Esta IP ya está en uso por otro cliente en el nodo.');
+            return;
         }
 
-        $plan = $cliente->contrato->plan;
-        $nodo = $plan->nodo;
-
-        // Crear instancia del servicio MikroTik
-        $mikroTikService = new MikroTikService(
-            $nodo->ip,
-            $nodo->user,
-            $nodo->pass,
-            $nodo->puerto_api ?? 8728
-        );
-
-        // Llamar al método del servicio para crear cola hija
-        $resultado = $mikroTikService->crearColaHija(
+        try {       
             
-            $ipAsignada,
-            $plan->nombre,          // Nombre de la cola padre
-            $plan->velocidad_subida,
-            $plan->velocidad_bajada,
-            $plan->rehuso ?? '1:1'  // Valor por defecto si no está especificado
-        );
+            // Obtener datos necesarios para MikroTik
+            $clienteConRelaciones = $this->cliente->load('contrato.plan.nodo');
+            
+            // Llamar al método para crear cola hija
+            $this->crearColaHija($clienteConRelaciones, $this->ip);
+             
+            // Guardar la IP en el cliente
+            $this->cliente->update([
+                'ip' => $this->ip,
+                'pool_id' => $this->pool_id
+            ]);
 
-        // Opcional: Log del resultado
-        \Log::info("Cola hija creada en MikroTik", [
-            'cliente_id' => $cliente->id,
-            'ip' => $ipAsignada,
-            'resultado' => $resultado
-        ]);
-
-    } catch (\Exception $e) {
-        \Log::error("Error al crear cola hija en MikroTik: " . $e->getMessage());
-        throw $e; // Re-lanzamos la excepción para manejarla en el método principal
+            session()->flash('success', 'IP asignada correctamente y cola hija configurada en MikroTik.');
+            return redirect()->route('asignarIPindex');
+            
+        } catch (\Exception $e) {
+            session()->flash('error', 'Ocurrió un error parece que no se tiene conexion con la mikrotik: ' . $e->getMessage());
+        }
     }
-}
+
+    protected function crearColaHija($cliente, $ipAsignada)
+    {
+    
+        try {
+            // Verificar que existan todas las relaciones necesarias
+            if (!$cliente->contrato || !$cliente->contrato->plan || !$cliente->contrato->plan->nodo) {
+                throw new \Exception("Faltan datos necesarios para configurar MikroTik");
+            }
+
+            $plan = $cliente->contrato->plan;
+            $nodo = $plan->nodo;
+
+            // Crear instancia del servicio MikroTik
+            $mikroTikService = new MikroTikService(
+                $nodo->ip,
+                $nodo->user,
+                $nodo->pass,
+                $nodo->puerto_api ?? 8728
+            );
+
+            // Llamar al método del servicio para crear cola hija
+            $resultado = $mikroTikService->crearColaHija(
+                
+                $ipAsignada,
+                $plan->nombre,          // Nombre de la cola padre
+                $plan->velocidad_subida,
+                $plan->velocidad_bajada,
+                $plan->rehuso ?? '1:1'  // Valor por defecto si no está especificado
+            );
+
+            // Opcional: Log del resultado
+            \Log::info("Cola hija creada en MikroTik", [
+                'cliente_id' => $cliente->id,
+                'ip' => $ipAsignada,
+                'resultado' => $resultado
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error("Error al crear cola hija en MikroTik: " . $e->getMessage());
+            throw $e; // Re-lanzamos la excepción para manejarla en el método principal
+        }
+    }
 
     public function render()
     {

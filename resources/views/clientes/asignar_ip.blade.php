@@ -20,22 +20,18 @@
         </div>
         <div class="container-fluid mt-1">
             <!-- Mostrar mensaje de éxito si existe -->
-            @if (session()->has('message'))
-              <div class="alert alert-success alert-dismissible fade show" role="alert">
-                  {{ session('message') }}
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-              </div>
+            @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
             @endif
           <!-- FIN mensaje de éxito -->
       </div>
         <div class="card-body">
-            <!-- Mostrar mensaje de éxito -->
-            @if(session('success'))
-                <div class="alert alert-success">
-                    {{ session('success') }}
-                </div>
-            @endif
-
+            
             <!-- Mostrar mensaje de error -->
             @if(session('error'))
                 <div class="alert alert-danger">

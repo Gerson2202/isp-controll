@@ -147,7 +147,7 @@ class MikroTikService
     }
     
     // FUNCIONES PARA CREAR COLAS PADRES
-// ----------------
+       
 
     public function crearColaPadre($nombrePlan, $subidaMbps, $bajadaMbps)
     {
@@ -215,17 +215,20 @@ class MikroTikService
             return false;
         }
     }
+    // FIN -FUNCIONES PARA CREAR COLAS PADRES
 
+    
     // Crear cola hija
-
     public function crearColaHija($ipCliente, $nombrePlanPadre, $subidaMbps, $bajadaMbps, $rehuso = '1:1')
     {
         try {
             $nombreColaHija = "CLIENTE-" . str_replace('.', '-', $ipCliente);
             
-            // 1. Calcular limit-at según rehúso
+            // 1. Calcular limit-at según rehúso (ahora con 1:2)
             $factorDivision = 1;
-            if ($rehuso === '1:4') {
+            if ($rehuso === '1:2') {
+                $factorDivision = 2;
+            } elseif ($rehuso === '1:4') {
                 $factorDivision = 4;
             } elseif ($rehuso === '1:6') {
                 $factorDivision = 6;
@@ -234,8 +237,8 @@ class MikroTikService
             $subidaLimitAt = ceil($subidaMbps / $factorDivision);
             $bajadaLimitAt = ceil($bajadaMbps / $factorDivision);
     
-            // 2. Actualizar target en cola padre (primero para evitar problemas)
-            $this->actualizarTargetColaPadre($nombrePlanPadre, $ipCliente);
+            // 2. Actualizar target y max-limit en cola padre
+            $this->actualizarTargetColaPadre($nombrePlanPadre, $ipCliente, $subidaLimitAt, $bajadaLimitAt);
             
             // 3. Crear cola hija
             $query = (new Query('/queue/simple/add'))
@@ -253,32 +256,51 @@ class MikroTikService
         }
     }
     
-    private function actualizarTargetColaPadre($nombrePadre, $ipHija)
+    private function actualizarTargetColaPadre($nombrePadre, $ipHija, $subidaLimitAt, $bajadaLimitAt)
     {
-        $query = (new Query('/queue/simple/print'))
+        // 1. Obtener información actual de la cola padre
+        $queryPadre = (new Query('/queue/simple/print'))
             ->where('name', $nombrePadre);
-        
-        $colaPadre = $this->client->query($query)->read();
-        
-        if (empty($colaPadre)) {
-            throw new \Exception("La cola padre '{$nombrePadre}' no existe");
-        }
+        $colaPadre = $this->client->query($queryPadre)->read()[0];
     
-        $targetActual = $colaPadre[0]['target'] ?? '';
+        // 2. Convertir de bits a Mbps
+        $maxLimitActual = explode('/', $colaPadre['max-limit']);
+        $maxSubidaActual = (float)$maxLimitActual[0] / 1000000;
+        $maxBajadaActual = (float)$maxLimitActual[1] / 1000000;
+    
+        // 3. Actualizar target
         $ipConMascara = $ipHija.'/32';
+        $targetActual = $colaPadre['target'] ?? '';
         
         if (strpos($targetActual, $ipConMascara) === false) {
-            $nuevoTarget = $targetActual 
-                ? $targetActual.','.$ipConMascara 
-                : $ipConMascara;
+            $nuevoTarget = $targetActual ? $targetActual.','.$ipConMascara : $ipConMascara;
             
+            // 4. Calcular suma total de limit-ats
+            $totalHijos = $nuevoTarget ? count(explode(',', $nuevoTarget)) : 0;
+            $totalSubidaNecesaria = $subidaLimitAt * $totalHijos;
+            $totalBajadaNecesaria = $bajadaLimitAt * $totalHijos;
+    
+            // 5. Actualizar max-limit solo si es necesario
+            $nuevoMaxSubida = $maxSubidaActual;
+            $nuevoMaxBajada = $maxBajadaActual;
+    
+            if ($totalSubidaNecesaria > $maxSubidaActual) {
+                $nuevoMaxSubida = $totalSubidaNecesaria;
+            }
+    
+            if ($totalBajadaNecesaria > $maxBajadaActual) {
+                $nuevoMaxBajada = $totalBajadaNecesaria;
+            }
+    
+            // 6. Aplicar cambios
             $this->client->query(
                 (new Query('/queue/simple/set'))
-                ->equal('.id', $colaPadre[0]['.id'])
+                ->equal('.id', $colaPadre['.id'])
+                ->equal('max-limit', ($nuevoMaxSubida * 1000000).'/'.($nuevoMaxBajada * 1000000))
                 ->equal('target', $nuevoTarget)
             )->read();
         }
     }
-
+   // FIN --Crear cola hija
 
 }
