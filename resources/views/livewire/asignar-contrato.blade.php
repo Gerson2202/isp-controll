@@ -18,7 +18,7 @@
                         <!-- Selector de Nodos -->
                         <div>
                             <label for="node">Selecciona un nodo:</label>
-                            <select id="node" wire:model="selectedNodeId" wire:change="changeNode">
+                            <select id="node" wire:model="selectedNodeId" wire:change="changeNode" required>
                                 <option value="">Selecciona un nodo</option>
                                 @foreach($nodos as $node)
                                     <option value="{{ $node->id }}">{{ $node->nombre }}</option>
