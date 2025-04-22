@@ -4,10 +4,12 @@ namespace App\Livewire;
 
 use App\Models\Cliente;
 use App\Models\Plan;
+use App\Models\Ticket;
 use App\Services\MikroTikService;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB; // <-- Añade esta línea
-
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class EditarPlanCliente extends Component
 {
@@ -18,11 +20,15 @@ class EditarPlanCliente extends Component
     public $isLoading = false;
     public $mensaje = '';
     public $tipoMensaje = ''; // 'success' o 'error'
+    public $precio; // Nueva propiedad para el nuevo precio
+    public $precio_anterior;
 
     public function mount(Cliente $cliente)
     {
         $this->cliente = $cliente;
         $this->loadClienteData();
+        $this->precio = $cliente->contrato->precio ?? 'Sin contrato';
+        $this->precio_anterior = $this->cliente->contrato->precio; // <- guardalo antes del update
     }
 
     protected function loadClienteData()
@@ -50,7 +56,8 @@ class EditarPlanCliente extends Component
    public function actualizarPlan()
     {
         $this->validate([
-            'plan_seleccionado' => 'required|exists:plans,id'
+            'plan_seleccionado' => 'required|exists:plans,id',
+            'precio' => 'required'
         ]);
 
         $this->isLoading = true;
@@ -68,7 +75,21 @@ class EditarPlanCliente extends Component
             }
 
             // 1. Actualizar en base de datos primero
-            $this->cliente->contrato->update(['plan_id' => $this->plan_seleccionado]);
+            $this->cliente->contrato->update(
+                ['plan_id' => $this->plan_seleccionado,
+                'precio' => $this->precio,
+                ]
+            );
+            // Creamos ticket de reporte de modificacion de plan 
+            $situacionTexto = "Se realizó cambio de plan de {$planAnterior->nombre} con precio de : {$this->precio_anterior} al plan: {$nuevoPlan->nombre} con precio $ {$this->precio}. Actualizado por el usuario: " . auth()->user()->name;
+            Ticket::create([
+                'tipo_reporte' => 'cambio de plan',
+                'situacion' => $situacionTexto,
+                'estado' => 'cerrado',
+                'fecha_cierre' => now(), 
+                'cliente_id' => $this->cliente->id,
+                'solucion' => 'Plan actualizado correctamente desde el panel',
+            ]);
 
             // 2. Actualizar en MikroTik
             $mikroTikService = new MikroTikService(
@@ -92,13 +113,13 @@ class EditarPlanCliente extends Component
             DB::commit();
             $this->mensaje = 'Plan actualizado correctamente!';
             $this->tipoMensaje = 'success';
+            $this->cliente->contrato->refresh(); // Recarga los datos del contrato
 
         } catch (\Exception $e) {
             DB::rollBack();
             $this->mensaje = 'Error: ' . $e->getMessage();
             $this->tipoMensaje = 'error';
-            \Log::error("Error actualizando plan", ['error' => $e->getMessage()]);
-        }
+            Log::error("Error actualizando plan", ['error' => $e->getMessage()]);        }
 
         $this->isLoading = false;
     }

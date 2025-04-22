@@ -266,52 +266,45 @@
       <div class="card-body" style="display: block;">
          <div class="row">
             
-            <div class="card-header">
-               <h3 class="card-title">Histórico PQR Cliente </h3>
-
-               <div class="card-tools">
-                 <div class="input-group input-group-sm" style="width: 150px;">
-                   <input type="text" name="table_search" class="form-control float-right" placeholder="Search">
-
-                   <div class="input-group-append">
-                     <button type="submit" class="btn btn-default">
-                       <i class="fas fa-search"></i>
-                     </button>
-                   </div>
-                 </div>
-               </div>
-             </div>
              <!-- /.card-header -->
              <div class="card-body table-responsive p-0">
-               <table class="table table-hover text-nowrap">
-                 <thead>
-                   <tr>
-                     <th>ID</th>
-                     <th>Tipo de reporte</th>
-                     <th>Situacion</th>
-                     <th>Fecha de creacion</th>
-                     <th>Fecha de cierre</th>
-                     <th>Solucion</th>
-                   </tr>
-                 </thead>
-                 <tbody>
-                  @foreach ($tickets as $ticket)
-                  <tr>
-                     <td>{{$ticket->id}}</td>
-                     <td>{{$ticket->tipo_reporte}}</td>
-                     <td>{{$ticket->situacion}}</td>
-                     <td>{{$ticket->created_at}}</td>
-                     <td>{{$ticket->fecha_cierre}}</td>
-                     @if ($ticket->estado== 'abierto')
-                      <td>{{$ticket->estado}}</td></tr>
-                     @else
-                      <td>{{$ticket->solucion}}</td></tr>
-                     @endif
-                  @endforeach
-                   
-                  
-                 </tbody>
-               </table>
+                <div class="table-responsive">
+                    <table id="ticketsTable" class="table table-hover" style="width:100%">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Tipo de reporte</th>
+                          <th class="situacion-column">Situacion</th>
+                          <th>Fecha de creacion</th>
+                          <th>Fecha de cierre</th>
+                          <th>Estado/Solución</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @foreach ($tickets as $ticket)
+                        <tr>
+                          <td>{{$ticket->id}}</td>
+                          <td>{{$ticket->tipo_reporte}}</td>
+                          <td class="situacion-cell">{{$ticket->situacion}}</td>
+                          <td>{{$ticket->created_at->format('d/m/Y H:i')}}</td>
+                          <td>
+                            @if($ticket->fecha_cierre)
+                              {{ \Carbon\Carbon::parse($ticket->fecha_cierre)->format('d/m/Y H:i') }}
+                            @else
+                              N/A
+                            @endif
+                          </td>                          <td>
+                            @if ($ticket->estado == 'abierto')
+                              <span class="badge bg-warning">{{$ticket->estado}}</span>
+                            @else
+                              <span class="text-success">{{$ticket->solucion}}</span>
+                            @endif
+                          </td>
+                        </tr>
+                        @endforeach
+                      </tbody>
+                    </table>
+                  </div>
              </div>
              <!-- /.card-body -->
            
@@ -324,7 +317,10 @@
 @stop
 
 @section('css')
- 
+ <!-- CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @stop
 
 @section('js')
@@ -333,5 +329,47 @@
     <!-- Agregar los scripts de Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
+    <!-- JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var table = $('#ticketsTable').DataTable({
+                responsive: true,
+                autoWidth: false,
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                },
+                columnDefs: [
+                    { 
+                        targets: [2], // Columna Situación
+                        render: function(data, type, row) {
+                            if (type === 'display') {
+                                return '<div class="situacion-content">' + data + '</div>';
+                            }
+                            return data;
+                        }
+                    },
+                    { 
+                        targets: '_all',
+                        className: 'dt-head-center dt-body-center'
+                    }
+                ],
+                initComplete: function() {
+                    // Ajustar altura de filas después de cargar
+                    this.api().columns.adjust().responsive.recalc();
+                }
+            });
+
+            // Redimensionar cuando cambia el tamaño de la ventana
+            $(window).on('resize', function() {
+                table.columns.adjust().responsive.recalc();
+            });
+        });
+    </script>
     
-@stop
+    @stop
