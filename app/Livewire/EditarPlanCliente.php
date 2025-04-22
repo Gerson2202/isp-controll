@@ -4,7 +4,10 @@ namespace App\Livewire;
 
 use App\Models\Cliente;
 use App\Models\Plan;
+use App\Services\MikroTikService;
 use Livewire\Component;
+use Illuminate\Support\Facades\DB; // <-- Añade esta línea
+
 
 class EditarPlanCliente extends Component
 {
@@ -44,37 +47,61 @@ class EditarPlanCliente extends Component
         $this->isLoading = false;
     }
 
-    public function actualizarPlan()
+   public function actualizarPlan()
     {
         $this->validate([
-            'plan_seleccionado' => [
-                'required',
-                'exists:plans,id',
-                function ($attribute, $value, $fail) {
-                    if (!in_array($value, $this->planes->pluck('id')->toArray())) {
-                        $fail('El plan seleccionado no pertenece al nodo actual.');
-                    }
-                },
-            ],
+            'plan_seleccionado' => 'required|exists:plans,id'
         ]);
 
         $this->isLoading = true;
-        $this->mensaje = '';
 
         try {
+            DB::beginTransaction();
+
+            // Datos actuales
+            $planAnterior = $this->cliente->contrato->plan;
+            $nuevoPlan = Plan::find($this->plan_seleccionado);
+            $ipCliente = $this->cliente->ip;
+
+            if (empty($ipCliente)) {
+                throw new \Exception("El cliente no tiene IP asignada");
+            }
+
+            // 1. Actualizar en base de datos primero
             $this->cliente->contrato->update(['plan_id' => $this->plan_seleccionado]);
-            $this->loadClienteData();
+
+            // 2. Actualizar en MikroTik
+            $mikroTikService = new MikroTikService(
+                $planAnterior->nodo->ip,
+                $planAnterior->nodo->user,
+                $planAnterior->nodo->pass,
+                $planAnterior->nodo->puerto_api ?? 8728
+            );
+
+            // 3. Proceso completo de actualización
+            $mikroTikService->actualizarPlanMikroTik(
+                $this->cliente->id,
+                $ipCliente,
+                $planAnterior->nombre,
+                $nuevoPlan->nombre,
+                $nuevoPlan->velocidad_subida,
+                $nuevoPlan->velocidad_bajada,
+                $nuevoPlan->rehuso ?? '1:1'
+            );
+
+            DB::commit();
             $this->mensaje = 'Plan actualizado correctamente!';
             $this->tipoMensaje = 'success';
 
         } catch (\Exception $e) {
-            $this->mensaje = 'Error al actualizar: ' . $e->getMessage();
+            DB::rollBack();
+            $this->mensaje = 'Error: ' . $e->getMessage();
             $this->tipoMensaje = 'error';
+            \Log::error("Error actualizando plan", ['error' => $e->getMessage()]);
         }
 
         $this->isLoading = false;
     }
-
     public function render()
     {
         return view('livewire.editar-plan-cliente');

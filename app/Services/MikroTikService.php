@@ -219,10 +219,10 @@ class MikroTikService
 
     
     // Crear cola hija
-    public function crearColaHija($ipCliente, $nombrePlanPadre, $subidaMbps, $bajadaMbps, $rehuso = '1:1')
+    public function crearColaHija($cliente_id,$ipCliente, $nombrePlanPadre, $subidaMbps, $bajadaMbps, $rehuso = '1:1')
     {
         try {
-            $nombreColaHija = "CLIENTE-" . str_replace('.', '-', $ipCliente);
+            $nombreColaHija = "CLIENTE-" . str_replace('.', '-', $cliente_id);
             
             // 1. Calcular limit-at según rehúso (ahora con 1:2)
             $factorDivision = 1;
@@ -302,5 +302,166 @@ class MikroTikService
         }
     }
    // FIN --Crear cola hija
+    
 
+//    --------------
+
+    public function actualizarPlanMikroTik($clienteId, $ipCliente, $planAnterior, $planNuevo, $subidaMbps, $bajadaMbps, $rehuso = '1:1')
+    {
+        try {
+            // 1. Calcular limit-at para el NUEVO plan
+            $factorDivision = 1;
+            if ($rehuso === '1:2') $factorDivision = 2;
+            elseif ($rehuso === '1:4') $factorDivision = 4;
+            elseif ($rehuso === '1:6') $factorDivision = 6;
+            
+            $subidaLimitAt = ceil($subidaMbps / $factorDivision);
+            $bajadaLimitAt = ceil($bajadaMbps / $factorDivision);
+
+            // 2. Actualizar cola anterior (SOLO remover IP, SIN cambiar max-limit)
+            $this->removerTargetDeColaPadre($planAnterior, $ipCliente);
+            $this->eliminarColaHija($clienteId, $planAnterior);
+            
+            // 3. Actualizar NUEVA cola (agregar IP Y actualizar límites)
+            $this->agregarTargetAColaPadre($planNuevo, $ipCliente);
+            $this->actualizarMaxLimitColaPadre($planNuevo, $subidaLimitAt, $bajadaLimitAt);
+            
+            // 4. Crear nueva cola hija
+            $nombreColaHija = "CLIENTE-" . str_replace('.', '-', $clienteId);
+            $query = (new Query('/queue/simple/add'))
+                ->equal('name', $nombreColaHija)
+                ->equal('target', $ipCliente.'/32')
+                ->equal('parent', $planNuevo)
+                ->equal('max-limit', $subidaMbps.'M/'.$bajadaMbps.'M')
+                ->equal('limit-at', $subidaLimitAt.'M/'.$bajadaLimitAt.'M')
+                ->equal('disabled', 'no');
+            
+            $this->client->query($query)->read();
+
+        } catch (\Exception $e) {
+            \Log::error("Error al actualizar plan en MikroTik", [
+                'cliente_id' => $clienteId,
+                'ip' => $ipCliente,
+                'error' => $e->getMessage()
+            ]);
+            throw new \Exception("Error al actualizar plan en MikroTik: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Actualiza los límites máximos de la cola padre (SOLO para nueva cola)
+     */
+    private function actualizarMaxLimitColaPadre($nombrePlan, $subidaLimitAt, $bajadaLimitAt)
+    {
+        $colaPadre = $this->obtenerColaPadre($nombrePlan);
+        
+        if (!$colaPadre) {
+            \Log::error("Cola padre no encontrada: $nombrePlan");
+            return false;
+        }
+    
+        // 1. Procesamiento robusto de targets
+        $targets = array_filter(
+            array_map('trim', 
+                explode(',', str_replace(' ', '', $colaPadre['target'] ?? '')))
+        );
+        $totalTargets = count($targets);
+    
+        // 2. Cálculo preciso del nuevo límite
+        $nuevoMaxSubida = $subidaLimitAt * $totalTargets;
+        $nuevoMaxBajada = $bajadaLimitAt * $totalTargets;
+    
+        // 3. Conversión segura de límites actuales
+        $currentMax = explode('/', $colaPadre['max-limit'] ?? '0M/0M');
+        $currentUp = (int)str_replace(['M','K'], '', $currentMax[0]);
+        $currentDown = (int)str_replace(['M','K'], '', $currentMax[1]);
+    
+        // 4. Forzar actualización si hay discrepancia (DEBUG)
+        \Log::debug("Pre-actualización", [
+            'plan' => $nombrePlan,
+            'targets_count' => $totalTargets,
+            'current_max' => "$currentUp/$currentDown",
+            'calculated_max' => "$nuevoMaxSubida/$nuevoMaxBajada"
+        ]);
+    
+        // 5. Siempre actualizar basado en el cálculo (eliminamos la condición)
+        $this->client->query(
+            (new Query('/queue/simple/set'))
+                ->equal('.id', $colaPadre['.id'])
+                ->equal('max-limit', "$nuevoMaxSubida"."M/$nuevoMaxBajada"."M")
+        )->read();
+    
+        \Log::info("Límites actualizados", [
+            'plan' => $nombrePlan,
+            'new_max' => "$nuevoMaxSubida/$nuevoMaxBajada",
+            'targets' => $targets
+        ]);
+    
+        return true;
+    }
+
+    private function removerTargetDeColaPadre($nombrePlan, $ipCliente)
+    {
+        $ipConMascara = $ipCliente.'/32';
+        $colaPadre = $this->obtenerColaPadre($nombrePlan);
+        
+        if ($colaPadre && isset($colaPadre['target'])) {
+            $targets = explode(',', $colaPadre['target']);
+            $nuevosTargets = array_filter($targets, function($target) use ($ipConMascara) {
+                return trim($target) !== $ipConMascara;
+            });
+            
+            $this->client->query(
+                (new Query('/queue/simple/set'))
+                    ->equal('.id', $colaPadre['.id'])
+                    ->equal('target', implode(',', $nuevosTargets))
+            )->read();
+        }
+    }
+
+    private function agregarTargetAColaPadre($nombrePlan, $ipCliente)
+    {
+        $ipConMascara = $ipCliente.'/32';
+        $colaPadre = $this->obtenerColaPadre($nombrePlan);
+        
+        if ($colaPadre) {
+            $targets = isset($colaPadre['target']) ? explode(',', $colaPadre['target']) : [];
+            
+            if (!in_array($ipConMascara, $targets)) {
+                $targets[] = $ipConMascara;
+                $this->client->query(
+                    (new Query('/queue/simple/set'))
+                        ->equal('.id', $colaPadre['.id'])
+                        ->equal('target', implode(',', $targets))
+                )->read();
+            }
+        }
+    }
+
+    private function obtenerColaPadre($nombrePlan)
+    {
+        $query = (new Query('/queue/simple/print'))
+            ->where('name', $nombrePlan);
+        $result = $this->client->query($query)->read();
+        return $result[0] ?? null;
+    }
+    
+    private function eliminarColaHija($clienteId, $planPadre)
+    {
+        $nombreCola = "CLIENTE-".str_replace('.', '-', $clienteId);
+        
+        $query = (new Query('/queue/simple/print'))
+            ->where('name', $nombreCola)
+            ->where('parent', $planPadre);
+        
+        $colas = $this->client->query($query)->read();
+        
+        if (!empty($colas)) {
+            $this->client->query(
+                (new Query('/queue/simple/remove'))
+                    ->equal('.id', $colas[0]['.id'])
+            )->read();
+        }
+    }
 }
+   

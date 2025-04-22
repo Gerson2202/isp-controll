@@ -139,7 +139,7 @@ class AsignarIpCliente extends Component
 
             // Llamar al método del servicio para crear cola hija
             $resultado = $mikroTikService->crearColaHija(
-                
+                $this->cliente->id,
                 $ipAsignada,
                 $plan->nombre,          // Nombre de la cola padre
                 $plan->velocidad_subida,
