@@ -305,7 +305,7 @@ class MikroTikService
     
 
 //    --------------
-
+    // FUNCIONES PARA ACTUALIZAR PLAN DE CLIENTE
     public function actualizarPlanMikroTik($clienteId, $ipCliente, $planAnterior, $planNuevo, $subidaMbps, $bajadaMbps, $rehuso = '1:1')
     {
         try {
@@ -463,5 +463,32 @@ class MikroTikService
             )->read();
         }
     }
+
+    // FUNCIONES PARA CAMBIO DE NODO 
+    /**
+ * Elimina todas las colas asociadas a un cliente (hijas y referencia en padre)
+ * 
+ * @param string $ipCliente La IP del cliente
+ * @param string $nombrePlan El nombre del plan padre
+ * @param int $clienteId El ID del cliente para identificar la cola hija
+ * @return bool
+ * @throws \Exception
+ */
+    public function eliminarCola($ipCliente, $nombrePlan, $clienteId)
+    {
+        try {
+            // 1. Eliminar la cola hija del cliente
+            $this->eliminarColaHija($clienteId, $nombrePlan);
+            
+            // 2. Remover la IP del target de la cola padre
+            $this->removerTargetDeColaPadre($nombrePlan, $ipCliente);
+            
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Error al eliminar colas para cliente $clienteId: " . $e->getMessage());
+            throw new \Exception("Error al eliminar colas en MikroTik: " . $e->getMessage());
+        }
+    }
+    
 }
    

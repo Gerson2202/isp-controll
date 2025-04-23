@@ -44,6 +44,9 @@
             <li class="nav-item">
                 <a class="nav-link" id="modificar-plan-tab" data-toggle="pill" href="#modificar-plan" role="tab">Modificar Plan</a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" id="modificar-nodo-tab" data-toggle="pill" href="#modificar-nodo" role="tab">Cambiar de Nodo</a>
+            </li>
         </ul>
         
         <!-- Tab panes -->
@@ -243,6 +246,13 @@
                 @livewire('editar-plan-cliente', ['cliente' => $cliente])
 
             </div>
+                {{-- Tab cambio de nodo  --}}
+            <div class="tab-pane fade" id="modificar-nodo" role="tabpanel">
+
+                 @livewire('editar-nodo-cliente', ['cliente' => $cliente])
+
+            </div>
+            
         </div>
     </div>
     </div>

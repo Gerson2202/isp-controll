@@ -19,7 +19,7 @@ return new class extends Migration
             $table->decimal('latitud', 10, 8)->nullable();
             $table->decimal('longitud', 11, 8)->nullable();
             $table->string('direccion')->nullable();
-            $table->string('ip')->nullable();
+            $table->string('ip')->nullable()->unique();
             $table->string('correo')->nullable();
             $table->string('punto_referencia')->nullable();
             $table->string('descripcion')->nullable();
