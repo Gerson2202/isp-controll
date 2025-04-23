@@ -353,50 +353,53 @@ class MikroTikService
      */
     private function actualizarMaxLimitColaPadre($nombrePlan, $subidaLimitAt, $bajadaLimitAt)
     {
-        $colaPadre = $this->obtenerColaPadre($nombrePlan);
-        
-        if (!$colaPadre) {
-            \Log::error("Cola padre no encontrada: $nombrePlan");
-            return false;
+        // 1. Obtener información actual de la cola padre
+        $queryPadre = (new Query('/queue/simple/print'))
+            ->where('name', $nombrePlan);
+        $colaPadre = $this->client->query($queryPadre)->read()[0];
+
+        // 2. Convertir de bits a Mbps (igual que en tu función)
+        $maxLimitActual = explode('/', $colaPadre['max-limit']);
+        $maxSubidaActual = (float)$maxLimitActual[0] / 1000000;
+        $maxBajadaActual = (float)$maxLimitActual[1] / 1000000;
+
+        // 3. Contar TODOS los targets (incluyendo IP base)
+        $targetActual = $colaPadre['target'] ?? '';
+        $totalTargets = $targetActual ? count(explode(',', $targetActual)) : 0;
+
+        // 4. Calcular necesidades totales (igual que en tu función)
+        $totalSubidaNecesaria = $subidaLimitAt * $totalTargets;
+        $totalBajadaNecesaria = $bajadaLimitAt * $totalTargets;
+
+        // 5. Determinar nuevos máximos (igual que en tu función)
+        $nuevoMaxSubida = $maxSubidaActual;
+        $nuevoMaxBajada = $maxBajadaActual;
+
+        if ($totalSubidaNecesaria > $maxSubidaActual) {
+            $nuevoMaxSubida = $totalSubidaNecesaria;
         }
-    
-        // 1. Procesamiento robusto de targets
-        $targets = array_filter(
-            array_map('trim', 
-                explode(',', str_replace(' ', '', $colaPadre['target'] ?? '')))
-        );
-        $totalTargets = count($targets);
-    
-        // 2. Cálculo preciso del nuevo límite
-        $nuevoMaxSubida = $subidaLimitAt * $totalTargets;
-        $nuevoMaxBajada = $bajadaLimitAt * $totalTargets;
-    
-        // 3. Conversión segura de límites actuales
-        $currentMax = explode('/', $colaPadre['max-limit'] ?? '0M/0M');
-        $currentUp = (int)str_replace(['M','K'], '', $currentMax[0]);
-        $currentDown = (int)str_replace(['M','K'], '', $currentMax[1]);
-    
-        // 4. Forzar actualización si hay discrepancia (DEBUG)
-        \Log::debug("Pre-actualización", [
-            'plan' => $nombrePlan,
-            'targets_count' => $totalTargets,
-            'current_max' => "$currentUp/$currentDown",
-            'calculated_max' => "$nuevoMaxSubida/$nuevoMaxBajada"
-        ]);
-    
-        // 5. Siempre actualizar basado en el cálculo (eliminamos la condición)
-        $this->client->query(
-            (new Query('/queue/simple/set'))
-                ->equal('.id', $colaPadre['.id'])
-                ->equal('max-limit', "$nuevoMaxSubida"."M/$nuevoMaxBajada"."M")
-        )->read();
-    
-        \Log::info("Límites actualizados", [
-            'plan' => $nombrePlan,
-            'new_max' => "$nuevoMaxSubida/$nuevoMaxBajada",
-            'targets' => $targets
-        ]);
-    
+
+        if ($totalBajadaNecesaria > $maxBajadaActual) {
+            $nuevoMaxBajada = $totalBajadaNecesaria;
+        }
+
+        // 6. Aplicar cambios SOLO si es necesario (igual que en tu función)
+        if ($nuevoMaxSubida > $maxSubidaActual || $nuevoMaxBajada > $maxBajadaActual) {
+            $this->client->query(
+                (new Query('/queue/simple/set'))
+                    ->equal('.id', $colaPadre['.id'])
+                    ->equal('max-limit', ($nuevoMaxSubida * 1000000).'/'.($nuevoMaxBajada * 1000000))
+            )->read();
+
+            \Log::info("Límites actualizados", [
+                'plan' => $nombrePlan,
+                'targets' => $totalTargets,
+                'previous_max' => "$maxSubidaActual/$maxBajadaActual",
+                'new_max' => "$nuevoMaxSubida/$nuevoMaxBajada",
+                'reason' => "{$totalTargets} targets x {$subidaLimitAt}M/{$bajadaLimitAt}M"
+            ]);
+        }
+
         return true;
     }
 

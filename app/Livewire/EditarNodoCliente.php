@@ -96,7 +96,7 @@ class EditarNodoCliente extends Component
             $this->cliente->update(['ip' => null]);
 
              // Creamos ticket de reporte de modificacion de plan 
-             $situacionTexto = "Se realizó cambio de Nodo de {$nodoAnterior} con precio de : {$precioAnterior} y plan {$nombrePlan} al Nodo: {$nuevoNodoNombre} con precio $ {$this->precio} con nuevo plan {$nuevoPlanNombre}. Actualizado por el usuario: " . auth()->user()->name;
+             $situacionTexto = "Se realizó cambio de Nodo de {$nodoAnterior} con precio de : {$precioAnterior} y plan {$nombrePlan} al Nodo: {$nuevoNodoNombre} con precio $ {$this->precio} con nuevo plan {$nuevoPlanNombre}, Ip anterior :{$ipCliente}. Actualizado por el usuario: " . auth()->user()->name;
              Ticket::create([
                  'tipo_reporte' => 'cambio de nodo',
                  'situacion' => $situacionTexto,
