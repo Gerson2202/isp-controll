@@ -9,7 +9,7 @@ use App\Models\Plan;
 use App\Models\Ticket;
 use App\Services\MikroTikService;
 use Livewire\Component;
-use Illuminate\Support\Facades\DB; // <-- Añade esta línea
+use Illuminate\Support\Facades\DB; 
 use Illuminate\Support\Facades\Log;
 
 class EditarNodoCliente extends Component
@@ -21,23 +21,38 @@ class EditarNodoCliente extends Component
     public $planes = [];
     public $nodos = [];
     public $selectedNodeId;
-    public Contrato $contrato;
+    public ?Contrato $contrato = null; // Hacerlo nullable
     public $plan_idAnterior;
-
+    public $isLoading = true; // Nuevo estado para carga
+    public $hasContract = false; // Nuevo estado para saber si tiene contrato
 
     public function mount(Cliente $cliente)
     {
         $this->cliente = $cliente;
         $this->nodos = Nodo::all();
         
-        // Obtener el contrato existente (asumimos que siempre existe)
-        $this->contrato = Contrato::where('cliente_id', $this->cliente->id)->firstOrFail();
+        // Cargar datos de forma asíncrona
+        $this->loadContractData();
+    }
+
+    // Nueva función para cargar datos del contrato
+    public function loadContractData()
+    {
+        $this->isLoading = true;
         
-        // Cargar datos del contrato
-        $this->plan_id = $this->contrato->plan_id;
-        $this->precio = $this->contrato->precio;
-        $this->selectedNodeId = $this->contrato->plan->nodo_id;
-        $this->planes = Plan::where('nodo_id', $this->selectedNodeId)->get();
+        try {
+            $this->contrato = Contrato::where('cliente_id', $this->cliente->id)->first();
+            
+            if ($this->contrato) {
+                $this->hasContract = true;
+                $this->plan_id = $this->contrato->plan_id;
+                $this->precio = $this->contrato->precio;
+                $this->selectedNodeId = $this->contrato->plan->nodo_id;
+                $this->planes = Plan::where('nodo_id', $this->selectedNodeId)->get();
+            }
+        } finally {
+            $this->isLoading = false;
+        }
     }
 
     public function changeNode()

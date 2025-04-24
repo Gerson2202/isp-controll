@@ -28,7 +28,7 @@ class EditarPlanCliente extends Component
         $this->cliente = $cliente;
         $this->loadClienteData();
         $this->precio = $cliente->contrato->precio ?? 'Sin contrato';
-        $this->precio_anterior = $this->cliente->contrato->precio; // <- guardalo antes del update
+        $this->precio_anterior = $this->cliente->contrato->precio ?? 'Sin contrato'; // <- guardalo antes del update
     }
 
     protected function loadClienteData()

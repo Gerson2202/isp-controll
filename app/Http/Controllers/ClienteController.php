@@ -88,11 +88,11 @@ class ClienteController extends Controller
      */
     public function update(Request $request, $id)
     {
-        
+        // return $request;
         $request->validate([
             'cedula' => 'required|string|max:20',
             'telefono' => 'required|string|max:20',
-            'correo' => 'required|email',
+            'correo' => 'nullable|email',
             'direccion' => 'required|string',
             'latitud' => 'nullable|numeric',
             'longitud' => 'nullable|numeric',
