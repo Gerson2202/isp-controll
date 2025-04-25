@@ -485,13 +485,141 @@ class MikroTikService
             
             // 2. Remover la IP del target de la cola padre
             $this->removerTargetDeColaPadre($nombrePlan, $ipCliente);
-            
+            $this->cortarCliente($ipCliente);
             return true;
         } catch (\Exception $e) {
             Log::error("Error al eliminar colas para cliente $clienteId: " . $e->getMessage());
             throw new \Exception("Error al eliminar colas en MikroTik: " . $e->getMessage());
         }
     }
+
+
+    // FUNCIONES  CORTAR O SUSPENDER CLIENTE
+
+    public function manejarEstadoCliente($ipCliente, $estado)
+    {
+        try {
+            switch ($estado) {
+                case 'activo':
+                    $this->activarCliente($ipCliente);
+                    break;
+                case 'cortado':
+                    $this->cortarCliente($ipCliente);
+                    break;
+                case 'suspendido':
+                    $this->suspenderCliente($ipCliente);
+                    break;
+            }
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Error al actualizar estado en MikroTik: " . $e->getMessage());
+            throw new \Exception("Error al actualizar estado en MikroTik: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Activa un cliente moviendo su IP a la lista "activado"
+     */
+    private function activarCliente($ipCliente)
+    {
+        // Primero eliminar de la lista "cortado" si existe
+        $this->eliminarDeAddressList($ipCliente, 'cortado');
+        
+        // Agregar a la lista "activado"
+        $this->agregarAAddressList($ipCliente, 'activado');
+    }
+
+    /**
+     * Corta un cliente moviendo su IP a la lista "cortado"
+     */
+    private function cortarCliente($ipCliente)
+    {
+        // Primero eliminar de la lista "activado" si existe
+        $this->eliminarDeAddressList($ipCliente, 'activado');
+        
+        // Agregar a la lista "cortado"
+        $this->agregarAAddressList($ipCliente, 'cortado');
+    }
+
+    /**
+     * Suspende un cliente (opcional)
+     */
+    private function suspenderCliente($ipCliente)
+    {
+        // Implementar lógica para suspensión si es necesaria
+        // Por ejemplo, podrías tener una lista "suspendido"
+    }
+
+    /**
+     * Agrega una IP a una address list específica
+     */
+    private function agregarAAddressList($ip, $listName)
+    {
+        try {
+            // Verificar si ya existe en la lista
+            $query = (new Query('/ip/firewall/address-list/print'))
+                ->where('address', $ip)
+                ->where('list', $listName);
+
+            $existing = $this->client->query($query)->read();
+
+            if (empty($existing)) {
+                $query = (new Query('/ip/firewall/address-list/add'))
+                    ->equal('address', $ip)
+                    ->equal('list', $listName);
+
+                $this->client->query($query)->read();
+                Log::info("IP $ip agregada a la lista $listName");
+            }
+        } catch (\Exception $e) {
+            Log::error("Error al agregar IP a address list: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Elimina una IP de una address list específica
+     */
+    private function eliminarDeAddressList($ip, $listName)
+    {
+        try {
+            $query = (new Query('/ip/firewall/address-list/print'))
+                ->where('address', $ip)
+                ->where('list', $listName);
+
+            $entries = $this->client->query($query)->read();
+
+            foreach ($entries as $entry) {
+                $query = (new Query('/ip/firewall/address-list/remove'))
+                    ->equal('.id', $entry['.id']);
+                $this->client->query($query)->read();
+                Log::info("IP $ip eliminada de la lista $listName");
+            }
+        } catch (\Exception $e) {
+            Log::error("Error al eliminar IP de address list: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Obtiene todas las IPs de una lista específica
+     */
+    public function obtenerIPsDeLista($listName)
+    {
+        try {
+            $query = (new Query('/ip/firewall/address-list/print'))
+                ->where('list', $listName);
+
+            $ips = $this->client->query($query)->read();
+            return array_map(function($item) {
+                return $item['address'];
+            }, $ips);
+        } catch (\Exception $e) {
+            Log::error("Error al obtener IPs de la lista: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
     
 }
    

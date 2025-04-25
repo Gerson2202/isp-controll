@@ -28,6 +28,19 @@
                 </button>
             </div>
         @endif
+        @if(!$cliente->ip)
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>Atención:</strong> Este cliente no tiene IP asignada. No se pueden realizar cambios ni suspensiones en MikroTik.
+        </div>
+        @endif
+        @if(Session::has('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ Session::get('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        @endif
     </div>
     <div class="card-body">
         <!-- Nav tabs -->
@@ -236,7 +249,7 @@
             
             </div>
 
-            <!-- NUEVA PESTAÑA -->
+            <!-- Cortar o suspender cliente -->
             <div class="tab-pane fade" id="nueva-pestana" role="tabpanel">
                  @livewire('actualizar-estado-cliente', ['cliente' => $cliente])
             </div>
