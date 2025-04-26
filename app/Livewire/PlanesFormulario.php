@@ -50,36 +50,51 @@ class PlanesFormulario extends Component
     // Actualizar el plan
     public function updatePlan()
     {
-        $plan = Plan::find($this->plan_id);
-        // Actualizar plan
-        $plan->update([
-            'nombre' => $this->nombre,
-            'descripcion' => $this->descripcion,
-            'velocidad_bajada' => $this->velocidad_bajada,
-            'velocidad_subida' => $this->velocidad_subida,
-            'rehuso' => $this->rehuso,
-            'nodo_id' => $this->nodo_id,
+        try {
+            // Buscar el plan
+            $plan = Plan::findOrFail($this->plan_id);
             
-        ]);
+            // Actualizar plan
+            $plan->update([
+                'nombre' => $this->nombre,
+                'descripcion' => $this->descripcion,
+                'velocidad_bajada' => $this->velocidad_bajada,
+                'velocidad_subida' => $this->velocidad_subida,
+                'rehuso' => $this->rehuso,
+                'nodo_id' => $this->nodo_id,
+            ]);
 
-         // Actualizar la lista de planes
-        $this->plans = Plan::all();
+            // Actualizar la lista de planes
+            $this->plans = Plan::all();
 
-        // Mostrar el mensaje de éxito
-        $this->successMessage = 'Plan actualizado exitosamente!';
+            // Notificación Toastr
+            $this->dispatch('notify', 
+                type: 'success',
+                message: 'Plan actualizado exitosamente!'
+            );
 
-        // Cerrar el modal
-        $this->showModal = false;
-        $this->resetForm();
-        // Despachar evento para mostrar el mensaje en frontend
-        $this->dispatch('show-success-message');
-     }
+            // Cerrar el modal y resetear formulario
+            $this->showModal = false;
+            $this->resetForm();
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            $this->dispatch('notify', 
+                type: 'error',
+                message: 'Error: El plan no fue encontrado'
+            );
 
-     // Limpiar el mensaje de éxito
-    public function clearSuccessMessage()
-    {
-        $this->successMessage = '';
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->dispatch('notify',
+                type: 'error',
+                message: 'Error de validación: ' . implode(' ', $e->validator->errors()->all())
+            );
+
+        } catch (\Exception $e) {
+            $this->dispatch('notify',
+                type: 'error',
+                message: 'Error al actualizar el plan: ' . $e->getMessage()
+            );
+        }
     }
 
     // Borrar el plan
@@ -105,36 +120,45 @@ class PlanesFormulario extends Component
     // Función para Crear un nuevo plan
     public function submitPlan()
     {
-      
-        // Validar los datos del formulario
-        $this->validate();
-        
-        // Crear un nuevo plan
-        Plan::create([
-            'nombre' => $this->nombre,
-            'descripcion' => $this->descripcion,
-            'velocidad_bajada' => $this->velocidad_bajada,
-            'velocidad_subida' => $this->velocidad_subida,
-            'rehuso' => $this->rehuso,
-            'nodo_id' => $this->nodo_id,
-        ]);
+        try {
+            // Validar los datos del formulario (sin cambios)
+            $this->validate();
+            
+            // Crear un nuevo plan (sin cambios)
+            Plan::create([
+                'nombre' => $this->nombre,
+                'descripcion' => $this->descripcion,
+                'velocidad_bajada' => $this->velocidad_bajada,
+                'velocidad_subida' => $this->velocidad_subida,
+                'rehuso' => $this->rehuso,
+                'nodo_id' => $this->nodo_id,
+            ]);
 
-        // Actualizar la lista de planes
-        $this->plans = Plan::all();
+            // Actualizar la lista de planes (sin cambios)
+            $this->plans = Plan::all();
+            
+            // Vaciar los campos del formulario (sin cambios)
+            $this->resetForm();
+            
+            // Notificaciones existentes (sin cambios)
+            $this->dispatch('notify', 
+                type: 'success', 
+                message: 'Plan Creado exitosamente'
+            );
 
-        // Mostrar el mensaje de éxito
-        $this->successMessage = 'Plan Creado exitosamente!';
-
-        // Vaciar los campos del formulario después de guardar
-        $this->resetForm();
-        // Despachar evento para mostrar el mensaje en frontend
-        $this->dispatch('show-success-message');
+        } catch (\Exception $e) {
+            // Solo agregamos esta parte para capturar errores
+            $this->dispatch('notify',
+                type: 'error',
+                message: 'Error al crear el plan: ' . $e->getMessage()
+            );
+        }
     }
+
     public function resetForm()
     {
         $this->nombre = '';
         $this->descripcion = '';
-        // $this->precio = '';
         $this->velocidad_bajada = '';
         $this->velocidad_subida = '';
         $this->rehuso = '';
@@ -146,58 +170,56 @@ class PlanesFormulario extends Component
         return view('livewire.planes-formulario');
     }
 
-    // ----------
-
     // Función para activar un plan en MikroTik
     public function activatePlan($planId)
-{
-    $this->loadingActivation = true;
-    $this->currentPlanActivating = $planId;
-    $this->resetErrorBag(); // Limpiar errores anteriores
-    $this->clearSuccessMessage(); // Limpiar mensajes anteriores
+    {
+        $this->loadingActivation = true;
+        $this->currentPlanActivating = $planId;
+        $this->resetErrorBag(); // Limpiar errores anteriores
+        $this->clearSuccessMessage(); // Limpiar mensajes anteriores
 
-    try {
-        $plan = Plan::with('nodo')->findOrFail($planId);
-        
-        if (!$plan->nodo) {
-            $this->addError('activation', 'Este plan no tiene nodo asignado');
-            return;
+        try {
+            $plan = Plan::with('nodo')->findOrFail($planId);
+            
+            if (!$plan->nodo) {
+                $this->addError('activation', 'Este plan no tiene nodo asignado');
+                return;
+            }
+
+            $mikroTikService = new MikroTikService(
+                $plan->nodo->ip,
+                $plan->nodo->user,
+                $plan->nodo->pass,
+                $plan->nodo->puerto_api ?? 8728
+            );
+
+            // Verificar si la cola ya existe primero
+            $nombreCola = $plan->nombre;
+            $existe = $mikroTikService->verificarColaExistente($nombreCola);
+            
+            if ($existe) {
+                throw new \Exception("La cola padre '{$nombreCola}' ya existe en este nodo");
+            }
+
+            // Si no existe, crear la cola
+            $result = $mikroTikService->crearColaPadre(
+                $plan->nombre,
+                $plan->velocidad_subida,
+                $plan->velocidad_bajada
+            );
+
+            // Solo mostrar éxito si realmente se creó
+            if ($result) {
+                $this->successMessage = 'Cola padre creada exitosamente en el nodo '.$plan->nodo->nombre;
+                $this->dispatch('show-success-message');
+            }
+
+        } catch (\Exception $e) {
+            $this->addError('activation', 'Error al activar plan: '.$e->getMessage());
+            Log::error("Error al activar plan {$planId}: ".$e->getMessage());
+        } finally {
+            $this->loadingActivation = false;
+            $this->currentPlanActivating = null;
         }
-
-        $mikroTikService = new MikroTikService(
-            $plan->nodo->ip,
-            $plan->nodo->user,
-            $plan->nodo->pass,
-            $plan->nodo->puerto_api ?? 8728
-        );
-
-        // Verificar si la cola ya existe primero
-        $nombreCola = $plan->nombre;
-        $existe = $mikroTikService->verificarColaExistente($nombreCola);
-        
-        if ($existe) {
-            throw new \Exception("La cola padre '{$nombreCola}' ya existe en este nodo");
-        }
-
-        // Si no existe, crear la cola
-        $result = $mikroTikService->crearColaPadre(
-            $plan->nombre,
-            $plan->velocidad_subida,
-            $plan->velocidad_bajada
-        );
-
-        // Solo mostrar éxito si realmente se creó
-        if ($result) {
-            $this->successMessage = 'Cola padre creada exitosamente en el nodo '.$plan->nodo->nombre;
-            $this->dispatch('show-success-message');
-        }
-
-    } catch (\Exception $e) {
-        $this->addError('activation', 'Error al activar plan: '.$e->getMessage());
-        Log::error("Error al activar plan {$planId}: ".$e->getMessage());
-    } finally {
-        $this->loadingActivation = false;
-        $this->currentPlanActivating = null;
     }
-}
 }
