@@ -57,17 +57,7 @@ class NodoSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-            [
-                'nombre' => 'Tibú',
-                'ip' => '192.168.1.5',
-                // 'user' => 'GerApi',
-                // 'pass' => '12345678',
-                'latitud' => 8.2997,   // Coordenada de Tibú
-                'longitud' => -73.5136,
-                // 'puerto_api' => '8728',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+            
         ]);
     }
 }

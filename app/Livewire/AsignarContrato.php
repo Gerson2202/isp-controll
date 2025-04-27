@@ -94,6 +94,7 @@ class AsignarContrato extends Component
                 'precio.regex' => 'El precio debe tener formato X.000 (ej: 10.000, 300.000)',
             ]);
             // Guardar el contrato
+            $this->precio = str_replace('.', '', $this->precio);
             $contrato = Contrato::create([
                 'cliente_id' => $this->cliente_id, // Ya tenemos el cliente_id en la propiedad
                 'plan_id' => $this->plan_id,

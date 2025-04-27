@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,  // Llamamos al seeder de usuarios
             NodoSeeder::class,
             ClienteSeeder::class,
+            PoolSeeder::class,
         ]);
     }
 }
