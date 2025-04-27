@@ -44,7 +44,6 @@ class PlanesFormulario extends Component
          $this->rehuso = $plan->rehuso;
          $this->nodo_id = $plan->nodo_id;
          $this->showModal = true;  
-         $this->clearSuccessMessage();  // Limpiar cualquier mensaje anterior
     }
 
     // Actualizar el plan
@@ -176,7 +175,6 @@ class PlanesFormulario extends Component
         $this->loadingActivation = true;
         $this->currentPlanActivating = $planId;
         $this->resetErrorBag(); // Limpiar errores anteriores
-        $this->clearSuccessMessage(); // Limpiar mensajes anteriores
 
         try {
             $plan = Plan::with('nodo')->findOrFail($planId);

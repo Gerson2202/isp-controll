@@ -385,15 +385,11 @@ return [
         'icon'    => 'fas fa-chart-line', // Icono principal
         'submenu' => [
             [
-                'text' => 'Crear Plan',
+                'text' => 'Gestionar Planes',
                 'route' => 'planesCreate', // Ruta para crear plan
                 'icon' => 'fas fa-plus', // Icono para crear
             ],
-            [
-                'text' => 'Ver Planes',
-                'route' => 'planesIndex', // Ruta para ver planes
-                'icon' => 'fas fa-list', // Icono para listar
-            ],
+            
         ],
     ],
     

@@ -1,6 +1,4 @@
 <div>
-    
-    
         @if ($errors->has('activation'))
             <div class="alert alert-danger alert-dismissible fade show">
                 {{ $errors->first('activation') }}
@@ -36,66 +34,72 @@
                               <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                           </div>
                           @endif  
-                        @foreach($plans as $plan)
-                            <div class="col-md-3">
-                                <div class="card">
+                          @foreach($plans as $plan)
+                          <div class="col-md-3 col-sm-6 mb-4">
+                              <div class="card h-100 shadow-sm">
+                                  <div class="card-header py-2 bg-light">
+                                      <h6 class="card-title mb-0 d-flex justify-content-between align-items-center">
+                                          <span>{{ $plan->nombre }}</span>
+                                          <span class="badge bg-info">{{ $plan->nodo ? $plan->nodo->nombre : 'Sin nodo' }}</span>
+                                      </h6>
+                                  </div>
                                   
-                                    <div class="card-header">
-                                        <h5 class="card-title">{{ $plan->nombre }} <strong>Nodo:{{ $plan->nodo ? $plan->nodo->nombre : 'Ninguno' }} </strong></h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row text-center">
-                                            <div class="col-6">
-                                                <i class="fas fa-upload text-primary"></i>
-                                                <h5>{{ $plan->velocidad_subida }} Mbps</h5>
-                                                <small>Subida</small>
-                                            </div>
-                                            <div class="col-6">
-                                                <i class="fas fa-download text-success"></i>
-                                                <h5>{{ $plan->velocidad_bajada }} Mbps</h5>
-                                                <small>Bajada</small>
-                                            </div>
-                                        </div>
-                                        
-                                        <hr>
-                                        
-                                        <p class="small"> <strong>Descripción: </strong>{{ $plan->descripcion }}</p>
-                                        <p><strong>Rehuso:</strong> {{ $plan->rehuso }}</p>
-                                    </div>
-                                    <div class="card-footer">
-                                        <div class="d-flex justify-content-between">
-                                            <div class="btn-group">
-                                                <button wire:click="editPlan({{ $plan->id }})" 
-                                                        class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button wire:click="deletePlan({{ $plan->id }})" 
-                                                        class="btn btn-sm btn-danger">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                            @if($plan->nodo)
-                                            <button wire:click="activatePlan({{ $plan->id }})" 
-                                                    wire:loading.attr="disabled"
-                                                    class="btn btn-sm btn-{{ $currentPlanActivating == $plan->id ? 'warning' : 'success' }}">
-                                                @if($currentPlanActivating == $plan->id)
-                                                    <span class="spinner-border spinner-border-sm" role="status"></span>
-                                                    Activando...
-                                                @else
-                                                    <i class="fas fa-power-off"></i> Activar
-                                                @endif
-                                            </button>
-                                            @else
-                                                <button class="btn btn-sm btn-secondary" disabled>
-                                                    <i class="fas fa-exclamation-circle"></i> Sin nodo
-                                                </button>
-                                            @endif
-                                        </div>
-                                        
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
+                                  <div class="card-body p-3">
+                                      <div class="d-flex justify-content-around mb-3">
+                                          <div class="text-center">
+                                              <i class="fas fa-upload text-primary mb-1"></i>
+                                              <h6 class="mb-0">{{ $plan->velocidad_subida }} Mbps</h6>
+                                              <small class="text-muted">Subida</small>
+                                          </div>
+                                          <div class="text-center">
+                                              <i class="fas fa-download text-success mb-1"></i>
+                                              <h6 class="mb-0">{{ $plan->velocidad_bajada }} Mbps</h6>
+                                              <small class="text-muted">Bajada</small>
+                                          </div>
+                                      </div>
+                                      
+                                      <div class="border-top pt-2">
+                                          <p class="small text-muted mb-1"><strong>Descripción:</strong> {{ Str::limit($plan->descripcion, 50) }}</p>
+                                          <p class="small text-muted mb-0"><strong>Rehuso:</strong> {{ $plan->rehuso }}</p>
+                                      </div>
+                                  </div>
+                                  
+                                  <div class="card-footer py-2 bg-white">
+                                      <div class="d-flex justify-content-between align-items-center">
+                                          <div class="btn-group btn-group-sm">
+                                              <button wire:click="editPlan({{ $plan->id }})" 
+                                                      class="btn btn-outline-primary">
+                                                  <i class="fas fa-edit"></i>
+                                              </button>
+                                              <button wire:click="deletePlan({{ $plan->id }})" 
+                                                      class="btn btn-outline-danger">
+                                                  <i class="fas fa-trash"></i>
+                                              </button>
+                                          </div>
+                                          
+                                          @if($plan->nodo)
+                                              <button wire:click="activatePlan({{ $plan->id }})" 
+                                                      wire:loading.attr="disabled"
+                                                      class="btn btn-sm btn-{{ $currentPlanActivating == $plan->id ? 'warning' : 'success' }}">
+                                                  @if($currentPlanActivating == $plan->id)
+                                                      <span class="spinner-border spinner-border-sm" role="status"></span>
+                                                      <span class="d-none d-md-inline">Activando...</span>
+                                                  @else
+                                                      <i class="fas fa-power-off"></i>
+                                                      <span class="d-none d-md-inline">Activar</span>
+                                                  @endif
+                                              </button>
+                                          @else
+                                              <button class="btn btn-sm btn-outline-secondary" disabled>
+                                                  <i class="fas fa-exclamation-circle"></i>
+                                                  <span class="d-none d-md-inline">Sin nodo</span>
+                                              </button>
+                                          @endif
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      @endforeach
                     </div>
                     {{-- <a href="#" class="btn btn-primary">Ver más planes</a> --}}
                 </div>
@@ -302,7 +306,7 @@
     </div>
 </div>
 
-      <!-- Script de Bootstrap para manejar el modal -->
+      <!-- Script Para manejo de Notificaciones Tosatar -->
       @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -314,5 +318,4 @@
             });
         </script>      
       @endpush
-      <!-- Script de JavaScript para manejar el mensaje de éxito -->  
 </div>

@@ -15,7 +15,6 @@ class ClienteFormulario extends Component
     public $email;
     public $cedula;
     public $estado = 'activo'; // Valor predeterminado
-    public $successMessage = ''; // Propiedad para el mensaje de éxito
 
    
 
@@ -36,10 +35,13 @@ class ClienteFormulario extends Component
         // Limpiamos los campos del formulario después de guardar
         $this->reset();
 
-        $this->successMessage = 'Cliente Creado exitosamente!';
+          // Notificación Toastr
+          $this->dispatch('notify', 
+          type: 'success',
+          message: 'Cliente creado exitosamente!'
+          );
 
-        // Despachar evento para mostrar el mensaje en frontend
-        $this->dispatch('show-success-message');
+     
     }
 
     public function render()

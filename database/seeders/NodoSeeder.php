@@ -14,7 +14,7 @@ class NodoSeeder extends Seeder
     {
         DB::table('nodos')->insert([
             [
-                'nombre' => 'Cúcuta',
+                'nombre' => 'Sabana',
                 'ip' => '192.168.1.1',
                 // 'user' => 'GerApi',
                 // 'pass' => '12345678',
@@ -25,7 +25,7 @@ class NodoSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'nombre' => 'Ocaña',
+                'nombre' => 'Portico',
                 'ip' => '192.168.1.2',
                 // 'user' => 'GerApi',
                 // 'pass' => '12345678',
@@ -36,7 +36,7 @@ class NodoSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'nombre' => 'Ábrego',
+                'nombre' => 'Pabellon',
                 'ip' => '192.168.1.3',
                 // 'user' => 'GerApi',
                 // 'pass' => '12345678',
@@ -47,7 +47,7 @@ class NodoSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'nombre' => 'La Playa',
+                'nombre' => 'Chicaro',
                 'ip' => '192.168.1.4',
                 // 'user' => 'GerApi',
                 // 'pass' => '12345678',
