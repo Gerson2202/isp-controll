@@ -34,7 +34,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Nodo</label>
                                     <select class="form-select" wire:model="selectedNodeId" wire:change="changeNode" required>
-                                        <option value="" selected disabled>Seleccionar nodo...</option>
+                                        <option value="" selected>Seleccionar nodo...</option>
                                         @foreach($nodos as $node)
                                             <option value="{{ $node->id }}">{{ $node->nombre }}</option>
                                         @endforeach
@@ -45,7 +45,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Plan</label>
                                     <select class="form-select" wire:model="plan_id" required>
-                                        <option value="" selected disabled>Seleccionar plan...</option>
+                                        <option value="" selected>Seleccionar plan...</option>
                                         @foreach($planes as $plan)
                                             <option value="{{ $plan->id }}">{{ $plan->nombre }}</option>
                                         @endforeach
@@ -70,8 +70,6 @@
                                         <span class="input-group-text">$</span>
                                         <input type="text" class="form-control" 
                                                wire:model="precio"
-                                               pattern="^\d+(\.\d{1,3})?$"
-                                               title="Formato: 99999.999"
                                                required>
                                     </div>
                                     <small class="text-muted">Ejemplo: 80.000</small>
@@ -99,5 +97,18 @@
             </div>
         </div>
     </div>
+
+     <!-- Script Para manejo de Notificaciones Tosatar -->
+     @push('scripts')
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+      <script>
+         document.addEventListener('livewire:init', () => {
+             Livewire.on('notify', (data) => {
+                 toastr[data.type](data.message);
+             });
+         });
+     </script>      
+   @endpush
 </div>
 
