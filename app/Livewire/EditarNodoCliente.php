@@ -130,8 +130,11 @@ class EditarNodoCliente extends Component
         } catch (\Exception $e) {
             // Revertimos la transacción
             DB::rollBack();
-            
-            session()->flash('error', 'Error al actualizar: '.$e->getMessage());
+            $this->dispatch('notify', 
+                type: 'error',
+                message: 'Error al intentar cambiar de nodo-'.$e->getMessage()
+            );
+
             return back()->withErrors(['mikrotik' => $e->getMessage()]);
         }
     }

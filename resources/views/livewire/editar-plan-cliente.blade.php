@@ -1,5 +1,5 @@
 <div>   
-    <div>
+    <div class="container-fluid py-4">
         @if($isLoading)
             <div class="text-center p-4">
                 <div class="spinner-border text-primary" role="status">
