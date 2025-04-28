@@ -229,27 +229,85 @@
                 </div>
                 {{-- Tab equipos asigandos --}}
                 <div class="tab-pane fade" id="equipos" role="tabpanel">
-                    <h5 class="mt-3 text-success text-center"><strong>Equipos Asignados</strong></h5>
-                    <br>
-                    <div class="row">
-                        @foreach ($inventarios as $inventario)
-                            <div class="col-md-6"> <!-- 2 columnas por fila en pantallas medianas y grandes -->
-                                <div class="card border-info mb-3">
-                                    <div class="card-body">
-                                        <h5 class="card-title"><strong>Modelo:</strong> {{$inventario->modelo->nombre}}</h5>
-                                        <p class="card-text"><strong>Mac:</strong> {{$inventario->mac}}</p>
-                                        @if (!empty($inventario->modelo->foto) && file_exists(public_path('storage/' . $inventario->modelo->foto)))
-                                            <div class="text-center">
-                                                <img src="{{ asset('storage/' . $inventario->modelo->foto) }}" alt="Foto del modelo" class="img-thumbnail" style="max-width: 150px;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="text-primary mb-0">
+                            <i class="fas fa-network-wired me-2"></i>Equipos Asignados
+                        </h3>
+                        <span class="badge bg-primary rounded-pill">
+                            {{ $inventarios->count() }} equipos
+                        </span>
+                    </div>
+                
+                    @if($inventarios->isEmpty())
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> No hay equipos asignados actualmente.
+                        </div>
+                    @else
+                        <div class="row g-4">
+                            @foreach ($inventarios as $inventario)
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="card h-100 shadow-sm border-start border-3 ">
+                                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                            <h5 class="card-title mb-0 text-truncate">
+                                                <i class="fas fa-desktop me-2 text-primary"></i>
+                                                {{ $inventario->modelo->nombre }}
+                                            </h5>
+                                            <span class="badge bg-primary rounded-pill">
+                                                {{ $loop->iteration }}
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <span class="badge bg-secondary me-2">
+                                                        <i class="fas fa-ethernet"></i>
+                                                    </span>
+                                                    <div>
+                                                        <small class="text-muted d-block">MAC Address</small>
+                                                        <span class="fw-bold">{{ $inventario->mac }}</span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <span class="badge bg-secondary me-2">
+                                                        <i class="fas fa-calendar-alt"></i>
+                                                    </span>
+                                                    <div>
+                                                        <small class="text-muted d-block">Fecha de Asignación</small>
+                                                        <span class="fw-bold">{{ $inventario->fecha }}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        @else
-                                            <p class="text-muted">No hay imagen disponible.</p>
-                                        @endif
+                                            
+                                            <div class="text-center py-3">
+                                                @if (!empty($inventario->modelo->foto) && file_exists(public_path('storage/' . $inventario->modelo->foto)))
+                                                    <img src="{{ asset('storage/' . $inventario->modelo->foto) }}" 
+                                                         alt="Foto del modelo" 
+                                                         class="img-fluid rounded shadow" 
+                                                         style="max-height: 120px;">
+                                                @else
+                                                    <div class="py-3 bg-light rounded">
+                                                        <i class="fas fa-image fa-2x text-muted mb-2"></i>
+                                                        <p class="small text-muted mb-0">Imagen no disponible</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="card-footer bg-transparent">
+                                            <a href="{{ route('equipos.show', $inventario->id) }}" 
+                                               class="btn btn-sm btn-outline-primary w-100"
+                                               target="_blank"
+                                               rel="noopener noreferrer">
+                                                <i class="fas fa-eye me-1"></i> Ver Detalles
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endforeach
-                    </div>
+                            @endforeach
+                        </div>
+                    @endif                    
                     
                 
                 </div>

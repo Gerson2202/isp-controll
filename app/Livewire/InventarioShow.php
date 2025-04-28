@@ -17,12 +17,11 @@ class InventarioShow extends Component
     public $nodos;
     public $modelo_id;
     public $mac;
+    public $fecha;
     public $descripcion;
     public $cliente_id;
     public $nodo_id;
     public $modalVisible = false;
-    public $errorMessage;
-    public $successMessage;
     
 
 #[On('clienteSeleccionado')]
@@ -42,6 +41,7 @@ public function setCliente($data)
         $this->descripcion = $this->inventario->descripcion;
         $this->cliente_id = $this->inventario->cliente_id;
         $this->nodo_id = $this->inventario->nodo_id;
+        $this->fecha = $this->inventario->fecha ?? 'sin fecha';
     }
 
     
@@ -49,8 +49,11 @@ public function setCliente($data)
 public function guardar()
 {
     if (($this->cliente_id && $this->nodo_id)) {
-        $this->errorMessage = "Solo se puede asignar el inventario a un cliente o a un nodo, no ambos.";
-        return;
+         // Notificaciones existentes (sin cambios)
+         $this->dispatch('notify', 
+         type: 'error', 
+         message: 'Error ,Solo se permite asiganar a un cliente o nodo , No ambos');
+         return;
     }
     
     $this->inventario->update([
@@ -59,11 +62,16 @@ public function guardar()
         'descripcion' => $this->descripcion,
         'cliente_id' => empty($this->cliente_id) ? null : $this->cliente_id,
         'nodo_id' => empty($this->nodo_id) ? null : $this->nodo_id,
+        'fecha' => empty($this->fecha) ? null : $this->fecha,
+
     ]);
 
-    $this->cerrarModal();
-    $this->successMessage = "Inventario actualizado con éxito.";
-}
+        $this->cerrarModal();
+        // Notificaciones existentes (sin cambios)
+        $this->dispatch('notify', 
+        type: 'success', 
+        message: 'Equipo actualizado  exitosamente'
+    );}
 
         public function mostrarModal()
     {
@@ -73,8 +81,6 @@ public function guardar()
     public function cerrarModal()
     {
         $this->modalVisible = false;
-        $this->errorMessage = null;
-        $this->successMessage = null;
     }
 
     public function render()

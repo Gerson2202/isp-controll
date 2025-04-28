@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('modelo_id')->constrained('modelos')->onDelete('cascade');
             $table->string('mac');
+            $table->date('fecha')->nullable(); // Fecha desde que lo tiene 
             $table->text('descripcion');
             $table->foreignId('cliente_id')->nullable()->constrained('clientes')->onDelete('cascade');
             $table->foreignId('nodo_id')->nullable()->constrained('nodos')->onDelete('cascade');
