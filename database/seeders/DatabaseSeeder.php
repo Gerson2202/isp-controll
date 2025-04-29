@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Contrato;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -27,6 +28,7 @@ class DatabaseSeeder extends Seeder
             NodoSeeder::class,
             ClienteSeeder::class,
             PoolSeeder::class,
+            ContratoSeeder::class
         ]);
     }
 }

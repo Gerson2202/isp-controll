@@ -3,15 +3,21 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ContratoController;
+use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\FotoTicketController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\NodoController;
+use App\Http\Controllers\PagoController;
 use App\Http\Controllers\PoolController;
 use App\Http\Controllers\VisitaController;
 use App\Livewire\AgendarVisita;
 use GuzzleHttp\Psr7\Request;
+use App\Livewire\Facturacion\PanelFacturacion;
+use App\Livewire\Facturacion\ListaFacturas;
+use App\Livewire\Facturacion\GenerarFacturasMensuales;
+use App\Livewire\Facturacion\ProcesarCortes;
 
 Route::get('/', function () {
     return view('welcome');
@@ -125,5 +131,20 @@ Route::patch('/visitas/{visita}/actualizar-fechas', function($visita) {
 
     return response()->json(['success' => true]);
 })->middleware('auth');
+
+
+
+// incio de rutas de facturacion
+ // Facturación
+ Route::get('/facturacion/index', [FacturaController::class, 'index'])->name('facturacion.index');
+ Route::get('/pagos/index', [PagoController::class, 'index'])->name('pagos.index');
+ Route::get('/facturacion/dashboard', [FacturaController::class, 'dashboard'])->name('facturacion.dashboard');
+
+ Route::prefix('facturacion')->group(function () {
+    Route::get('/panel', PanelFacturacion::class)->name('facturacion.panel');
+    Route::get('/facturas', ListaFacturas::class)->name('facturas.index');
+    Route::get('/generar-facturas', GenerarFacturasMensuales::class)->name('facturas.generar');
+    Route::get('/procesar-cortes', ProcesarCortes::class)->name('facturas.cortes');
+});
 
 });

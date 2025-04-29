@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('contratos', function (Blueprint $table) {
+        Schema::create('historial_cortes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('cliente_id')->constrained()->onDelete('cascade');
-            $table->foreignId('plan_id')->constrained()->onDelete('cascade');
-            $table->string('tecnologia')->nullable();
-            $table->date('fecha_inicio');
-            $table->string('estado')->default('activo'); // activo/suspendido/cancelado
-            $table->date('fecha_fin')->nullable();
-            $table->bigInteger('precio');
+            $table->date('fecha_corte');
+            $table->date('fecha_reconexion')->nullable();
+            $table->decimal('monto_reconexion', 10, 2)->nullable();
+            $table->text('notas')->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('contratos');
+        Schema::dropIfExists('historial_cortes');
     }
 };

@@ -345,15 +345,25 @@ return [
         'icon'    => 'fas fa-credit-card', // Icono principal
         'submenu' => [
             [
+                'text' => 'Dashboard',
+                'route' => 'facturacion.dashboard', // Ruta paraDashboard
+                'icon' => 'fas fa-plus', 
+            ],
+            [
                 'text' => 'Crear contrato',
                 'route' => 'contratoIndex', // Ruta para agregar cliente
                 'icon' => 'fas fa-plus', // Icono para agregar
             ],
-            // [
-            //     'text' => 'Ver Contratos',
-            //     'route' => 'clientesBuscar', // Ruta para ver clientes
-            //     'icon' => 'fas fa-dollar-sign', // Icono para listar
-            // ],
+             [
+                'text' => 'Facturas',
+                 'route' => 'facturacion.index', // Ruta para ver clientes
+                 'icon' => 'fas fa-dollar-sign', // Icono para listar
+             ],
+             [
+                'text' => 'Pagos',
+                 'route' => 'pagos.index', // Ruta para ver clientes
+                 'icon' => 'fas fa-dollar-sign', // Icono para listar
+             ],
         ],
     ],
 

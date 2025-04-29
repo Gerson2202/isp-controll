@@ -29,4 +29,15 @@ class Contrato extends Model
      {
          return $this->belongsTo(Plan::class);
      }
+
+
+    //  ---RELACIONES DE FACTURACION
+    
+
+   
+
+    public function facturas()
+    {
+        return $this->hasMany(Factura::class);
+    }
 }

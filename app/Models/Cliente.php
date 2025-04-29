@@ -47,4 +47,16 @@ class Cliente extends Model
     {
         return $this->belongsTo(Pool::class);
     }
+
+    // ---- FACTURAACION 
+   
+    public function facturas()
+    {
+        return $this->hasManyThrough(Factura::class, Contrato::class);
+    }
+
+    public function cortes()
+    {
+        return $this->hasMany(HistorialCorte::class);
+    }
 }
