@@ -65,6 +65,9 @@
                 <li class="nav-item">
                     <a class="nav-link" id="modificar-nodo-tab" data-toggle="pill" href="#modificar-nodo" role="tab">Cambiar de Nodo</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="facturas-tab" data-toggle="pill" href="#facturas" role="tab">Estado de Factura</a>
+                </li>
             </ul>
             
             <!-- Tab panes -->
@@ -324,9 +327,10 @@
                 </div>
                     {{-- Tab cambio de nodo  --}}
                 <div class="tab-pane fade" id="modificar-nodo" role="tabpanel">
-
                     @livewire('editar-nodo-cliente', ['cliente' => $cliente])
-
+                </div>
+                <div class="tab-pane fade" id="facturas" role="tabpanel">
+                     @livewire('facturacion.detalle-factura', ['cliente' => $cliente]) 
                 </div>
                 
             </div>

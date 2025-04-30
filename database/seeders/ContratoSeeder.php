@@ -33,7 +33,7 @@ class ContratoSeeder extends Seeder
                 'fecha_inicio' => now()->subMonths(rand(1, 12)), // Fecha entre 1 y 12 meses atrás
                 'fecha_fin' => null, // Contratos activos sin fecha de fin
                 'estado' => 'activo',
-                'precio' => $this->getPrecioSegunPlan($planes->random()),
+                'precio' => collect([16, 23, 30])->random(),               
                 'created_at' => now(),
             ]);
         });

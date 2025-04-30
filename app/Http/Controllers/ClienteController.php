@@ -30,6 +30,11 @@ class ClienteController extends Controller
         return view('clientes.search');
     }
 
+    public function historialFacturas(Cliente $cliente)
+    {
+        return view('clientes.historial-facturas', compact('cliente'));
+    }
+    
     // Funcion para mostrar clientes sin ip asignadas 
     public function asignarIPindex()
     {

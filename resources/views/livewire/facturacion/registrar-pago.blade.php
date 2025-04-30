@@ -26,7 +26,12 @@
                             @foreach($facturas as $factura)
                             <tr>
                                 <td>{{ $factura->numero_factura }}</td>
-                                <td>{{ $factura->contrato->cliente->nombre }}</td>
+                                <td>
+                                    <a href="{{ route('clientes.show', $factura->contrato->cliente->id) }}" class="badge bg-info text-decoration-none" target="_blank">
+                                        {{ $factura->contrato->cliente->nombre }}
+                                    </a>
+                                </td>
+                                
                                 <td>${{ number_format($factura->monto_total, 2) }}</td>
                                 <td>
                                     <button wire:click="seleccionarFactura({{ $factura->id }})" 

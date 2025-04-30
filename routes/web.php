@@ -39,6 +39,8 @@ Route::get('/clientes/create', [ClienteController::class, 'create'])->name('clie
 Route::get('/clientes/search', [ClienteController::class, 'search'])->name('clientesBuscar');
 Route::get('/clientes/{id}', [ClienteController::class, 'show'])->name('clientes.show');
 Route::put('/clientes/edit/{id}', [ClienteController::class, 'update'])->name('clientes.update');
+Route::get('/clientes/{cliente}/historial-facturas', [ClienteController::class, 'historialFacturas'])->name('clientes.historial-facturas');
+
 
 // Ruta para mostrar los clientes con IP nula
 Route::get('/cliente/asignarip', [ClienteController::class, 'asignarIPindex'])->name('asignarIPindex');

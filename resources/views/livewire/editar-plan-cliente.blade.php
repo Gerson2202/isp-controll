@@ -32,7 +32,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Nodo actual:</label>
-                                <p class="form-control-plaintext">{{ $cliente->contrato->plan->nodo->nombre }}</p>
+                                <p class="form-control-plaintext">{{ $cliente->contrato->plan->nodo->nombre ?? 'sin nodo'}}</p>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Plan actual:</label>

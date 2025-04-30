@@ -44,7 +44,7 @@ class EditarPlanCliente extends Component
             return;
         }
 
-        $this->id_nodo = $this->cliente->contrato->plan->nodo->id;
+        $this->id_nodo = optional($this->cliente->contrato?->plan?->nodo)->id;
         $this->planes = Plan::where('nodo_id', $this->id_nodo)
                           ->orderBy('nombre')
                           ->get();

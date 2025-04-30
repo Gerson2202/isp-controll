@@ -47,7 +47,7 @@ class RegistrarPago extends Component
                 'monto' => [
                     'required',
                     'numeric',
-                    'min:0.01',
+                    'min:1',
                     function ($attribute, $value, $fail) {
                         if ($value > $this->facturaSeleccionada->saldo_pendiente) {
                             $message = 'El monto no puede ser mayor al saldo pendiente ($'.number_format($this->facturaSeleccionada->saldo_pendiente, 2).')';

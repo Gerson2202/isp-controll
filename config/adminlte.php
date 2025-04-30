@@ -339,31 +339,45 @@ return [
             ],
         ],
     ],
-     // Seccion facturacion
+
+     // Seccion Contratos
      [
+        'text'    => 'Contratos', // Texto principal
+        'icon'    => 'fas fa-file-contract', // Icono principal
+        'submenu' => [
+            [
+                'text' => 'Crear contrato',
+                'route' => 'contratoIndex', // Ruta para agregar cliente
+                'icon' => 'fas fa-plus', // Icono para agregar
+            ],
+            [
+                'text' => 'Lista de Contratos',
+                'route' => 'contratoIndex', // Ruta para agregar cliente
+                'icon' => 'fas fa-list', // Icono para agregar
+            ],
+             
+        ],
+    ],
+     // Seccion facturacion
+    [
         'text'    => 'Facturacion', // Texto principal
         'icon'    => 'fas fa-credit-card', // Icono principal
         'submenu' => [
             [
                 'text' => 'Dashboard',
                 'route' => 'facturacion.dashboard', // Ruta paraDashboard
-                'icon' => 'fas fa-plus', 
+                'icon' => 'fas fa-chart-line', 
             ],
             [
-                'text' => 'Crear contrato',
-                'route' => 'contratoIndex', // Ruta para agregar cliente
-                'icon' => 'fas fa-plus', // Icono para agregar
-            ],
-             [
-                'text' => 'Facturas',
+                'text' => 'Crear Facturas',
                  'route' => 'facturacion.index', // Ruta para ver clientes
-                 'icon' => 'fas fa-dollar-sign', // Icono para listar
-             ],
-             [
+                 'icon' => 'fas fa-file-invoice-dollar', // Icono para listar
+            ],
+            [
                 'text' => 'Pagos',
                  'route' => 'pagos.index', // Ruta para ver clientes
-                 'icon' => 'fas fa-dollar-sign', // Icono para listar
-             ],
+                 'icon' => 'fas fa-money-bill-wave', // Icono para listar
+            ],
         ],
     ],
 
