@@ -347,12 +347,12 @@ return [
         'submenu' => [
             [
                 'text' => 'Crear contrato',
-                'route' => 'contratoIndex', // Ruta para agregar cliente
+                'route' => 'contratoIndex', // 
                 'icon' => 'fas fa-plus', // Icono para agregar
             ],
             [
                 'text' => 'Lista de Contratos',
-                'route' => 'contratoIndex', // Ruta para agregar cliente
+                'route' => 'contratos.list', // Ruta para agregar cliente
                 'icon' => 'fas fa-list', // Icono para agregar
             ],
              

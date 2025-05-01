@@ -15,6 +15,8 @@ class Contrato extends Model
         'plan_id',     // ID del plan
         'fecha_inicio',
         'fecha_fin',
+        'tecnologia',
+        'estado',
         'precio',      // Cambié 'monto' por 'precio'
     ];
 

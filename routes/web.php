@@ -67,8 +67,9 @@ Route::get('/nodos', [NodoController::class, 'index'])->name('nodosIndex');
 Route::get('/Nonitoreo', [NodoController::class, 'index1'])->name('MonitoreoIndex');
 // Rutas para Contratos
 Route::get('/contratos', [ContratoController::class, 'index'])->name('contratoIndex');
-Route::get('asignar-contrato/{cliente}', [ContratoController::class, 'asignarContrato'])->name('asignarContrato');
-Route::post('guardar-contrato', [ContratoController::class, 'guardarContrato'])->name('guardarContrato');
+Route::get('/contratos/list', [ContratoController::class, 'list'])->name('contratos.list');
+Route::get('/asignar-contrato/{cliente}', [ContratoController::class, 'asignarContrato'])->name('asignarContrato');
+Route::post('/guardar-contrato', [ContratoController::class, 'guardarContrato'])->name('guardarContrato');
 
 // Rutas para Pooles
 // ---Vista Gestionar Pooles--

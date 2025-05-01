@@ -47,10 +47,16 @@ class ContratosList extends Component
         $this->sortField = $field;
     }
 
+    // Funcion oculatar modal
+    public function hide()
+    {
+        $this->showModal = false;
+    }
+
     public function openEditModal($contratoId)
     {
+        $this->showModal = true;
         $contrato = Contrato::findOrFail($contratoId);
-        
         $this->contratoId = $contrato->id;
         $this->cliente_id = $contrato->cliente_id;
         $this->plan_id = $contrato->plan_id;
@@ -59,14 +65,14 @@ class ContratosList extends Component
         $this->fecha_inicio = $contrato->fecha_inicio; // Formato Y-m-d
         $this->fecha_fin = $contrato->fecha_fin;       // Formato Y-m-d o null
         
-        $this->showModal = true;
     }
 
     public function updateContrato()
     {
-        $this->validate();
+       
+        $contrato = Contrato::findOrFail($this->contratoId);
 
-        Contrato::find($this->contratoId)->update([
+        $contrato->update([
             'cliente_id' => $this->cliente_id,
             'plan_id' => $this->plan_id,
             'tecnologia' => $this->tecnologia,
@@ -76,8 +82,13 @@ class ContratosList extends Component
         ]);
 
         $this->showModal = false;
-        $this->dispatch('notify', type: 'success', message: 'Contrato actualizado!');
-    }
+            
+        // Notificación Toastr
+        $this->dispatch('notify', 
+        type: 'success',
+        message: 'Contrato actualizado exitosamente!'
+        );
+        }
 
     public function render()
     {

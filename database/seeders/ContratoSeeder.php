@@ -26,12 +26,14 @@ class ContratoSeeder extends Seeder
 
         // Crear 1 contrato activo por cliente
         $clientes->each(function ($cliente) use ($planes) {
+            $fechaInicio = now()->subMonths(rand(1, 12));
+            
             Contrato::create([
                 'cliente_id' => $cliente->id,
-                'plan_id' => $planes->random()->id, // Asigna un plan aleatorio
+                'plan_id' => $planes->random()->id,
                 'tecnologia' => $this->getTecnologiaAleatoria(),
-                'fecha_inicio' => now()->subMonths(rand(1, 12)), // Fecha entre 1 y 12 meses atrás
-                'fecha_fin' => null, // Contratos activos sin fecha de fin
+                'fecha_inicio' => $fechaInicio,
+                'fecha_fin' => $fechaInicio->copy()->addYear(), // Fecha fin = 1 año después
                 'estado' => 'activo',
                 'precio' => collect([16, 23, 30])->random(),               
                 'created_at' => now(),

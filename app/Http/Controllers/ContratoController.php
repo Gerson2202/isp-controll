@@ -17,6 +17,16 @@ class ContratoController extends Controller
         return view('contratos.index',compact('clientesSinContrato'));
     }
 
+    // Pagina donde muestro todos los contratos y poder editarlos 
+    
+    public function list()
+    {
+        
+        return view('contratos.list');
+    }
+    
+    
+
     public function asignarContrato($cliente_id)
     {
         // Buscar el cliente
