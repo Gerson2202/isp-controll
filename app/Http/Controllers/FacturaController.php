@@ -18,4 +18,10 @@ class FacturaController extends Controller
 
        return view('facturacion.dashboard');
     }
+
+    public function cortes()
+    {
+
+       return view('clientes.tablaCortes');
+    }
 }

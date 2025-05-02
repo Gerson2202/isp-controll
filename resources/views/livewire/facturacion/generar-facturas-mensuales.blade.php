@@ -6,7 +6,7 @@
             </div>
             <div class="card-body">
                 {{-- Poder selecionar mes y año libremente --}}
-                {{-- <div class="row mb-4">
+                 <div class="row mb-4">
                     <div class="col-md-6">
                         <label class="form-label">Mes</label>
                         <select wire:model="mes" class="form-select">
@@ -22,9 +22,9 @@
                         <input type="number" wire:model="anio" class="form-control" 
                                min="{{ now()->year - 1 }}" max="{{ now()->year + 1 }}">
                     </div>
-                </div> --}}
+                </div> 
                 <!-- Selectores de Fecha -->
-                <div class="row mb-4">
+                {{-- <div class="row mb-4">
                     <div class="col-md-6">
                         <label class="form-label">Mes</label>
                         <select class="form-select" disabled>
@@ -47,7 +47,7 @@
                         </select>
                         <input type="hidden" wire:model="anio" value="{{ $currentYear }}">
                     </div>
-                </div>
+                </div> --}}
                 
                 <!-- Botón de Acción -->
                 <button wire:click="generarFacturas" wire:loading.attr="disabled" class="btn btn-success">

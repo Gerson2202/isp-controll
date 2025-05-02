@@ -401,6 +401,11 @@ return [
                 'route' => 'nodosIndex', // Ruta para ver nodos 
                 'icon' => 'fas fa-broadcast-tower', // Icono para listar
            ],
+           [
+            'text' => 'Cortes y activaciones',
+            'route' => 'facturacion.corte', // Ruta para ver nodos 
+            'icon' => 'fas fa-plug', // Icono para listar
+            ],
         ],
     ],
     // Botón para Planes con submenú

@@ -142,12 +142,14 @@ Route::patch('/visitas/{visita}/actualizar-fechas', function($visita) {
  Route::get('/facturacion/index', [FacturaController::class, 'index'])->name('facturacion.index');
  Route::get('/pagos/index', [PagoController::class, 'index'])->name('pagos.index');
  Route::get('/facturacion/dashboard', [FacturaController::class, 'dashboard'])->name('facturacion.dashboard');
+ Route::get('/facturacion/corte', [FacturaController::class, 'cortes'])->name('facturacion.corte');
 
- Route::prefix('facturacion')->group(function () {
-    Route::get('/panel', PanelFacturacion::class)->name('facturacion.panel');
-    Route::get('/facturas', ListaFacturas::class)->name('facturas.index');
-    Route::get('/generar-facturas', GenerarFacturasMensuales::class)->name('facturas.generar');
-    Route::get('/procesar-cortes', ProcesarCortes::class)->name('facturas.cortes');
-});
+
+//  Route::prefix('facturacion')->group(function () {
+//     Route::get('/panel', PanelFacturacion::class)->name('facturacion.panel');
+//     Route::get('/facturas', ListaFacturas::class)->name('facturas.index');
+//     Route::get('/generar-facturas', GenerarFacturasMensuales::class)->name('facturas.generar');
+//     Route::get('/procesar-cortes', ProcesarCortes::class)->name('facturas.cortes');
+//     });
 
 });

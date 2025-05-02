@@ -23,9 +23,9 @@ return new class extends Migration
             $table->string('correo')->nullable();
             $table->string('punto_referencia')->nullable();
             $table->string('descripcion')->nullable();
-            $table->foreignId('pool_id')->nullable()->constrained()->onDelete('cascade'); // Relación con el pool
-           
-            $table->string('estado')->nullable();
+            $table->foreignId('pool_id')->nullable()->constrained()->onDelete('cascade'); // Relación con el pool   
+            $table->enum('estado', ['activo', 'cortado'])->default('activo');
+
             $table->timestamps();  // created_at, updated_at
         });
         

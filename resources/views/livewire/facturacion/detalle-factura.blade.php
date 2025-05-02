@@ -81,15 +81,7 @@
                                 @endforeach
                             </tbody>
                         </table>
-                    </div>
-                    <div class="text-center mt-4">
-                        <a 
-                            href="{{ route('clientes.historial-facturas', $cliente->id) }}" 
-                            class="btn btn-primary"
-                        >
-                            <i class="fas fa-history me-2"></i> Ver Histórico Completo
-                        </a>
-                    </div>
+                    </div>                 
                 @else
                 
                     <div class="alert alert-info mb-0">
@@ -105,4 +97,12 @@
             </div>
         </div>
     @endif
+    <div class="text-center mt-4">
+        <a 
+            href="{{ route('clientes.historial-facturas', $cliente->id) }}" 
+            class="btn btn-primary"
+        >
+            <i class="fas fa-history me-2"></i> Ver Histórico Completo
+        </a>
+    </div>
 </div>

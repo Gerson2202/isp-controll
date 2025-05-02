@@ -22,7 +22,7 @@ class ClienteFactory extends Factory
             'direccion' => $this->faker->address(),  // Dirección
             'correo' => $this->faker->unique()->safeEmail(),  // Correo electrónico
             'cedula' => $this->faker->unique()->numerify('###########'),  // Cédula (números aleatorios)
-            'estado' => 'suspendido',
+            'estado' => 'cortado',
         ];
     }
 }
