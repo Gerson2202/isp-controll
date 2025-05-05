@@ -3,46 +3,50 @@
 namespace App\Livewire\Facturacion;
 
 use Livewire\Component;
-use Livewire\WithPagination; // Agregar este trait
+use Livewire\WithPagination;
 use App\Models\Factura;
 use App\Models\Pago;
-use Illuminate\Support\Facades\DB; // Importación necesaria
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 class RegistrarPago extends Component
 {
-    use WithPagination; // Usar el trait de paginación
+    use WithPagination;
     
-    protected $paginationTheme = 'bootstrap'; // Opcional: si usas Bootstrap
+    protected $paginationTheme = 'bootstrap';
     
     public $search = '';
     public $facturaSeleccionada;
     public $monto;
     public $metodo_pago = 'efectivo';
     public $fecha_pago;
+    public $pagoRegistrado = null;
+    public $mostrarComprobante = false;
 
     public function seleccionarFactura($facturaId)
     {
         $this->facturaSeleccionada = Factura::with('contrato.cliente')->find($facturaId);
         $this->monto = $this->facturaSeleccionada->saldo_pendiente;
         $this->fecha_pago = now()->format('Y-m-d');
+        $this->mostrarComprobante = false;
+        $this->pagoRegistrado = null;
     }
 
     public function cerrarModal()
     {
         $this->facturaSeleccionada = null;
         $this->reset(['monto', 'metodo_pago', 'fecha_pago']);
+        $this->mostrarComprobante = false;
+        $this->pagoRegistrado = null;
     }
 
     public function registrarPago()
     {
         try {
-            // Validación adicional
             if (!$this->facturaSeleccionada) {
                 throw new Exception('No se ha seleccionado ninguna factura');
             }
 
-            // Validación de campos
             $this->validate([
                 'monto' => [
                     'required',
@@ -63,17 +67,14 @@ class RegistrarPago extends Component
                 'fecha_pago' => 'required|date|before_or_equal:today'
             ]);
 
-            // Transacción de base de datos
             DB::transaction(function () {
-                // Registrar el pago
-                $pago = Pago::create([
+                $this->pagoRegistrado = Pago::create([
                     'factura_id' => $this->facturaSeleccionada->id,
                     'monto' => $this->monto,
                     'metodo_pago' => $this->metodo_pago,
                     'fecha_pago' => $this->fecha_pago
                 ]);
 
-                // Actualizar factura
                 $this->facturaSeleccionada->saldo_pendiente -= $this->monto;
                 
                 if ($this->facturaSeleccionada->saldo_pendiente <= 0) {
@@ -82,20 +83,15 @@ class RegistrarPago extends Component
                 
                 $this->facturaSeleccionada->save();
             });
-
-            // Reset y notificación
-            $this->reset(['facturaSeleccionada', 'monto', 'metodo_pago', 'fecha_pago']);
-            $this->resetPage();
-            
             $this->dispatch('notify', 
-                type: 'success', 
-                message: 'Pago registrado correctamente'
-            );
+            type: 'success', 
+            message: 'Pago regitrado exitosamente'
+        );
+            $this->mostrarComprobante = true;
+            $this->reset(['monto', 'metodo_pago', 'fecha_pago']);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // Las validaciones de Laravel ya manejan esto
             throw $e;
-            
         } catch (Exception $e) {
             $this->dispatch('notify', 
                 type: 'error', 
@@ -104,15 +100,22 @@ class RegistrarPago extends Component
         }
     }
 
+    public function cerrarComprobante()
+    {
+        $this->mostrarComprobante = false;
+        $this->facturaSeleccionada = null;
+        $this->pagoRegistrado = null;
+        $this->resetPage();
+    }
 
     public function updatingSearch()
     {
-        $this->resetPage(); // Resetear la paginación cuando se cambia la búsqueda
+        $this->resetPage();
     }
 
     public function getFacturasProperty()
     {
-        return Factura::where('estado', 'pendiente') // Este filtro siempre se aplica
+        return Factura::where('estado', 'pendiente')
             ->when($this->search, function($query) {
                 $query->where(function($q) {
                     $q->where('numero_factura', 'like', '%'.$this->search.'%')

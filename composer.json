@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "evilfreelancer/routeros-api-php": "^1.5",
+        "intervention/image": "^3.11",
         "jeroennoten/laravel-adminlte": "^3.14",
         "laravel/framework": "^11.31",
         "laravel/jetstream": "^5.3",
