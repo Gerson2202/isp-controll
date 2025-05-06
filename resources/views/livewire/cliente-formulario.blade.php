@@ -44,7 +44,7 @@
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-phone text-muted"></i></span>
-                                    <input type="number" wire:model="telefono" class="form-control" id="telefono" required>
+                                    <input type="text" wire:model="telefono" class="form-control" id="telefono" required>
                                 </div>
                                 @error('telefono') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>

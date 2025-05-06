@@ -107,7 +107,18 @@ class PoolComponent extends Component
     public function delete($id)
     {
         try {
-            Pool::findOrFail($id)->delete();
+            $pool = Pool::findOrFail($id);
+            
+            // Verificar si el pool tiene clientes asociados
+            if ($pool->clientes()->count() > 0) {
+                $this->dispatch('notify', 
+                    type: 'error',
+                    message: 'No se puede eliminar el pool porque tiene clientes asignados.'
+                );
+                return; // Esto detiene la ejecución
+            }
+            
+            $pool->delete();
             $this->loadPools();
             
             $this->dispatch('notify', 

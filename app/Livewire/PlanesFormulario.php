@@ -52,7 +52,14 @@ class PlanesFormulario extends Component
         try {
             // Buscar el plan
             $plan = Plan::findOrFail($this->plan_id);
-            
+            // Verificar si el plan tiene contratos asociados
+            if ($plan->contratos()->exists()) {
+                $this->dispatch('notify', 
+                    type: 'error',
+                    message: 'No se puede Editar el plan porque está asociado a contratos existentes.'
+                );
+                return; // Detener la ejecución
+            }
             // Actualizar plan
             $plan->update([
                 'nombre' => $this->nombre,
@@ -99,11 +106,32 @@ class PlanesFormulario extends Component
     // Borrar el plan
     public function deletePlan($id)
     {
-       
-       Plan::find($id)->delete();
-       $this->plans = Plan::all(); // Volver a cargar los planes
-        $this->successMessage = 'Plan Eliminado con exito!';
-
+        try {
+            $plan = Plan::findOrFail($id);
+            
+            // Verificar si el plan tiene contratos asociados
+            if ($plan->contratos()->exists()) {
+                $this->dispatch('notify', 
+                    type: 'error',
+                    message: 'No se puede eliminar el plan porque está asociado a contratos existentes.'
+                );
+                return; // Detener la ejecución
+            }
+            
+            $plan->delete();
+            $this->plans = Plan::all(); // Volver a cargar los planes
+            
+            $this->dispatch('notify', 
+                type: 'success',
+                message: 'Plan eliminado con éxito!'
+            );
+            
+        } catch (\Exception $e) {
+            $this->dispatch('notify', 
+                type: 'error',
+                message: 'Error al eliminar plan: '.$e->getMessage()
+            );
+        }
     }
 
     // Validación de los campos
@@ -120,10 +148,7 @@ class PlanesFormulario extends Component
     public function submitPlan()
     {
         try {
-            // Validar los datos del formulario (sin cambios)
-            $this->validate();
             
-            // Crear un nuevo plan (sin cambios)
             Plan::create([
                 'nombre' => $this->nombre,
                 'descripcion' => $this->descripcion,

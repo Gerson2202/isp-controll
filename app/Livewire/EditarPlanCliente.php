@@ -81,7 +81,7 @@ class EditarPlanCliente extends Component
                 ]
             );
             // Creamos ticket de reporte de modificacion de plan 
-            $situacionTexto = "Se realizó cambio de plan de {$planAnterior->nombre} con precio de : {$this->precio_anterior} al plan: {$nuevoPlan->nombre} con precio $ {$this->precio}. Actualizado por el usuario: " . auth()->user()->name;
+            $situacionTexto = "Se realizó cambio de plan de {$planAnterior->nombre} con precio de : $ {$this->precio_anterior} al plan: {$nuevoPlan->nombre} con precio $ {$this->precio}. Actualizado por el usuario: " . auth()->user()->name;
             Ticket::create([
                 'tipo_reporte' => 'cambio de plan',
                 'situacion' => $situacionTexto,
