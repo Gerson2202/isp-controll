@@ -57,44 +57,99 @@
                     <h3 class="card-title mb-0"><i class="bi bi-monitor me-2"></i>Monitor de Nodo: {{ $nodoNombre }}</h3>
                 </div>
                 <div class="card-body">
-                    <!-- Información del sistema -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <div class="card bg-light mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title"><i class="bi bi-clock-history me-2"></i>Tiempo de Encendido</h5>
-                                    <p class="card-text display-6">12d 4h 35m</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="card bg-light mb-3">
-                                <div class="card-body">
-                                    <h5 class="card-title"><i class="bi bi-cpu me-2"></i>Uso de CPU</h5>
-                                    <div class="d-flex align-items-center">
-                                        <div class="progress w-75 me-2" style="height: 20px;">
-                                            <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" 
-                                                 role="progressbar" 
-                                                 style="width: 45%;" 
-                                                 aria-valuenow="45" 
-                                                 aria-valuemin="0" 
-                                                 aria-valuemax="100">
-                                            </div>
-                                        </div>
-                                        <span class="fw-bold">45%</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Botón para cargar interfaces -->
                     <div class="d-grid gap-2 mb-4">
                         <button wire:click="loadInterfaces"
                                 class="btn btn-primary btn-lg">
-                            <i class="bi bi-arrow-repeat me-2"></i>Cargar Interfaces
+                            <i class="bi bi-arrow-repeat me-2"></i>Cargar Datos
                         </button>
                     </div>
+                    <!-- Información del sistema -->
+                    <div class="row mb-4">                       
+                        {{-- uptime --}}
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body p-3 d-flex flex-column">
+                                    <h6 class="card-title mb-2">
+                                        <i class="bi bi-clock-history me-2"></i>Tiempo de Encendido
+                                    </h6>
+                                    <p class="mb-0 fw-semibold">{{ $systemResources['uptime'] ?? 'N/A' }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {{-- cpu --}}
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body p-3 d-flex flex-column">
+                                    <h6 class="card-title mb-2">
+                                        <i class="bi bi-cpu me-2"></i>Uso de CPU
+                                    </h6>
+                                    <div class="position-relative">
+                                        @php
+                                            // Obtener el porcentaje de CPU o usar 0 como valor por defecto
+                                            $cpuLoad = (int)($systemResources['cpu-load'] ?? 0);
+                                            
+                                            // Determinar el color según el porcentaje
+                                            $progressBarClass = 'bg-success'; // Por defecto verde
+                                            $alertMessage = '';
+                                            
+                                            if ($cpuLoad >= 40 && $cpuLoad <= 75) {
+                                                $progressBarClass = 'bg-warning'; // Amarillo
+                                            } elseif ($cpuLoad > 75) {
+                                                $progressBarClass = 'bg-danger'; // Rojo
+                                                $alertMessage = '¡Alerta! CPU supera el 75% de uso';
+                                            }
+                                        @endphp
+                        
+                                        <!-- Barra de progreso -->
+                                        <div class="progress" style="height: 16px;">
+                                            <div 
+                                                class="progress-bar {{ $progressBarClass }} progress-bar-striped progress-bar-animated" 
+                                                role="progressbar"
+                                                style="width: {{ $cpuLoad }}%;"
+                                                aria-valuenow="{{ $cpuLoad }}"
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Porcentaje centrado -->
+                                        <span class="fw-bold text-center position-absolute w-100" 
+                                              style="top: 50%; transform: translateY(-50%); left: 0;
+                                                     color: {{ $cpuLoad > 50 ? 'white' : 'inherit' }};">
+                                            {{ $cpuLoad }}%
+                                        </span>
+                                        
+                                        <!-- Mensaje de alerta cuando supera 75% -->
+                                        @if($cpuLoad > 75)
+                                            <div class="mt-2 alert alert-danger py-1 mb-0 text-center">
+                                                <i class="bi bi-exclamation-triangle-fill"></i> {{ $alertMessage }}
+                                            </div>
+                                        @endif
+                                        
+                                        <!-- Mensaje cuando no hay datos -->
+                                        @if(!isset($systemResources['cpu-load']))
+                                            <div class="mt-2 alert alert-warning py-1 mb-0 text-center">
+                                                <i class="bi bi-exclamation-circle"></i> Datos de CPU no disponibles
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Temperatura y voltaje --}}
+                        <div class="col-md-6">
+                            <div class="card bg-light mb-3">
+                                <div class="card-body p-3 d-flex flex-column">
+                                    <h6 class="card-title mb-2">
+                                        <i class="bi bi-thermometer-half me-2"></i>Temperatura y Voltaje
+                                    </h6>
+                                    <p class="mb-0 fw-semibold">Temperatura: <strong>{{ $systemHealth['temperature'] ?? 0 }}</strong> </p>
+                                    <p class="mb-0 fw-semibold">Voltaje: <strong>{{ $systemHealth['voltage'] ?? 0 }}</strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>           
 
                     <!-- Mensajes de error -->
                     @if($errorMessage)

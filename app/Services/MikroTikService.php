@@ -145,7 +145,43 @@ class MikroTikService
         return (float)$bits / 1000000; // 1 Mbps = 1000000 bps
        
     }
+
+    // Consultar infromacion de systeam 
+    public function getSystemResources()
+    {
+        $query = new Query('/system/resource/print');
+        $response = $this->client->query($query)->read();
     
+        return $response[0] ?? [];
+    }
+    
+    //consultar voltaje y tempertura
+    public function getSystemHealth()
+    {
+        // Realizamos la consulta a /system/health/print
+        $query = new Query('/system/health/print');
+        $response = $this->client->query($query)->read();
+
+        // Inicializamos las variables para almacenar los valores de temperatura y voltaje
+        $healthData = [
+            'temperature' => 'N/A',
+            'voltage' => 'N/A'
+        ];
+
+        // Iteramos sobre los resultados para encontrar los valores de temperatura y voltaje
+        foreach ($response as $item) {
+            if ($item['name'] == 'voltage') {
+                $healthData['voltage'] = $item['value'] . ' ' . $item['type'];
+            }
+            if ($item['name'] == 'temperature') {
+                $healthData['temperature'] = $item['value'] . ' ' . $item['type'];
+            }
+        }
+
+        return $healthData;
+    }
+
+// -----------------------------------------------------------------
     // FUNCIONES PARA CREAR COLAS PADRES
        
 
@@ -339,7 +375,7 @@ class MikroTikService
             $this->client->query($query)->read();
 
         } catch (\Exception $e) {
-            \Log::error("Error al actualizar plan en MikroTik", [
+            Log::error("Error al actualizar plan en MikroTik", [
                 'cliente_id' => $clienteId,
                 'ip' => $ipCliente,
                 'error' => $e->getMessage()
@@ -391,7 +427,7 @@ class MikroTikService
                     ->equal('max-limit', ($nuevoMaxSubida * 1000000).'/'.($nuevoMaxBajada * 1000000))
             )->read();
 
-            \Log::info("Límites actualizados", [
+            Log::info("Límites actualizados", [
                 'plan' => $nombrePlan,
                 'targets' => $totalTargets,
                 'previous_max' => "$maxSubidaActual/$maxBajadaActual",
@@ -506,9 +542,9 @@ class MikroTikService
                 case 'cortado':
                     $this->cortarCliente($ipCliente);
                     break;
-                case 'suspendido':
-                    $this->suspenderCliente($ipCliente);
-                    break;
+                // case 'suspendido':
+                //     $this->suspenderCliente($ipCliente);
+                //     break;
             }
             return true;
         } catch (\Exception $e) {
@@ -540,16 +576,6 @@ class MikroTikService
         // Agregar a la lista "cortado"
         $this->agregarAAddressList($ipCliente, 'cortado');
     }
-
-    /**
-     * Suspende un cliente (opcional)
-     */
-    private function suspenderCliente($ipCliente)
-    {
-        // Implementar lógica para suspensión si es necesaria
-        // Por ejemplo, podrías tener una lista "suspendido"
-    }
-
     /**
      * Agrega una IP a una address list específica
      */

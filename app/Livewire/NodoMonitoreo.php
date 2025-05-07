@@ -5,8 +5,6 @@ namespace App\Livewire;
 use App\Models\Nodo;
 use App\Services\MikroTikService;
 use Livewire\Component;
-use RouterOS\Exceptions\ConnectException;
-use RouterOS\Exceptions\BadCredentialsException;
 
 class NodoMonitoreo extends Component
 {
@@ -17,6 +15,10 @@ class NodoMonitoreo extends Component
     public $nodoNombre = ''; // Nombre del nodo seleccionado
     public $nodo; // Objeto del nodo seleccionado
     public $interfaceStats = []; // Estadísticas de tráfico de las interfaces
+    public $systemResources = [];
+    public $systemHealth = [];
+    public $isLoading = false;
+    public $shouldCancel = false;
     public function mount()
     {
         // Obtener todos los nodos al cargar el componente
@@ -36,6 +38,8 @@ class NodoMonitoreo extends Component
         $this->nodoNombre = $this->nodo->nombre;
         $this->selectedNodoId = $nodoId;
         $this->interfaces = []; // Limpiar las interfaces al seleccionar un nuevo nodo
+        $this->systemResources = []; // Limpiar las interfaces al seleccionar un nuevo nodo
+        $this->systemHealth = []; // Limpiar las interfaces al seleccionar un nuevo nodo
         $this->errorMessage = ''; // Limpiar mensajes de error
     }
 
@@ -72,6 +76,8 @@ class NodoMonitoreo extends Component
         try {
             $this->interfaces = $mikroTikService->getInterfaces();
             $this->interfaceStats = $mikroTikService->getInterfaceStatistics(); // Obtener estadísticas
+            $this->systemResources = $mikroTikService->getSystemResources(); //obtener datos de sistema CPU-TIEMPO
+            $this->systemHealth = $mikroTikService->getSystemHealth(); //Obtener Voltage y temperatura
             $this->errorMessage = ''; // Limpiar mensajes de error
         } catch (\Exception $e) {
             $this->errorMessage = 'Error al obtener las interfaces: ' . $e->getMessage();
