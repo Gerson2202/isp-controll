@@ -1,11 +1,9 @@
 @extends('adminlte::page')
-@section('title', 'Dashboard') <!-- Corregí "Dasboard" a "Dashboard" -->
-
+@section('title', 'Dashboard')
 @section('content_header')
    <h1>Informacion del cliente</h1>
    @livewireStyles
    
-   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
    <!-- Agrega los estilos de Bootstrap -->
    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
    <!-- Toastr -->
@@ -68,6 +66,9 @@
                 <li class="nav-item">
                     <a class="nav-link" id="facturas-tab" data-toggle="pill" href="#facturas" role="tab">Estado de Factura</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="grafica-tab" data-toggle="pill" href="#grafica" role="tab">Grafica de consumo</a>
+                </li>
             </ul>
             
             <!-- Tab panes -->
@@ -83,6 +84,10 @@
                                 <button class="btn btn-warning btn-sm mb-3" data-bs-toggle="modal" data-bs-target="#editClienteModal">
                                     <i class="fas fa-edit me-1"></i> Editar Información
                                 </button>
+                                <a href="{{ route('clientes.graficas', ['id' => $cliente->id]) }}" class="btn btn-primary">
+                                    Ver Gráficas
+                                </a>
+                                
                             
                                 <ul class="list-unstyled">
                                     <li class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Cedula:</strong> {{$cliente->cedula}}</li>
@@ -332,6 +337,9 @@
                 <div class="tab-pane fade" id="facturas" role="tabpanel">
                      @livewire('facturacion.detalle-factura', ['cliente' => $cliente]) 
                 </div>
+                <div class="tab-pane fade" id="grafica" role="tabpanel">
+                    {{-- @livewire('clientes.graficas-consumo-cliente', ['cliente' => $cliente]) --}}
+                </div>
                 
             </div>
         </div>
@@ -424,12 +432,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    {{-- ---- --}}
-    <!-- Agregar los scripts de Bootstrap -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
     @stack('scripts')
     <!-- JavaScript -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    {{-- <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script> --}}
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>

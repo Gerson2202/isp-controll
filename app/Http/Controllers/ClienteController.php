@@ -34,6 +34,12 @@ class ClienteController extends Controller
     {
         return view('clientes.historial-facturas', compact('cliente'));
     }
+
+    public function graficas($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+        return view('clientes.graficas', compact('cliente'));
+    }
     
     // Funcion para mostrar clientes sin ip asignadas 
     public function asignarIPindex()

@@ -2,30 +2,22 @@
 
 namespace App\Livewire;
 
-use App\Models\Plan;
 use Livewire\Component;
 
 class Prueba extends Component
 {
-    public $plans;
-    public $selectedPlanId;
-
-    public function mount()
-    {
-        // Obtener todos los planes de la base de datos
-        $this->plans = Plan::all();
-    }
-
-    public function changePlan()
-    {
-        // Este método se ejecutará cuando el usuario cambie la selección
-        dd($this->selectedPlanId); // Muestra el ID del plan seleccionado
-    }
+    public $datos = [
+        ['x' => 'Ene', 'y' => 65],
+        ['x' => 'Feb', 'y' => 59],
+        ['x' => 'Mar', 'y' => 80],
+        ['x' => 'Abr', 'y' => 81],
+        ['x' => 'May', 'y' => 56],
+        ['x' => 'Jun', 'y' => 55],
+        ['x' => 'Jul', 'y' => 40]
+    ];
 
     public function render()
     {
-        return view('livewire.prueba', [
-            'plans' => $this->plans,
-        ]);
+        return view('livewire.prueba');
     }
 }

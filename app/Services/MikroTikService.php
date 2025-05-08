@@ -646,6 +646,37 @@ class MikroTikService
         }
     }
 
-    
+    // Graficas de consumo
+
+    public function obtenerEstadisticasCliente($ipCliente, $clienteId)
+    {
+        try {
+            $query = (new Query('/queue/simple/print'))
+            ->where('target', $ipCliente.'/32');
+            
+            $colas = $this->client->query($query)->read();
+            
+            if (empty($colas)) {
+                throw new \Exception("No se encontró la cola del cliente");
+            }
+
+            $cola = $colas[0];
+            $rates = explode('/', $cola['rate'] ?? '0/0');
+            
+            return [
+                'subida' => round($rates[1] / 1000000, 2), // Upload en Mbps
+                'bajada' => round($rates[0] / 1000000, 2),  // Download en Mbps
+                'raw_rate' => $cola['rate']
+            ];
+
+        } catch (\Exception $e) {
+            Log::error("Error obteniendo estadísticas", [
+                'ip' => $ipCliente,
+                'error' => $e->getMessage()
+            ]);
+            throw new \Exception("Error al obtener datos: " . $e->getMessage());
+        }
+    }
+
 }
    

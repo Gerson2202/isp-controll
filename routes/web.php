@@ -38,6 +38,8 @@ Route::get('/clientes', [ClienteController::class, 'index'])->name('clientesInde
 Route::get('/clientes/create', [ClienteController::class, 'create'])->name('clientesCreate');
 Route::get('/clientes/search', [ClienteController::class, 'search'])->name('clientesBuscar');
 Route::get('/clientes/{id}', [ClienteController::class, 'show'])->name('clientes.show');
+Route::get('/clientes/grafica/{id}', [ClienteController::class, 'graficas'])->name('clientes.graficas');
+
 Route::put('/clientes/edit/{id}', [ClienteController::class, 'update'])->name('clientes.update');
 Route::get('/clientes/{cliente}/historial-facturas', [ClienteController::class, 'historialFacturas'])->name('clientes.historial-facturas');
 
