@@ -9,27 +9,35 @@ use Illuminate\Support\Facades\Log;
 class GraficasConsumoCliente extends Component
 {
     public $cliente;
-    public $datosConsumo = [];
-    public $mostrarGraficas = false;
+    public $labels = [];
+    public $subidaData = [];
+    public $bajadaData = [];
     public $isLoading = false;
     public $error = null;
+    protected $maxDataPoints = 60; // 60 puntos = 1 minuto de datos
 
-    public function cargarGraficas()
+    public function mount()
     {
-        $this->mostrarGraficas = true;
+        if ($this->cliente) {
+            $this->iniciarMonitoreo();
+        }
+    }
+
+    public function iniciarMonitoreo()
+    {
         $this->obtenerDatosConsumo();
+        $this->dispatch('iniciar-monitoreo');
     }
 
     public function obtenerDatosConsumo()
     {
-        if (!$this->mostrarGraficas) return;
-
         $this->isLoading = true;
         $this->error = null;
 
         try {
             $nodo = $this->cliente->contrato->plan->nodo;
-            
+
+            // Obtener estadísticas del cliente
             $estadisticas = (new MikroTikService(
                 $nodo->ip,
                 $nodo->user,
@@ -40,36 +48,31 @@ class GraficasConsumoCliente extends Component
                 $this->cliente->id
             );
 
-            $this->agregarPuntoDatos($estadisticas);
-            $this->dispatch('actualizarGraficas')->self();
-            $this->dispatch('programarActualizacion', intervalo: 1000);
+            // Agregar nuevos datos
+            $timestamp = now()->format('H:i:s');
+            $this->labels[] = $timestamp;
+            $this->subidaData[] = $estadisticas['subida'];
+            $this->bajadaData[] = $estadisticas['bajada'];
 
+            // Limitar la cantidad de puntos a mostrar
+            if (count($this->labels) > $this->maxDataPoints) {
+                array_shift($this->labels);
+                array_shift($this->subidaData);
+                array_shift($this->bajadaData);
+            }
+
+            // Log para depuración
+            Log::info('Datos acumulados:', [
+                'labels' => $this->labels,
+                'subidaData' => $this->subidaData,
+                'bajadaData' => $this->bajadaData,
+            ]);
         } catch (\Exception $e) {
             $this->error = $e->getMessage();
+            Log::error("Error obteniendo estadísticas: " . $e->getMessage());
         } finally {
             $this->isLoading = false;
         }
-    }
-
-    protected function agregarPuntoDatos($estadisticas)
-    {
-        $this->datosConsumo[] = [
-            'timestamp' => now()->format('H:i:s'),
-            'subida' => $estadisticas['subida'],
-            'bajada' => $estadisticas['bajada'],
-            'raw_rate' => $estadisticas['raw_rate']
-        ];
-
-        // Mantener máximo 30 puntos de datos
-        if (count($this->datosConsumo) > 30) {
-            array_shift($this->datosConsumo);
-        }
-    }
-
-    public function resetearGraficas()
-    {
-        $this->mostrarGraficas = false;
-        $this->datosConsumo = [];
     }
 
     public function render()
