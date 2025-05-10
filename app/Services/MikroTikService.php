@@ -664,8 +664,8 @@ class MikroTikService
             $rates = explode('/', $cola['rate'] ?? '0/0');
             
             return [
-                'subida' => round($rates[1] / 1000000, 2), // Upload en Mbps
-                'bajada' => round($rates[0] / 1000000, 2),  // Download en Mbps
+                'bajada' => round($rates[1] / 1000000, 2), // Upload en Mbps
+                'subida' => round($rates[0] / 1000000, 2),  // Download en Mbps
                 'raw_rate' => $cola['rate']
             ];
 

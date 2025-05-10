@@ -14,7 +14,7 @@ class GraficasConsumoCliente extends Component
     public $bajadaData = [];
     public $isLoading = false;
     public $error = null;
-    protected $maxDataPoints = 60; // 60 puntos = 1 minuto de datos
+    protected $maxDataPoints = 10; // Ahora solo se guardan 5 puntos
 
     public function mount()
     {
@@ -25,6 +25,7 @@ class GraficasConsumoCliente extends Component
 
     public function iniciarMonitoreo()
     {
+        // Se llama cada segundo desde el cliente
         $this->obtenerDatosConsumo();
         $this->dispatch('iniciar-monitoreo');
     }
@@ -54,7 +55,7 @@ class GraficasConsumoCliente extends Component
             $this->subidaData[] = $estadisticas['subida'];
             $this->bajadaData[] = $estadisticas['bajada'];
 
-            // Limitar la cantidad de puntos a mostrar
+            // Limitar la cantidad de puntos a 5
             if (count($this->labels) > $this->maxDataPoints) {
                 array_shift($this->labels);
                 array_shift($this->subidaData);

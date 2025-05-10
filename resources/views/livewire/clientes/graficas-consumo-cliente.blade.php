@@ -1,25 +1,61 @@
 <div>
     <div>
     <!-- Título -->
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Gráficas de Consumo - {{ $cliente->nombre }}</h1>
-
-    <!-- Mensajes de estado -->
-    @if($isLoading)
-        <div class="p-4 mb-4 bg-blue-100 text-blue-800 rounded">Obteniendo datos...</div>
-    @endif
-
-    @if($error)
-        <div class="p-4 mb-4 bg-red-100 text-red-800 rounded">{{ $error }}</div>
-    @endif
-
-    <!-- Contenedor de gráfica -->
-    <div class="bg-white p-6 rounded-lg shadow-md">
-        <div class="h-96">
+   <div class="card shadow-sm border-0">
+    <!-- Card header -->
+    <div class="card-header bg-white border-0 py-3">
+        <h5 class="card-title mb-0">
+    <span class="d-flex align-items-center">
+        <i class="bi bi-graph-up me-2 text-primary"></i>
+        <a href="{{ route('clientes.show', $cliente->id) }}" class="text-decoration-none">
+            <span class="text-primary fw-semibold hover-underline">
+                {{ $cliente->nombre }}
+            </span>
+        </a>
+        <span class="badge ms-2" style="background-color: #6f42c1; color: white; font-weight: 500">
+            {{ $cliente->contrato->plan->nombre }}
+        </span>
+    </span>
+</h5>
+    </div>
+    
+    <!-- Card body (gráfica) -->
+    <div class="card-body p-0">
+        <div class="p-4" style="height: 400px;">
             <canvas id="consumoChart" wire:ignore></canvas>
         </div>
     </div>
+    
+    <!-- Card footer (opcional) -->
+   <div class="card-footer bg-light border-0 py-2">
+    <div class="d-flex align-items-center justify-content-between">
+        <span class="text-muted small">Datos en vivo</span>
+        
+        <div class="d-flex align-items-center">
+            <span class="vr mx-2 opacity-25"></span>
+            <span class="text-dark fw-medium">
+                <i class="bi bi-ethernet me-1"></i>
+                <strong>{{ $cliente->ip ?: 'Sin ip' }}</strong>
+            </span>
+            <span class="vr mx-2 opacity-25"></span>
+        </div>
+        
+        <span class="text-muted small">@if($isLoading)<i class="bi bi-lightning-charge"></i>@endif</span>
+    </div>
+</div>
+</div>
 
-    @push('scripts')
+<style>
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+@push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('livewire:initialized', () => {
@@ -35,25 +71,28 @@
                 consumoChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: @json($labels),
+                        labels: [], // Inicialmente vacío
                         datasets: [
                             {
                                 label: 'Subida (Mbps)',
-                                data: @json($subidaData),
+                                data: [],
                                 borderColor: 'rgb(59, 130, 246)',
                                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
                                 tension: 0.4,
                                 borderWidth: 2,
-                                fill: true
+                                fill: true,
+                                pointRadius: 1  // <-- Añade esta línea para ocultar puntos
+                                
                             },
                             {
                                 label: 'Bajada (Mbps)',
-                                data: @json($bajadaData),
+                                data: [],
                                 borderColor: 'rgb(239, 68, 68)',
                                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
                                 tension: 0.4,
                                 borderWidth: 2,
-                                fill: true
+                                fill: true,
+                                pointRadius: 1  // <-- Añade esta línea para ocultar puntos
                             }
                         ]
                     },
@@ -61,7 +100,7 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         animation: {
-                            duration: 0
+                            duration: 0 // Sin animación para actualizaciones rápidas
                         },
                         plugins: {
                             legend: {
@@ -90,13 +129,14 @@
                 });
             }
 
-            // Actualizar gráfica
-           function updateChart() {
+            // Actualizar gráfica con datos acumulados
+            function updateChart(labels, subidaData, bajadaData) {
                 if (!consumoChart) return;
 
-                consumoChart.data.labels = @json($labels); // Etiquetas actualizadas
-                consumoChart.data.datasets[0].data = @json($subidaData); // Datos de subida actualizados
-                consumoChart.data.datasets[1].data = @json($bajadaData); // Datos de bajada actualizados
+                // Actualizar etiquetas y datos
+                consumoChart.data.labels = labels; // Etiquetas actualizadas (acumuladas)
+                consumoChart.data.datasets[0].data = subidaData; // Datos de subida acumulados
+                consumoChart.data.datasets[1].data = bajadaData; // Datos de bajada acumulados
                 consumoChart.update(); // Actualiza la gráfica
             }
 
@@ -105,16 +145,19 @@
                 // Limpiar intervalo existente
                 if (intervalo) clearInterval(intervalo);
 
-                // Iniciar nuevo intervalo
-                intervalo = setInterval(updateChart, 1000);
-
-                // Primera actualización inmediata
-                updateChart();
+                // Iniciar nuevo intervalo para solicitar datos y actualizar la gráfica
+                intervalo = setInterval(() => {
+                    $wire.call('obtenerDatosConsumo') // Llama al servidor para obtener nuevos datos
+                        .then(() => {
+                            // Actualizar gráfica con los datos acumulados
+                            updateChart($wire.get('labels'), $wire.get('subidaData'), $wire.get('bajadaData'));
+                        });
+                }, 1000); // Cada 1 segundo
             });
 
             // Inicializar gráfica
             initChart();
-            
+
             // Iniciar monitoreo automáticamente
             $wire.dispatch('iniciar-monitoreo');
 
@@ -124,7 +167,7 @@
             });
         });
     </script>
-    @endpush
+@endpush
 </div>
 </div>
 

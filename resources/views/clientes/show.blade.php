@@ -66,14 +66,15 @@
                 <li class="nav-item">
                     <a class="nav-link" id="facturas-tab" data-toggle="pill" href="#facturas" role="tab">Estado de Factura</a>
                 </li>
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a class="nav-link" id="grafica-tab" data-toggle="pill" href="#grafica" role="tab">Grafica de consumo</a>
-                </li>
+                </li> --}}
             </ul>
             
             <!-- Tab panes -->
             <div class="tab-content mt-3">
                 <div class="tab-pane fade show active" id="info" role="tabpanel">
+                    {{-- Datos personales --}}
                     <div class="row">
                         <div class="col-lg-4">
                             <h3 class="text-primary"><i class="fas fa-paint-brush"></i> {{$cliente->nombre}}</h3>
@@ -84,11 +85,7 @@
                                 <button class="btn btn-warning btn-sm mb-3" data-bs-toggle="modal" data-bs-target="#editClienteModal">
                                     <i class="fas fa-edit me-1"></i> Editar Información
                                 </button>
-                                <a href="{{ route('clientes.graficas', ['id' => $cliente->id]) }}" class="btn btn-primary">
-                                    Ver Gráficas
-                                </a>
-                                
-                            
+                                                
                                 <ul class="list-unstyled">
                                     <li class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Cedula:</strong> {{$cliente->cedula}}</li>
                                     <li class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Telefono:</strong> {{$cliente->telefono}}</li>
@@ -166,19 +163,79 @@
                                 </div>
                             </div>
                             <hr>
-                            <h5 class="mt-5 text-center text-muted"><strong>Datos De red </strong></h5>
-                            <ul class="list-unstyled">
-                                @if ($cliente->ip == null)
-                                <li class=" text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Nodo:</strong>No disponible</li>
-                                <li class=" text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Ip:</strong>No disponible</li>
+                            <hr class="my-4 border-opacity-25">
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-header bg-white border-0 py-3">
+                                    <h5 class="card-title mb-0 text-center">
+                                        <i class="fas fa-network-wired me-2 text-primary"></i>
+                                        <span class="text-gradient">Datos de Red</span>
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        @if ($cliente->ip == null)
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <i class="fas fa-server me-2 text-muted"></i>
+                                                    <strong>Nodo:</strong>
+                                                </span>
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary">No disponible</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <i class="fas fa-globe me-2 text-muted"></i>
+                                                    <strong>IP:</strong>
+                                                </span>
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary">No disponible</span>
+                                            </li>
+                                        @else
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <i class="fas fa-server me-2 text-primary"></i>
+                                                    <strong>Nodo:</strong>
+                                                </span>
+                                                <span class="badge bg-primary bg-opacity-10 text-dark">{{ $cliente->contrato->plan->nodo->nombre }}</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <i class="fas fa-globe me-2 text-primary"></i>
+                                                    <strong>IP:</strong>
+                                                </span>
+                                                <span class="badge bg-primary bg-opacity-10 text-dark font-monospace">{{ $cliente->ip }}</span>
+                                            </li>
+                                        @endif
+                                    </ul>
 
-                                @else
-                                <li class=" text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Nodo:</strong> cucuta</li>
-                                <li class=" text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Ip:</strong> {{$cliente->ip}}</li>
-
-                                @endif
+                                    @if ($cliente->ip)
+                                        <div class="d-grid mt-3">
+                                            <a href="{{ route('clientes.graficas', ['id' => $cliente->id]) }}" 
+                                            class="btn btn-primary btn-hover-gradient">
+                                                <i class="fas fa-chart-line me-2"></i> Ver Consumo en Vivo
+                                            </a>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <style>
+                                .text-gradient {
+                                    background: linear-gradient(135deg, #3a7bd5 0%, #00d2ff 100%);
+                                    -webkit-background-clip: text;
+                                    background-clip: text;
+                                    -webkit-text-fill-color: transparent;
+                                    font-weight: 600;
+                                }
                                 
-                            </ul>
+                                .btn-hover-gradient:hover {
+                                    background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+                                    border-color: transparent;
+                                    transform: translateY(-1px);
+                                }
+                                
+                                .font-monospace {
+                                    font-family: 'Courier New', monospace;
+                                    letter-spacing: 0.5px;
+                                }
+                            </style>
                         </div>
                         <div class="col-lg-8">
                             <div class="row">
@@ -337,9 +394,9 @@
                 <div class="tab-pane fade" id="facturas" role="tabpanel">
                      @livewire('facturacion.detalle-factura', ['cliente' => $cliente]) 
                 </div>
-                <div class="tab-pane fade" id="grafica" role="tabpanel">
-                    {{-- @livewire('clientes.graficas-consumo-cliente', ['cliente' => $cliente]) --}}
-                </div>
+                {{-- <div class="tab-pane fade" id="grafica" role="tabpanel">
+                     @livewire('clientes.graficas-consumo-cliente', ['cliente' => $cliente]) 
+                </div> --}}
                 
             </div>
         </div>
