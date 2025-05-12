@@ -49,7 +49,7 @@ class ActualizarEstadoCliente extends Component
                 'estado' => 'cerrado',
                 'fecha_cierre' => now(), 
                 'cliente_id' => $this->cliente->id,
-                'solucion' => 'Plan actualizado correctamente desde el panel',
+                'solucion' => 'Estado actualizado correctamente desde el panel',
             ]);
             $plan = $this->cliente->contrato->plan;
             $nodo = $plan->nodo;

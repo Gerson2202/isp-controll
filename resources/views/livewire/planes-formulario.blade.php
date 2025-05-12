@@ -71,10 +71,12 @@
                                                       class="btn btn-outline-primary">
                                                   <i class="fas fa-edit"></i>
                                               </button>
-                                              <button wire:click="deletePlan({{ $plan->id }})" 
-                                                      class="btn btn-outline-danger">
-                                                  <i class="fas fa-trash"></i>
-                                              </button>
+                                              <button 
+                                                    x-data
+                                                    @click.prevent="if (confirm('¿Estás seguro de que deseas eliminar este plan?')) { $wire.deletePlan({{ $plan->id }}) }" 
+                                                    class="btn btn-outline-danger">
+                                                    <i class="fas fa-trash"></i>
+                                               </button>
                                           </div>
                                           
                                           @if($plan->nodo)
@@ -198,113 +200,112 @@
      
     <!-- Modal Editar Planes -->
     <div class="modal fade @if($showModal) show @endif" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style="display: @if($showModal) block @else none @endif;">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <!-- Encabezado del Modal -->
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="exampleModalLabel">
-                    <i class="fas fa-edit me-2"></i>Editar Plan
-                </h5>
-                <button wire:click="hide" type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            
-            <!-- Cuerpo del Modal -->
-            <div class="modal-body">
-                <form wire:submit.prevent="updatePlan">
-                    <!-- Campos del formulario -->
-                    <div class="row">
-                        <!-- Columna Izquierda -->
-                        <div class="col-md-6">
-                            <!-- Nombre -->
-                            <div class="form-group mb-3">
-                                <label for="nombre" class="form-label">
-                                    <i class="fas fa-tag me-1"></i>Nombre
-                                </label>
-                                <input type="text" class="form-control shadow-sm" id="nombre" wire:model="nombre">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <!-- Encabezado del Modal -->
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="exampleModalLabel">
+                        <i class="fas fa-edit me-2"></i>Editar Plan
+                    </h5>
+                    <button wire:click="hide" type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                
+                <!-- Cuerpo del Modal -->
+                <div class="modal-body">
+                    <form wire:submit.prevent="updatePlan">
+                        <!-- Campos del formulario -->
+                        <div class="row">
+                            <!-- Columna Izquierda -->
+                            <div class="col-md-6">
+                                <!-- Nombre -->
+                                <div class="form-group mb-3">
+                                    <label for="nombre" class="form-label">
+                                        <i class="fas fa-tag me-1"></i>Nombre
+                                    </label>
+                                    <input type="text" class="form-control shadow-sm" id="nombre" wire:model="nombre">
+                                </div>
+                                
+                                <!-- Descripción -->
+                                <div class="form-group mb-3">
+                                    <label for="descripcion" class="form-label">
+                                        <i class="fas fa-align-left me-1"></i>Descripción
+                                    </label>
+                                    <textarea class="form-control shadow-sm" id="descripcion" wire:model="descripcion" rows="3"></textarea>
+                                </div>
+                                
+                                <!-- Rehuso -->
+                                <div class="form-group mb-3">
+                                    <label for="rehuso" class="form-label">
+                                        <i class="fas fa-exchange-alt me-1"></i>Rehuso
+                                    </label>
+                                    <select class="form-control shadow-sm" id="rehuso" wire:model="rehuso">
+                                        <option value="">Seleccione un rehuso</option>
+                                        <option value="1:1">1:1</option>
+                                        <option value="1:2">1:2</option>
+                                        <option value="1:4">1:4</option>
+                                        <option value="1:6">1:6</option>
+                                    </select>
+                                </div>
                             </div>
                             
-                            <!-- Descripción -->
-                            <div class="form-group mb-3">
-                                <label for="descripcion" class="form-label">
-                                    <i class="fas fa-align-left me-1"></i>Descripción
-                                </label>
-                                <textarea class="form-control shadow-sm" id="descripcion" wire:model="descripcion" rows="3"></textarea>
-                            </div>
-                            
-                            <!-- Rehuso -->
-                            <div class="form-group mb-3">
-                                <label for="rehuso" class="form-label">
-                                    <i class="fas fa-exchange-alt me-1"></i>Rehuso
-                                </label>
-                                <select class="form-control shadow-sm" id="rehuso" wire:model="rehuso">
-                                    <option value="">Seleccione un rehuso</option>
-                                    <option value="1:1">1:1</option>
-                                    <option value="1:2">1:2</option>
-                                    <option value="1:4">1:4</option>
-                                    <option value="1:6">1:6</option>
-                                </select>
+                            <!-- Columna Derecha -->
+                            <div class="col-md-6">
+                                <!-- Velocidad de Bajada -->
+                                <div class="form-group mb-3">
+                                    <label for="velocidad_bajada" class="form-label">
+                                        <i class="fas fa-download me-1"></i>Velocidad de bajada
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control shadow-sm" id="velocidad_bajada" 
+                                            wire:model="velocidad_bajada" min="0">
+                                        <span class="input-group-text">Mbps</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Velocidad de Subida -->
+                                <div class="form-group mb-3">
+                                    <label for="velocidad_subida" class="form-label">
+                                        <i class="fas fa-upload me-1"></i>Velocidad de subida
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control shadow-sm" id="velocidad_subida" 
+                                            wire:model="velocidad_subida" min="0">
+                                        <span class="input-group-text">Mbps</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Nodo -->
+                                <div class="form-group mb-3">
+                                    <label for="nodo_id" class="form-label">
+                                        <i class="fas fa-server me-1"></i>Nodo
+                                    </label>
+                                <select class="form-control shadow-sm" id="nodo_id" wire:model="nodo_id" required>
+                                        <option value="">Seleccione un nodo</option>
+                                        @foreach($nodos as $nodo)
+                                            <option value="{{ $nodo->id }}">{{ $nodo->nombre }}</option>
+                                        @endforeach
+                                    </select>
+
+                                </div>
                             </div>
                         </div>
                         
-                        <!-- Columna Derecha -->
-                        <div class="col-md-6">
-                            <!-- Velocidad de Bajada -->
-                            <div class="form-group mb-3">
-                                <label for="velocidad_bajada" class="form-label">
-                                    <i class="fas fa-download me-1"></i>Velocidad de bajada
-                                </label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control shadow-sm" id="velocidad_bajada" 
-                                           wire:model="velocidad_bajada" min="0">
-                                    <span class="input-group-text">Mbps</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Velocidad de Subida -->
-                            <div class="form-group mb-3">
-                                <label for="velocidad_subida" class="form-label">
-                                    <i class="fas fa-upload me-1"></i>Velocidad de subida
-                                </label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control shadow-sm" id="velocidad_subida" 
-                                           wire:model="velocidad_subida" min="0">
-                                    <span class="input-group-text">Mbps</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Nodo -->
-                            <div class="form-group mb-3">
-                                <label for="nodo_id" class="form-label">
-                                    <i class="fas fa-server me-1"></i>Nodo
-                                </label>
-                                <select class="form-control shadow-sm" id="nodo_id" wire:model="nodo_id" required>
-                                    <option value="">Seleccione un nodo</option>
-                                    @foreach($nodos as $nodo)
-                                        <option value="{{ $nodo->id }}" {{ $nodo->id == $nodo_id ? 'selected' : '' }}>
-                                            {{ $nodo->nombre }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                        <!-- Pie del Modal -->
+                        <div class="modal-footer">
+                            <button wire:click="hide" type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i>Cancelar
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Actualizar
+                            </button>
                         </div>
-                    </div>
-                    
-                    <!-- Pie del Modal -->
-                    <div class="modal-footer">
-                        <button wire:click="hide" type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-1"></i>Cancelar
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-1"></i>Actualizar
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
       <!-- Script Para manejo de Notificaciones Tosatar -->
       @push('scripts')

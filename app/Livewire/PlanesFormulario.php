@@ -15,7 +15,8 @@ class PlanesFormulario extends Component
     public $showModal = false;
     public $plans;
     public $nodos;
-    public $nombre, $descripcion, $velocidad_bajada, $velocidad_subida, $rehuso, $plan_id, $nodo_id;
+    public $nombre, $descripcion, $velocidad_bajada, $velocidad_subida, $rehuso, $plan_id;
+    public $nodo_id = ''; // o null
     public $successMessage = ''; // Propiedad para el mensaje de éxito
 
     public function mount()
@@ -233,13 +234,20 @@ class PlanesFormulario extends Component
 
             // Solo mostrar éxito si realmente se creó
             if ($result) {
-                $this->successMessage = 'Cola padre creada exitosamente en el nodo '.$plan->nodo->nombre;
-                $this->dispatch('show-success-message');
+
+                $this->dispatch('notify', 
+                type: 'success', 
+                message: 'Cola padre creada exitosamente en el nodo '.$plan->nodo->nombre
+                );
             }
 
         } catch (\Exception $e) {
             $this->addError('activation', 'Error al activar plan: '.$e->getMessage());
             Log::error("Error al activar plan {$planId}: ".$e->getMessage());
+            $this->dispatch('notify', 
+                type: 'error', 
+                message: 'Error al activar plan {$planId}: '.$e->getMessage()
+                );
         } finally {
             $this->loadingActivation = false;
             $this->currentPlanActivating = null;

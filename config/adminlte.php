@@ -196,7 +196,7 @@ return [
     'classes_content_wrapper' => '',
     'classes_content_header' => '',
     'classes_content' => '',
-    'classes_sidebar' => 'sidebar-dark-primary elevation-4',
+    'classes_sidebar' => 'sidebar-light-primary elevation-4',
     'classes_sidebar_nav' => '',
     'classes_topnav' => 'navbar-white navbar-light',
     'classes_topnav_nav' => 'navbar-expand',
@@ -409,17 +409,11 @@ return [
         ],
     ],
     // Botón para Planes con submenú
+    
     [
-        'text'    => 'Planes', // Texto principal
-        'icon'    => 'fas fa-chart-line', // Icono principal
-        'submenu' => [
-            [
-                'text' => 'Gestionar Planes',
-                'route' => 'planesCreate', // Ruta para crear plan
-                'icon' => 'fas fa-plus', // Icono para crear
-            ],
-            
-        ],
+            'text'   => 'Planes',
+            'route'  => 'planesCreate', // Nombre de la ruta
+            'icon'   => 'fas fa-chart-line', // Icono de FontAwesome
     ],
     
      // Seccion Inventario
@@ -483,9 +477,9 @@ return [
     ],
         // Botón de monitoreo
     [
-            'text'   => 'Monitoreo de Consumo',
+            'text'   => 'Monitorear nodos',
             'route'  => 'MonitoreoIndex', // Nombre de la ruta
-            'icon'   => 'fas fa-camera', // Icono de FontAwesome
+            'icon'   => 'fas fa-network-wired', // Icono de FontAwesome
     ],
 ],
 

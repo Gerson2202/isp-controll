@@ -35,7 +35,7 @@
             <span class="vr mx-2 opacity-25"></span>
             <span class="text-dark fw-medium">
                 <i class="bi bi-ethernet me-1"></i>
-                <strong>{{ $cliente->ip ?: 'Sin ip' }}</strong>
+                <strong>IPV4: {{ $cliente->ip ?: 'Sin ip' }}</strong>
             </span>
             <span class="vr mx-2 opacity-25"></span>
         </div>

@@ -7,7 +7,6 @@
                 <label for="estado">Estado del Cliente</label>
                 <select class="form-control" wire:model="estado">
                     <option value="activo">Activo</option>
-                    <option value="suspendido">Suspendido</option>
                     <option value="cortado">Cortado</option>
                 </select>
                 @error('estado') <span class="text-danger">{{ $message }}</span> @enderror
