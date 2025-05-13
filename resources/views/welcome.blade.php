@@ -67,13 +67,11 @@
                     <div class="relative w-full max-w-6xl px-6 py-10">
                         <header class="grid grid-cols-2 items-center gap-4 py-10 lg:grid-cols-3">
                             <div class="flex items-center">
-                                <svg class="h-12 w-auto text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M19.4 15C19.2669 15.3016 19.227 15.6362 19.2863 15.9606C19.3456 16.285 19.5009 16.5834 19.7316 16.8141C19.9623 17.0448 20.2607 17.2001 20.5851 17.2594C20.9095 17.3187 21.2441 17.2788 21.5457 17.1457" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M2.45426 6.85431C2.75593 6.72118 3.09047 6.68133 3.41489 6.74062C3.73931 6.79991 4.03772 6.95523 4.26841 7.18592C4.4991 7.41661 4.65442 7.71502 4.71371 8.03944C4.773 8.36386 4.73315 8.6984 4.60002 9.00006" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M4.60002 15C4.73315 15.3016 4.773 15.6362 4.71371 15.9606C4.65442 16.285 4.4991 16.5834 4.26841 16.8141C4.03772 17.0448 3.73931 17.2001 3.41489 17.2594C3.09047 17.3187 2.75593 17.2788 2.45426 17.1457" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    <path d="M19.4 9.00006C19.2669 8.6984 19.227 8.36386 19.2863 8.03944C19.3456 7.71502 19.5009 7.41661 19.7316 7.18592C19.9623 6.95523 20.2607 6.79991 20.5851 6.74062C20.9095 6.68133 21.2441 6.72118 21.5457 6.85431" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
+                                <img 
+                                    src="{{ asset('img/logo.png') }}" 
+                                    alt="Logo Isprotik" 
+                                    class="h-16 w-auto object-contain hover:scale-105 transition-transform duration-300"
+                                >
                                 <span class="ml-3 text-2xl font-bold text-white">Isprotik</span>
                             </div>
                             <div class="flex lg:justify-center lg:col-start-2">
@@ -254,6 +252,14 @@
                                     </a>
                                 </div>
                             </div>
+                            <div class="flex flex-col sm:flex-row justify-center gap-4">    
+                                <img 
+                                    src="{{ asset('img/logo.png') }}" 
+                                    alt="Logo Isprotik" 
+                                    class="h-40 w-auto object-contain hover:scale-105 transition-transform duration-300"
+                                >
+                            </div>
+                            
                         </main>
 
                         <footer class="py-16 text-center text-sm text-white/80">
