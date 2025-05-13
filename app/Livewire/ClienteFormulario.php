@@ -14,7 +14,7 @@ class ClienteFormulario extends Component
     public $direccion;
     public $email;
     public $cedula;
-    public $estado = 'activo'; // Valor predeterminado
+    public $estado = 'suspendido'; // Valor predeterminado
 
    
 

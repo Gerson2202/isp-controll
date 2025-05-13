@@ -297,15 +297,30 @@
                             <button wire:click="hide" type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                 <i class="fas fa-times me-1"></i>Cancelar
                             </button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i>Actualizar
+                            <button type="submit"
+                                    onclick="return confirm('¿Estás seguro de que deseas actualizar el plan?')"
+                                    wire:loading.attr="disabled"
+                                    wire:target="updatePlan"
+                                    class="btn btn-primary">
+                                <span wire:loading.remove wire:target="updatePlan">
+                                    <i class="fas fa-save me-1"></i>Actualizar
+                                </span>
+                                <span wire:loading wire:target="updatePlan">
+                                    <i class="fas fa-spinner fa-spin me-1"></i>Procesando...
+                                </span>
                             </button>
+
+                        </div>
+                        <!-- Deshabilitar formulario durante carga -->
+                        <div wire:loading.class="pe-none" wire:target="updatePlan">
                         </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+    
+    
 
       <!-- Script Para manejo de Notificaciones Tosatar -->
       @push('scripts')

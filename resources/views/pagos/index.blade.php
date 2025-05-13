@@ -3,7 +3,7 @@
 
 @section('content_header')
 
-   <h1 class="ml-2">Pagos</h1>
+<h1 class="ml-1"><i class="bi bi-cash-coin me-2"></i>Registrar Pago</h1>
 
 @stop
 
@@ -21,6 +21,8 @@
     <!-- Toastr -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <!-- Livewire Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
 @stop
 
 @section('js')

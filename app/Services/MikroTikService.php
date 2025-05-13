@@ -8,6 +8,7 @@ use RouterOS\Exceptions\BadCredentialsException;
 use RouterOS\Exceptions\ConnectException;
 use Illuminate\Support\Facades\Log; // Importar la clase Log
 
+
 class MikroTikService
 {
     protected $client;
@@ -678,5 +679,50 @@ class MikroTikService
         }
     }
 
+    // funcionaes para actualizar plan ;  elimnar cola padre con sus hijas
+    
+   /**
+ * Elimina una cola padre y todas sus colas hijas en MikroTik
+ * 
+ * @param string $nombreColaPadre Nombre exacto de la cola padre
+ * @return bool
+ * @throws \Exception Si ocurre algún error
+ */
+    public function eliminarColaPadreYHijas(string $nombreColaPadre): bool
+    {
+        try {
+            // 1. Primero eliminamos todas las colas hijas (targets)
+            $queryHijas = new Query('/queue/simple/print');
+            $queryHijas->where('parent', $nombreColaPadre);
+            $hijas = $this->client->query($queryHijas)->read();
+
+            foreach ($hijas as $hija) {
+                $removeQuery = new Query('/queue/simple/remove');
+                $removeQuery->equal('.id', $hija['.id']);
+                $this->client->query($removeQuery)->read();
+            }
+
+            // 2. Luego eliminamos la cola padre
+            $queryPadre = new Query('/queue/simple/print');
+            $queryPadre->where('name', $nombreColaPadre);
+            $padre = $this->client->query($queryPadre)->read();
+
+            if (!empty($padre)) {
+                $removePadre = new Query('/queue/simple/remove');
+                $removePadre->equal('.id', $padre[0]['.id']);
+                $this->client->query($removePadre)->read();
+            }
+
+            return true;
+
+        } catch (\RouterOS\Exceptions\ConnectException $e) {
+            throw new \Exception("Error de conexión al MikroTik: " . $e->getMessage());
+            
+        } catch (\RouterOS\Exceptions\BadCredentialsException $e) {
+            throw new \Exception("Credenciales incorrectas para el MikroTik: " . $e->getMessage());
+            
+        } catch (\Exception $e) {
+            throw new \Exception("Error al eliminar colas: " . $e->getMessage());
+        }
+    }
 }
-   

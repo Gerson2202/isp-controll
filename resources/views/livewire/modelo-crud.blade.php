@@ -69,7 +69,7 @@
                                     </td>
                                     <td>
                                         <button class="btn btn-warning btn-sm" wire:click="edit({{ $modelo->id }})">Editar</button>
-                                        <button class="btn btn-danger btn-sm" wire:click="delete({{ $modelo->id }})">Eliminar</button>
+                                        {{-- <button class="btn btn-danger btn-sm" wire:click="delete({{ $modelo->id }})">Eliminar</button> --}}
                                     </td>
                                 </tr>
                             @endforeach

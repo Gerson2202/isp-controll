@@ -13,35 +13,54 @@
     
                 <!-- Facturas pendientes -->
                 @if($facturas->count())
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>N° Factura</th>
-                                <th>Cliente</th>
-                                <th>Total</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($facturas as $factura)
-                            <tr>
-                                <td>{{ $factura->numero_factura }}</td>
-                                <td>
-                                    <a href="{{ route('clientes.show', $factura->contrato->cliente->id) }}" class="badge bg-info text-decoration-none" target="_blank">
-                                        {{ $factura->contrato->cliente->nombre }}
-                                    </a>
-                                </td>
-                                <td>${{ number_format($factura->monto_total, 2) }}</td>
-                                <td>
-                                    <button wire:click="seleccionarFactura({{ $factura->id }})" 
-                                            class="btn btn-sm btn-success">
-                                        Registrar Pago
-                                    </button>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                   <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>N° Factura</th>
+                                    <th>Cliente</th>
+                                    <th>Mes</th>
+                                    <th>Total</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($facturas as $factura)
+                                <tr>
+                                    <td data-label="N° Factura">{{ $factura->numero_factura }}</td>
+                                    <td data-label="Cliente">
+                                        <a href="{{ route('clientes.show', $factura->contrato->cliente->id) }}" 
+                                        class="badge bg-info text-decoration-none text-truncate" 
+                                        style="max-width: 150px; display: inline-block;" 
+                                        target="_blank"
+                                        title="{{ $factura->contrato->cliente->nombre }}">
+                                            {{ $factura->contrato->cliente->nombre }}
+                                        </a>
+                                    </td>
+                                    <td data-label="Mes">
+                                        @php
+                                            $meses = [
+                                                1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+                                                5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+                                                9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+                                            ];
+                                            $mesNumero = $factura->fecha_emision ? date('n', strtotime($factura->fecha_emision)) : null;
+                                            $mesNombre = $mesNumero ? $meses[$mesNumero] : 'Sin fecha';
+                                        @endphp
+                                        <span class="badge bg-primary">{{ $mesNombre }}</span>
+                                    </td>
+                                    <td data-label="Total">${{ number_format($factura->monto_total, 2) }}</td>
+                                    <td data-label="Acciones">
+                                        <button wire:click="seleccionarFactura({{ $factura->id }})" 
+                                                class="btn btn-sm btn-success">
+                                            Registrar Pago
+                                        </button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                     
                     <!-- Paginación -->
                     <div class="mt-4">

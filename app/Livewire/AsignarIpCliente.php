@@ -148,14 +148,14 @@ class AsignarIpCliente extends Component
             );
 
             // Opcional: Log del resultado
-            \Log::info("Cola hija creada en MikroTik", [
+            Log::info("Cola hija creada en MikroTik", [
                 'cliente_id' => $cliente->id,
                 'ip' => $ipAsignada,
                 'resultado' => $resultado
             ]);
 
         } catch (\Exception $e) {
-            \Log::error("Error al crear cola hija en MikroTik: " . $e->getMessage());
+            Log::error("Error al crear cola hija en MikroTik: " . $e->getMessage());
             throw $e; // Re-lanzamos la excepción para manejarla en el método principal
         }
     }

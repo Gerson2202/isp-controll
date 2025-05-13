@@ -2,11 +2,13 @@
 
 namespace App\Livewire;
 
+use App\Models\Cliente;
 use App\Models\Nodo;
 use App\Models\Plan;
 use App\Services\MikroTikService;
 use Livewire\Component;
 use Illuminate\Support\Facades\Log; // Importar la clase Log
+use Illuminate\Support\Facades\DB;
 
 class PlanesFormulario extends Component
 {
@@ -18,6 +20,11 @@ class PlanesFormulario extends Component
     public $nombre, $descripcion, $velocidad_bajada, $velocidad_subida, $rehuso, $plan_id;
     public $nodo_id = ''; // o null
     public $successMessage = ''; // Propiedad para el mensaje de éxito
+    public $clientesAsociados = []; // clientes que tienen el plan
+    public $nodo;
+    public $isProcessing = false;
+    public $progress = 0;
+    public $totalClients = 0;
 
     public function mount()
     {
@@ -35,7 +42,7 @@ class PlanesFormulario extends Component
 
     // Mostrar el modal para actualizar
     public function editPlan($id)
-    {
+    {   
          $plan = Plan::find($id);
          $this->plan_id = $plan->id;
          $this->nombre = $plan->nombre;
@@ -50,18 +57,58 @@ class PlanesFormulario extends Component
     // Actualizar el plan
     public function updatePlan()
     {
+        $this->isProcessing = true;
+        $this->progress = 0;
+        // Iniciar transacción de base de datos
+        DB::beginTransaction();
+
         try {
-            // Buscar el plan
-            $plan = Plan::findOrFail($this->plan_id);
-            // Verificar si el plan tiene contratos asociados
-            if ($plan->contratos()->exists()) {
-                $this->dispatch('notify', 
-                    type: 'error',
-                    message: 'No se puede Editar el plan porque está asociado a contratos existentes.'
-                );
-                return; // Detener la ejecución
+            // 1. Obtener el plan y su nodo relacionado
+            $plan = Plan::with('nodo')->findOrFail($this->plan_id);
+            $this->nodo = $plan->nodo;
+
+            // 2. Obtener clientes asociados al plan
+            $this->clientesAsociados = Cliente::with('contratos')
+                ->whereHas('contratos', function($query) {
+                    $query->where('plan_id', $this->plan_id);
+                })->get();
+
+            // 3. Validar que el nodo tenga credenciales de API
+            if (!$this->nodo || !$this->nodo->ip || !$this->nodo->user) {
+                throw new \Exception("El nodo asociado no tiene credenciales de API configuradas.");
             }
-            // Actualizar plan
+
+            // 4. Inicializar servicio MikroTik
+            $mikroTikService = new MikroTikService(
+                $this->nodo->ip,
+                $this->nodo->user,
+                $this->nodo->pass,
+                $this->nodo->puerto_api ?? 8728
+            );
+
+            // 5. Eliminar cola padre y sus hijas
+            $mikroTikService->eliminarColaPadreYHijas($plan->nombre);   
+            // 6. Crear nueva cola padre
+            $mikroTikService->crearColaPadre($this->nombre,$this->velocidad_subida,$this->velocidad_bajada);
+            // Indicadores de carga
+             $this->totalClients = count($this->clientesAsociados);
+             $processedClients = 0;
+
+            // 7. Crear colas hijas
+            foreach ($this->clientesAsociados as $cliente) {
+                $mikroTikService->crearColaHija(
+                    $cliente->id,
+                    $cliente->ip,
+                    $this->nombre,
+                    $this->velocidad_subida,
+                    $this->velocidad_bajada,
+                    $this->rehuso ?? '1:1'
+                );
+                  $processedClients++;
+                  $this->progress = intval(($processedClients / $this->totalClients) * 100);
+            }
+
+            // 8. Actualizar el plan en la base de datos (dentro de la transacción)
             $plan->update([
                 'nombre' => $this->nombre,
                 'descripcion' => $this->descripcion,
@@ -70,6 +117,9 @@ class PlanesFormulario extends Component
                 'rehuso' => $this->rehuso,
                 'nodo_id' => $this->nodo_id,
             ]);
+
+            // 9. Confirmar la transacción si todo fue exitoso
+            DB::commit();
 
             // Actualizar la lista de planes
             $this->plans = Plan::all();
@@ -85,22 +135,28 @@ class PlanesFormulario extends Component
             $this->resetForm();
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
             $this->dispatch('notify', 
                 type: 'error',
                 message: 'Error: El plan no fue encontrado'
             );
 
         } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
             $this->dispatch('notify',
                 type: 'error',
                 message: 'Error de validación: ' . implode(' ', $e->validator->errors()->all())
             );
 
         } catch (\Exception $e) {
+            DB::rollBack();
             $this->dispatch('notify',
                 type: 'error',
                 message: 'Error al actualizar el plan: ' . $e->getMessage()
             );
+        }
+        finally {
+            $this->isProcessing = false; // Desactivar indicador
         }
     }
 

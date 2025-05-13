@@ -31,26 +31,43 @@ class PoolComponent extends Component
         $this->pools = Pool::with('nodo')->latest()->get();
     }
 
-    public function store()
+    public function save()
     {
-        $validated = $this->validate();
-        
+        $rules = [
+            'nodo_id' => 'required|exists:nodos,id',
+            'nombre' => 'required|string|max:255' . $this->pool_id,
+            'start_ip' => 'required|ip',
+            'end_ip' => 'required|ip|different:start_ip',
+            'descripcion' => 'nullable|string|max:500',
+        ];
+
+        $validated = $this->validate($rules);
+
         try {
-            Pool::create($validated);
-            
+            if ($this->pool_id) {
+                // Modo edición
+                $pool = Pool::findOrFail($this->pool_id);
+                $pool->update($validated);
+
+                $this->dispatch('notify', 
+                    type: 'success',
+                    message: 'Pool actualizado exitosamente!');
+            } else {
+                // Modo creación
+                Pool::create($validated);
+
+                $this->dispatch('notify', 
+                    type: 'success',
+                    message: 'Pool creado exitosamente!');
+            }
+
             $this->resetFields();
             $this->loadPools();
-            
-            $this->dispatch('notify', 
-                type: 'success',
-                message: 'Pool creado exitosamente!'
-            );
-            
+
         } catch (\Exception $e) {
             $this->dispatch('notify', 
                 type: 'error',
-                message: 'Error al crear pool: '.$e->getMessage()
-            );
+                message: 'Error: ' . $e->getMessage());
         }
     }
 
@@ -68,41 +85,6 @@ class PoolComponent extends Component
         $this->showModal = true;
     }
 
-    public function update()
-    {
-        $this->validate([
-            'nodo_id' => 'required|exists:nodos,id',
-            'nombre' => 'required|string|max:255|unique:pools,nombre,'.$this->pool_id,
-            'start_ip' => 'required|ip',
-            'end_ip' => 'required|ip|different:start_ip',
-            'descripcion' => 'nullable|string|max:500',
-        ]);
-
-        try {
-            $pool = Pool::find($this->pool_id);
-            $pool->update([
-                'nodo_id' => $this->nodo_id,
-                'nombre' => $this->nombre,
-                'start_ip' => $this->start_ip,
-                'end_ip' => $this->end_ip,
-                'descripcion' => $this->descripcion,
-            ]);
-
-            $this->hide();
-            $this->loadPools();
-            
-            $this->dispatch('notify', 
-                type: 'success',
-                message: 'Pool actualizado exitosamente!'
-            );
-            
-        } catch (\Exception $e) {
-            $this->dispatch('notify', 
-                type: 'error',
-                message: 'Error al actualizar pool: '.$e->getMessage()
-            );
-        }
-    }
 
     public function delete($id)
     {

@@ -28,7 +28,7 @@ class DatabaseSeeder extends Seeder
             NodoSeeder::class,
             ClienteSeeder::class,
             PoolSeeder::class,
-            ContratoSeeder::class
+            // ContratoSeeder::class
         ]);
     }
 }
