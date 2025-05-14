@@ -34,14 +34,20 @@ class ModeloCrud extends Component
                 'nombre' => $this->nombre,
                 'foto' => $this->saveFoto(),
             ]);
-            session()->flash('message', 'Modelo actualizado exitosamente');
+             $this->dispatch('notify', 
+                type: 'success',
+                message: 'Modelo actualizado exitosamente'
+            );
         } else {
             // Crear un nuevo modelo
             Modelo::create([
                 'nombre' => $this->nombre,
                 'foto' => $this->saveFoto(),
             ]);
-            session()->flash('message', 'Modelo creado exitosamente');
+             $this->dispatch('notify', 
+                type: 'success',
+                message: 'Modelo creado exitosamente'
+            );
         }
 
         $this->resetInputFields(); // Limpiar los campos después de guardar
@@ -56,7 +62,10 @@ class ModeloCrud extends Component
         }
         $modelo->delete();
 
-        session()->flash('message', 'Modelo eliminado exitosamente');
+         $this->dispatch('notify', 
+                type: 'error',
+                message: 'Modelo creado exitosamente'
+            );
     }
 
     // Para cargar la imagen y obtener el path

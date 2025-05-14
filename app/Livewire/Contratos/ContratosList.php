@@ -46,7 +46,12 @@ class ContratosList extends Component
         }
         $this->sortField = $field;
     }
+      public function cargarDatos()
+    {
+        
 
+        // Dispara el evento para mostrar el modal en el navegador
+    }
     // Funcion oculatar modal
     public function hide()
     {
@@ -55,7 +60,8 @@ class ContratosList extends Component
 
     public function openEditModal($contratoId)
     {
-        $this->showModal = true;
+        $this->dispatch('abrir-modal');
+        // $this->showModal = true;
         $contrato = Contrato::findOrFail($contratoId);
         $this->contratoId = $contrato->id;
         $this->cliente_id = $contrato->cliente_id;
@@ -81,7 +87,7 @@ class ContratosList extends Component
             'estado' => $this->estado
         ]);
 
-        $this->showModal = false;
+        $this->dispatch('cerrar-modal');
             
         // Notificación Toastr
         $this->dispatch('notify', 

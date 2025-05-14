@@ -68,10 +68,8 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary"
-                                            wire:click="openEditModal({{ $contrato->id }})">
-                                        Editar
-                                    </button>
+                                
+                                    <button wire:click="openEditModal({{ $contrato->id }})" class="btn btn-sm btn-primary">Editar</button>
                                 </td>
                             </tr>
                             @endforeach
@@ -87,79 +85,96 @@
         </div>
     
         <!-- Modal de edición -->
-        <div class="modal fade @if($showModal) show @endif" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style="display: @if($showModal) block @else none @endif;">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">Editar Contrato #{{ $contratoId ?? '' }}</h5>
-                        <button wire:click="hide" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form wire:submit.prevent="updateContrato">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Cliente</label>
-                                    <select class="form-select" wire:model="cliente_id" disabled>
-                                        <option value="">Seleccionar cliente</option>
-                                        @foreach($clientes as $cliente)
-                                            <option value="{{ $cliente->id }}" {{ $cliente->id == $cliente_id ? 'selected' : '' }}>
-                                                {{ $cliente->nombre }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+        <div wire:ignore.self class="modal fade" id="modalCliente" tabindex="-1" aria-labelledby="modalClienteLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">Editar Contrato #{{ $contratoId ?? '' }}</h5>
+                            <button wire:click="hide" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form wire:submit.prevent="updateContrato">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Cliente</label>
+                                        <select class="form-select" wire:model="cliente_id" disabled>
+                                            <option value="">Seleccionar cliente</option>
+                                            @foreach($clientes as $cliente)
+                                                <option value="{{ $cliente->id }}" {{ $cliente->id == $cliente_id ? 'selected' : '' }}>
+                                                    {{ $cliente->nombre }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Plan</label>
+                                        <select class="form-select" wire:model="plan_id" disabled>
+                                            <option value="">Seleccionar plan</option>
+                                            @foreach($planes as $plan)
+                                                <option value="{{ $plan->id }}" {{ $plan->id == $plan_id ? 'selected' : '' }}>
+                                                    {{ $plan->nombre }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Tecnología</label>
+                                        <select class="form-select" wire:model="tecnologia" required>
+                                            <option value="">Seleccionar tecnología</option>
+                                            <option value="Radioenlace">Radioenlace</option>
+                                            <option value="Fibra óptica">Fibra óptica</option>
+                                        </select>
+                                        @error('tecnologia') <div class="text-danger small">{{ $message }}</div> @enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Estado</label>
+                                        <select class="form-select" wire:model="estado" required>
+                                            <option value="activo" {{ $estado == 'activo' ? 'selected' : '' }}>Activo</option>
+                                            <option value="cancelado" {{ $estado == 'cancelado' ? 'selected' : '' }}>cancelado</option>
+                                            <option value="suspendido" {{ $estado == 'suspendido' ? 'selected' : '' }}>Suspendido</option>
+                                        </select>
+                                        <small class="text-danger">Los estados diferente de <strong>activo</strong> no se tendran en cuenta para facturacion.</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Fecha Inicio</label>
+                                        <input type="date" class="form-control" wire:model="fecha_inicio" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Fecha Fin</label>
+                                        <input type="date" class="form-control" wire:model="fecha_fin">
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Plan</label>
-                                    <select class="form-select" wire:model="plan_id" disabled>
-                                        <option value="">Seleccionar plan</option>
-                                        @foreach($planes as $plan)
-                                            <option value="{{ $plan->id }}" {{ $plan->id == $plan_id ? 'selected' : '' }}>
-                                                {{ $plan->nombre }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                <div class="modal-footer mt-4">
+                                    <button wire:click="hide" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <span wire:loading.remove wire:target="updateContrato">Guardar</span>
+                                        <span wire:loading wire:target="updateContrato" class="spinner-border spinner-border-sm"></span>
+                                    </button>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Tecnología</label>
-                                    <select class="form-select" wire:model="tecnologia" required>
-                                        <option value="">Seleccionar tecnología</option>
-                                        <option value="Radioenlace">Radioenlace</option>
-                                        <option value="Fibra óptica">Fibra óptica</option>
-                                    </select>
-                                    @error('tecnologia') <div class="text-danger small">{{ $message }}</div> @enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Estado</label>
-                                    <select class="form-select" wire:model="estado" required>
-                                        <option value="activo" {{ $estado == 'activo' ? 'selected' : '' }}>Activo</option>
-                                        <option value="cancelado" {{ $estado == 'cancelado' ? 'selected' : '' }}>cancelado</option>
-                                        <option value="suspendido" {{ $estado == 'suspendido' ? 'selected' : '' }}>Suspendido</option>
-                                    </select>
-                                    <small class="text-danger">Los estados diferente de <strong>activo</strong> no se tendran en cuenta para facturacion.</small>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Fecha Inicio</label>
-                                    <input type="date" class="form-control" wire:model="fecha_inicio" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Fecha Fin</label>
-                                    <input type="date" class="form-control" wire:model="fecha_fin">
-                                </div>
-                            </div>
-                            <div class="modal-footer mt-4">
-                                <button wire:click="hide" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                <button type="submit" class="btn btn-primary">
-                                    <span wire:loading.remove wire:target="updateContrato">Guardar</span>
-                                    <span wire:loading wire:target="updateContrato" class="spinner-border spinner-border-sm"></span>
-                                </button>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
+    {{-- --------- --}}
     
+     <!-- Script para abrir el modal -->
+    <script>
+        window.addEventListener('abrir-modal', () => {
+            const modal = new bootstrap.Modal(document.getElementById('modalCliente'));
+            modal.show();
+        });
+
+        window.addEventListener('cerrar-modal', () => {
+            const modalEl = document.getElementById('modalCliente');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) {
+                modal.hide();
+            }
+        });
+    </script>
+
     @push('scripts')
     
     @endpush

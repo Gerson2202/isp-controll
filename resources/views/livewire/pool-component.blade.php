@@ -65,7 +65,8 @@
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">Listado de Pools</h5>
             </div>
-            <div class="card-body">
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead class="table-light">
@@ -104,6 +105,7 @@
                 </div>
             </div>
         </div>
+
          @push('scripts')
             <script>
                 document.addEventListener('livewire:init', () => {

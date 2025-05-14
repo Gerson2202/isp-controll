@@ -79,6 +79,16 @@
             </div>
         </div>
     </div>
+    @push('scripts')
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('notify', (data) => {
+                toastr[data.type](data.message);
+            });
+        });
+    </script>
+    @endpush
+
     
 </div>
 

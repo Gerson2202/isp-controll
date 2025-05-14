@@ -54,110 +54,139 @@ class PlanesFormulario extends Component
          $this->showModal = true;  
     }
 
-    // Actualizar el plan
+    // Actualizar el plan-- ultimo cambio solo se agrego la condicion de if para dejar actualizar sino tiene contrato
     public function updatePlan()
     {
-        $this->isProcessing = true;
-        $this->progress = 0;
-        // Iniciar transacción de base de datos
-        DB::beginTransaction();
+        $plan = Plan::findOrFail($this->plan_id);
+            
+        //Verificar si el plan tiene contratos asociados
+        if ($plan->contratos()->exists()) {
+                
+            $this->isProcessing = true;
+            $this->progress = 0;
+            // Iniciar transacción de base de datos
+            DB::beginTransaction();
+                try {
+                    // 1. Obtener el plan y su nodo relacionado
+                    $plan = Plan::with('nodo')->findOrFail($this->plan_id);
+                    $this->nodo = $plan->nodo;
 
-        try {
-            // 1. Obtener el plan y su nodo relacionado
-            $plan = Plan::with('nodo')->findOrFail($this->plan_id);
-            $this->nodo = $plan->nodo;
+                    // 2. Obtener clientes asociados al plan
+                    $this->clientesAsociados = Cliente::with('contratos')
+                        ->whereHas('contratos', function($query) {
+                            $query->where('plan_id', $this->plan_id);
+                        })->get();
 
-            // 2. Obtener clientes asociados al plan
-            $this->clientesAsociados = Cliente::with('contratos')
-                ->whereHas('contratos', function($query) {
-                    $query->where('plan_id', $this->plan_id);
-                })->get();
+                    // 3. Validar que el nodo tenga credenciales de API
+                    if (!$this->nodo || !$this->nodo->ip || !$this->nodo->user) {
+                        throw new \Exception("El nodo asociado no tiene credenciales de API configuradas.");
+                    }
 
-            // 3. Validar que el nodo tenga credenciales de API
-            if (!$this->nodo || !$this->nodo->ip || !$this->nodo->user) {
-                throw new \Exception("El nodo asociado no tiene credenciales de API configuradas.");
-            }
+                    // 4. Inicializar servicio MikroTik
+                    $mikroTikService = new MikroTikService(
+                        $this->nodo->ip,
+                        $this->nodo->user,
+                        $this->nodo->pass,
+                        $this->nodo->puerto_api ?? 8728
+                    );
 
-            // 4. Inicializar servicio MikroTik
-            $mikroTikService = new MikroTikService(
-                $this->nodo->ip,
-                $this->nodo->user,
-                $this->nodo->pass,
-                $this->nodo->puerto_api ?? 8728
-            );
+                    // 5. Eliminar cola padre y sus hijas
+                    $mikroTikService->eliminarColaPadreYHijas($plan->nombre);   
+                    // 6. Crear nueva cola padre
+                    $mikroTikService->crearColaPadre($this->nombre,$this->velocidad_subida,$this->velocidad_bajada);
+                    // Indicadores de carga
+                    $this->totalClients = count($this->clientesAsociados);
+                    $processedClients = 0;
 
-            // 5. Eliminar cola padre y sus hijas
-            $mikroTikService->eliminarColaPadreYHijas($plan->nombre);   
-            // 6. Crear nueva cola padre
-            $mikroTikService->crearColaPadre($this->nombre,$this->velocidad_subida,$this->velocidad_bajada);
-            // Indicadores de carga
-             $this->totalClients = count($this->clientesAsociados);
-             $processedClients = 0;
+                    // 7. Crear colas hijas
+                    foreach ($this->clientesAsociados as $cliente) {
+                        $mikroTikService->crearColaHija(
+                            $cliente->id,
+                            $cliente->ip,
+                            $this->nombre,
+                            $this->velocidad_subida,
+                            $this->velocidad_bajada,
+                            $this->rehuso ?? '1:1'
+                        );
+                        $processedClients++;
+                        $this->progress = intval(($processedClients / $this->totalClients) * 100);
+                    }
 
-            // 7. Crear colas hijas
-            foreach ($this->clientesAsociados as $cliente) {
-                $mikroTikService->crearColaHija(
-                    $cliente->id,
-                    $cliente->ip,
-                    $this->nombre,
-                    $this->velocidad_subida,
-                    $this->velocidad_bajada,
-                    $this->rehuso ?? '1:1'
-                );
-                  $processedClients++;
-                  $this->progress = intval(($processedClients / $this->totalClients) * 100);
-            }
+                    // 8. Actualizar el plan en la base de datos (dentro de la transacción)
+                    $plan->update([
+                        'nombre' => $this->nombre,
+                        'descripcion' => $this->descripcion,
+                        'velocidad_bajada' => $this->velocidad_bajada,
+                        'velocidad_subida' => $this->velocidad_subida,
+                        'rehuso' => $this->rehuso,
+                        'nodo_id' => $this->nodo_id,
+                    ]);
 
-            // 8. Actualizar el plan en la base de datos (dentro de la transacción)
+                    // 9. Confirmar la transacción si todo fue exitoso
+                    DB::commit();
+
+                    // Actualizar la lista de planes
+                    $this->plans = Plan::all();
+
+                    // Notificación Toastr
+                    $this->dispatch('notify', 
+                        type: 'success',
+                        message: 'Plan actualizado exitosamente!'
+                    );
+
+                    // Cerrar el modal y resetear formulario
+                    $this->showModal = false;
+                    $this->resetForm();
+
+                } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                    DB::rollBack();
+                    $this->dispatch('notify', 
+                        type: 'error',
+                        message: 'Error: El plan no fue encontrado'
+                    );
+
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    DB::rollBack();
+                    $this->dispatch('notify',
+                        type: 'error',
+                        message: 'Error de validación: ' . implode(' ', $e->validator->errors()->all())
+                    );
+
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    $this->dispatch('notify',
+                        type: 'error',
+                        message: 'Error al actualizar el plan: ' . $e->getMessage()
+                    );
+                }
+                finally {
+                    $this->isProcessing = false; // Desactivar indicador
+                }
+              
+                
+        }else {
+            // Si no tiene contrato asociado me deja actualizar con normalidad
             $plan->update([
-                'nombre' => $this->nombre,
-                'descripcion' => $this->descripcion,
-                'velocidad_bajada' => $this->velocidad_bajada,
-                'velocidad_subida' => $this->velocidad_subida,
-                'rehuso' => $this->rehuso,
-                'nodo_id' => $this->nodo_id,
-            ]);
+                    'nombre' => $this->nombre,
+                    'descripcion' => $this->descripcion,
+                    'velocidad_bajada' => $this->velocidad_bajada,
+                    'velocidad_subida' => $this->velocidad_subida,
+                    'rehuso' => $this->rehuso,
+                    'nodo_id' => $this->nodo_id,
+                ]);
 
-            // 9. Confirmar la transacción si todo fue exitoso
-            DB::commit();
-
-            // Actualizar la lista de planes
-            $this->plans = Plan::all();
-
-            // Notificación Toastr
-            $this->dispatch('notify', 
-                type: 'success',
-                message: 'Plan actualizado exitosamente!'
-            );
-
-            // Cerrar el modal y resetear formulario
-            $this->showModal = false;
-            $this->resetForm();
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            DB::rollBack();
-            $this->dispatch('notify', 
-                type: 'error',
-                message: 'Error: El plan no fue encontrado'
-            );
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            DB::rollBack();
-            $this->dispatch('notify',
-                type: 'error',
-                message: 'Error de validación: ' . implode(' ', $e->validator->errors()->all())
-            );
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            $this->dispatch('notify',
-                type: 'error',
-                message: 'Error al actualizar el plan: ' . $e->getMessage()
-            );
-        }
-        finally {
-            $this->isProcessing = false; // Desactivar indicador
-        }
+                
+                $this->plans = Plan::all();
+                // Notificación Toastr
+                $this->dispatch('notify', 
+                    type: 'success',
+                    message: 'Plan actualizado exitosamente!'
+                );
+                // Cerrar el modal y resetear formulario
+                $this->showModal = false;
+                $this->resetForm();
+              
+        }    
     }
 
     // Borrar el plan
