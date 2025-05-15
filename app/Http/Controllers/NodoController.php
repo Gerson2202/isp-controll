@@ -38,9 +38,10 @@ class NodoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Nodo $nodo)
+    public function show($id)
     {
-        //
+        $nodo = Nodo::findOrFail($id);
+        return view('nodos.show', compact('nodo'));
     }
 
     /**

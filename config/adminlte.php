@@ -63,12 +63,12 @@ return [
     |
     */
 
-    'logo' => '<b>Admin</b>LTE',
-    'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
+    'logo' => '<b>Suministros</b>y</b>Redes',
+    'logo_img' => '/img/logo-sidebar.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
-    'logo_img_alt' => 'Admin Logo',
+    'logo_img_alt' => 'Logo de Tu ISP',
 
     /*
     |--------------------------------------------------------------------------
@@ -113,7 +113,7 @@ return [
         'enabled' => true,
         'mode' => 'fullscreen',
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
+            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png', //imagen de logo cargando
             'alt' => 'AdminLTE Preloader Image',
             'effect' => 'animation__shake',
             'width' => 60,
@@ -257,7 +257,7 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => 'home',
+    'dashboard_url' => 'dashboard',
     'logout_url' => 'logout',
     'login_url' => 'login',
     'register_url' => 'register',
@@ -396,11 +396,6 @@ return [
                  'route' => 'poolIndex', // Ruta para ver clientes
                  'icon' => 'fa-exchange-alt', // Icono para listar
             ],
-            [
-                'text' => 'Gestionar Nodos',
-                'route' => 'nodosIndex', // Ruta para ver nodos 
-                'icon' => 'fas fa-broadcast-tower', // Icono para listar
-           ],
            [
             'text' => 'Cortes y activaciones',
             'route' => 'facturacion.corte', // Ruta para ver nodos 
@@ -476,11 +471,25 @@ return [
         ],
     ],
         // Botón de monitoreo
+
     [
-            'text'   => 'Monitorear nodos',
+        'text'    => 'Nodos', // Texto principal
+        'icon'    => 'fas fa-broadcast-tower', // Icono principal
+        'submenu' => [
+            [
+                'text' => 'Mis nodos',
+                'route' => 'nodosIndex', // Ruta para ver nodos 
+                'icon' => 'fas fa-server', // Icono para listar
+           ],
+            [
+            'text'   => 'Monitoreo',
             'route'  => 'MonitoreoIndex', // Nombre de la ruta
             'icon'   => 'fas fa-network-wired', // Icono de FontAwesome
+             ],
+            
+        ],
     ],
+    
 ],
 
     /*

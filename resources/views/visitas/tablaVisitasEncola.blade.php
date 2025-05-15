@@ -18,37 +18,47 @@
             <h5>Visitas en Cola de Programación</h5> 
         </div>
         <div class="card-body">
-            <!-- Tabla de visitas en cola -->
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Descripción</th>
-                        <th>#Ticket</th>
-                        <th>Cliente</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($visitasEnCola as $visita)
+            <!-- Contenedor scrollable y responsivo -->
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-bordered table-hover table-striped">
+                    <thead class="table-light">
                         <tr>
-                            <td>{{ $visita->id }}</td>
-                            <td>{{ $visita->descripcion }}</td>
-                            <td>{{ $visita->ticket ? $visita->ticket->id : 'Sin ticket' }}</td>
-                            <td>{{ $visita->ticket && $visita->ticket->cliente ? $visita->ticket->cliente->nombre : 'Sin cliente' }}</td>
-                            <td>
-                                <!-- Botón para agendar -->
-                               <a href="{{ route('visitas.edit', $visita->id) }}" class="btn btn-primary">Agendar</a> 
-                            </td>
+                            <th>ID</th>
+                            <th>Descripción</th>
+                            <th>#Ticket</th>
+                            <th>Cliente</th>
+                            <th>Acciones</th>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="text-center">No hay visitas en cola de programación.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse($visitasEnCola as $visita)
+                            <tr>
+                                <td>{{ $visita->id }}</td>
+                                <td>{{ $visita->descripcion }}</td>
+                                <td>{{ $visita->ticket ? $visita->ticket->id : 'Sin ticket' }}</td>
+                                <td>
+                                    @if($visita->ticket && $visita->ticket->cliente)
+                                        <a href="{{ route('clientes.show', $visita->ticket->cliente->id) }}" target="_blank" class="btn btn-outline-info btn-sm">
+                                            {{ $visita->ticket->cliente->nombre }}
+                                        </a>
+                                    @else
+                                        Sin cliente
+                                    @endif
+                                </td>
+                                <td>
+                                    <a href="{{ route('visitas.edit', $visita->id) }}" class="btn btn-primary btn-sm">Agendar</a> 
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center">No hay visitas en cola de programación.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
+
     </div> 
 </div>
 

@@ -18,6 +18,10 @@ use App\Livewire\Facturacion\PanelFacturacion;
 use App\Livewire\Facturacion\ListaFacturas;
 use App\Livewire\Facturacion\GenerarFacturasMensuales;
 use App\Livewire\Facturacion\ProcesarCortes;
+use App\Models\Cliente;
+use App\Models\Inventario;
+use App\Models\Nodo;
+use App\Models\Ticket;
 
 Route::get('/', function () {
     return view('welcome');
@@ -29,7 +33,13 @@ Route::middleware([
     'verified',
 ])->group(function () {
     Route::get('/dashboard', function () {
-        return view('dashboard');
+            return view('dashboard', [
+        'clientesCount' => Cliente::count(),
+        'equiposCount' => Inventario::count(),
+        'nodosCount' => Nodo::count(),
+        'ticketsAbiertos' => Ticket::where('estado', 'Abierto')->count(),
+        'ticketsRecientes' => Ticket::with('cliente')->latest()->take(5)->get(),
+    ]);
     })->name('dashboard');
 
     
@@ -66,6 +76,7 @@ Route::get('/inventario', [InventarioController::class, 'index'])->name('inventa
 
 
 Route::get('/nodos', [NodoController::class, 'index'])->name('nodosIndex');
+Route::get('/nodos/detalle/{nodo}', [NodoController::class, 'show'])->name('nodos.show');
 Route::get('/Nonitoreo', [NodoController::class, 'index1'])->name('MonitoreoIndex');
 // Rutas para Contratos
 Route::get('/contratos', [ContratoController::class, 'index'])->name('contratoIndex');
@@ -112,6 +123,8 @@ Route::get('/visitas/calendario', function() {
             'descripcion' => $visita->descripcion,
             'estado' => $visita->estado,
             'ticket_id' => $visita->ticket_id,
+            'latitud' => $visita->ticket->cliente->latitud,
+            'longitud' => $visita->ticket->cliente->longitud,
             'cliente_nombre' => optional($visita->ticket->cliente)->nombre ?? 'No especificado',
             'cliente_id' => optional($visita->ticket->cliente)->id, // Nuevo campo
             'color' => match($visita->estado) {

@@ -53,6 +53,13 @@
         <p><strong>Inicio:</strong> <span id="eventStart"></span></p>
         <p><strong>Fin:</strong> <span id="eventEnd"></span></p>
         <p><strong>Descripción:</strong> <span id="eventDescription"></span></p>
+        <button id="btnVerMapa" class="btn btn-success mt-2" style="display: none;">
+            📍 Ver en Mapa
+        </button>
+
+
+
+
         <div class="modal-footer" style="margin-top: 20px; text-align: right;">
             <button id="viewClientBtn" class="btn btn-info" style="display: none;">
                 <i class="fas fa-user"></i> Ver Cliente
@@ -75,126 +82,139 @@
     {{-- Incio de logica para fullcalendar --}}
     <script>
         $(document).ready(function() {
-    // Configuración inicial de Toastr
-    toastr.options = {
-        "closeButton": true,
-        "progressBar": true,
-        "positionClass": "toast-top-right",
-        "timeOut": "5000"
-    };
+            // Configuración inicial de Toastr
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "timeOut": "5000"
+            };
 
-    // Inicializar calendario
-    var calendar = $('#calendar').fullCalendar({
-        header: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'month,agendaWeek,agendaDay'
-        },
-        defaultView: 'month',
-        locale: 'es',
-        editable: true,
-        eventDurationEditable: true,
-        events: {
-            url: "{{ route('visitas.calendario') }}",
-            method: 'GET',
-            failure: function() {
-                toastr.error('Error al cargar las visitas');
-            }
-        },
-        eventRender: function(event, element) {
-            // Modificar el título para incluir el cliente como enlace
-            var titleHtml = `Ticket #${event.ticket_id} - `;
-            if (event.cliente_id) {
-                titleHtml += `<span class="cliente-link" 
-                              style="color: #3A7BFF; cursor: pointer;" 
-                              data-cliente-id="${event.cliente_id}">
-                              ${event.cliente_nombre}
-                             </span>`;
-            } else {
-                titleHtml += event.cliente_nombre;
-            }
-            element.find('.fc-title').html(titleHtml);
-        },
-        eventDrop: function(event, delta, revertFunc) {
-            actualizarEvento(event, revertFunc, 'Visita reagendada correctamente');
-        },
-        eventResize: function(event, delta, revertFunc) {
-            actualizarEvento(event, revertFunc, 'Duración de visita actualizada');
-        },
-        eventClick: function(calEvent, jsEvent, view) {
-            $('#eventTitle').text(calEvent.title);
-            $('#eventTicketId').text(calEvent.ticket_id);
-            $('#eventStatus').text(calEvent.estado);
-            $('#eventStatus').removeClass().addClass('badge ' + 
-                (calEvent.estado === 'Pendiente' ? 'badge-warning' : 
-                 calEvent.estado === 'En progreso' ? 'badge-info' : 
-                 'badge-success'));
-            $('#eventStart').text(moment(calEvent.start).format('LLLL'));
-            $('#eventEnd').text(moment(calEvent.end).format('LLLL'));
-            $('#eventDescription').text(calEvent.descripcion);
-            
-            // Configurar el botón de edición
-            $('#editEventBtn').off('click').on('click', function() {
-                window.location.href = `/visitas/${calEvent.id}/edit`;
+            // Inicializar calendario
+            var calendar = $('#calendar').fullCalendar({
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,agendaWeek,agendaDay'
+                },
+                defaultView: 'month',
+                locale: 'es',
+                editable: true,
+                eventDurationEditable: true,
+                events: {
+                    url: "{{ route('visitas.calendario') }}",
+                    method: 'GET',
+                    failure: function() {
+                        toastr.error('Error al cargar las visitas');
+                    }
+                },
+                eventRender: function(event, element) {
+                    // Modificar el título para incluir el cliente como enlace
+                    var titleHtml = `Ticket #${event.ticket_id} - `;
+                    if (event.cliente_id) {
+                        titleHtml += `<span class="cliente-link" 
+                                    style="color: #3A7BFF; cursor: pointer;" 
+                                    data-cliente-id="${event.cliente_id}">
+                                    ${event.cliente_nombre}
+                                    </span>`;
+                    } else {
+                        titleHtml += event.cliente_nombre;
+                    }
+                    element.find('.fc-title').html(titleHtml);
+                },
+                eventDrop: function(event, delta, revertFunc) {
+                    actualizarEvento(event, revertFunc, 'Visita reagendada correctamente');
+                },
+                eventResize: function(event, delta, revertFunc) {
+                    actualizarEvento(event, revertFunc, 'Duración de visita actualizada');
+                },
+                eventClick: function(calEvent, jsEvent, view) {
+                    $('#eventTitle').text(calEvent.title);
+                    $('#eventTicketId').text(calEvent.ticket_id);
+                    $('#eventStatus').text(calEvent.estado);
+                    $('#eventStatus').removeClass().addClass('badge ' + 
+                        (calEvent.estado === 'Pendiente' ? 'badge-warning' : 
+                        calEvent.estado === 'En progreso' ? 'badge-info' : 
+                        'badge-success'));
+                    $('#eventStart').text(moment(calEvent.start).format('LLLL'));
+                    $('#eventEnd').text(moment(calEvent.end).format('LLLL'));
+                    $('#eventDescription').text(calEvent.descripcion);
+                    $('#eventlatitud').text(calEvent.latitud);
+                    $('#eventlongitud').text(calEvent.longitud);
+                    
+                    // Botón editar
+                    $('#editEventBtn').off('click').on('click', function() {
+                        window.location.href = `/visitas/${calEvent.id}/edit`;
+                    });
+
+                    // Botón ver cliente
+                    if (calEvent.cliente_id) {
+                        $('#viewClientBtn').show().off('click').on('click', function() {
+                            window.open(`/clientes/${calEvent.cliente_id}`, '_blank');
+                        });
+                    } else {
+                        $('#viewClientBtn').hide();
+                    }
+
+                    // Botón ver en mapa
+                    if (calEvent.latitud && calEvent.longitud) {
+                        $('#btnVerMapa').show().off('click').on('click', function() {
+                            const url = `https://www.google.com/maps?q=${calEvent.latitud},${calEvent.longitud}`;
+                            window.open(url, '_blank', 'noopener,noreferrer');
+                        });
+                    } else {
+                        $('#btnVerMapa').hide();
+                    }
+
+                    $('#eventDetails').fadeIn();
+                }
+
             });
-            
-            // Configurar el botón para ver cliente si existe
-            if (calEvent.cliente_id) {
-                $('#viewClientBtn').show().off('click').on('click', function() {
-                    window.location.href = `/clientes/${calEvent.cliente_id}`;
+
+            // Manejar clic en nombre de cliente (fuera del modal)
+            $(document).on('click', '.cliente-link', function(e) {
+                e.stopPropagation();
+                const clienteId = $(this).data('cliente-id');
+                window.location.href = `/clientes/${clienteId}`;
+            });
+
+            function actualizarEvento(event, revertFunc, mensajeExito) {
+                var updateData = {
+                    fecha_inicio: event.start.format('YYYY-MM-DD HH:mm:ss'),
+                    fecha_cierre: event.end.format('YYYY-MM-DD HH:mm:ss'),
+                    _token: "{{ csrf_token() }}"
+                };
+
+                // Mostrar notificación de carga
+                toastr.info('Actualizando visita...', '', {timeOut: 2000});
+
+                $.ajax({
+                    url: "/visitas/" + event.id + "/actualizar-fechas",
+                    method: 'PATCH',
+                    data: updateData,
+                    success: function(response) {
+                        if (response.success) {
+                            toastr.success(mensajeExito);
+                        } else {
+                            revertFunc();
+                            toastr.error(response.message || 'Error al actualizar');
+                        }
+                    },
+                    error: function(xhr) {
+                        revertFunc();
+                        if (xhr.status === 422) {
+                            toastr.error(xhr.responseJSON.message || 'Datos inválidos');
+                        } else {
+                            toastr.error('Error de conexión con el servidor');
+                        }
+                    }
                 });
-            } else {
-                $('#viewClientBtn').hide();
             }
-            
-            $('#eventDetails').fadeIn();
-        }
-    });
 
-    // Manejar clic en nombre de cliente (fuera del modal)
-    $(document).on('click', '.cliente-link', function(e) {
-        e.stopPropagation();
-        const clienteId = $(this).data('cliente-id');
-        window.location.href = `/clientes/${clienteId}`;
-    });
-
-    function actualizarEvento(event, revertFunc, mensajeExito) {
-        var updateData = {
-            fecha_inicio: event.start.format('YYYY-MM-DD HH:mm:ss'),
-            fecha_cierre: event.end.format('YYYY-MM-DD HH:mm:ss'),
-            _token: "{{ csrf_token() }}"
-        };
-
-        // Mostrar notificación de carga
-        toastr.info('Actualizando visita...', '', {timeOut: 2000});
-
-        $.ajax({
-            url: "/visitas/" + event.id + "/actualizar-fechas",
-            method: 'PATCH',
-            data: updateData,
-            success: function(response) {
-                if (response.success) {
-                    toastr.success(mensajeExito);
-                } else {
-                    revertFunc();
-                    toastr.error(response.message || 'Error al actualizar');
-                }
-            },
-            error: function(xhr) {
-                revertFunc();
-                if (xhr.status === 422) {
-                    toastr.error(xhr.responseJSON.message || 'Datos inválidos');
-                } else {
-                    toastr.error('Error de conexión con el servidor');
-                }
-            }
+            $('.close-btn').click(function() {
+                $('#eventDetails').fadeOut();
+            });
         });
-    }
-
-    $('.close-btn').click(function() {
-        $('#eventDetails').fadeOut();
-    });
-});
     </script>
 
      {{-- Fin de logica para fullcalendar --}}

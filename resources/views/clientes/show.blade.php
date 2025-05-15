@@ -96,13 +96,15 @@
                                         <li class="btn-link text-secondary">
                                             <i class="fas fa-map-marker-alt me-2"></i><strong> Coordenada:</strong>
                                             @if($cliente->latitud && $cliente->longitud)
-                                            <a href="https://www.google.com/maps?q={{ $cliente->latitud }},{{ $cliente->longitud }}" 
-                                            target="_blank" 
-                                            class="btn btn-sm btn-outline-info ms-2" 
-                                            title="Ver en Google Maps">
-                                                <i class="fas fa-map-marked-alt"></i> Ver en mapa
-                                            </a>
-                                        @endif
+                                                <a href="https://www.google.com/maps?q={{ $cliente->latitud }},{{ $cliente->longitud }}" 
+                                                    target="_blank" 
+                                                    class="btn btn-sm btn-outline-info ms-2" 
+                                                    title="Ver en Google Maps">
+                                                    <i class="fas fa-map-marked-alt"></i> Ver en mapa
+                                                </a>
+                                                @else()
+                                                Sin datos de coordenadas
+                                            @endif
                                         </li>
                                     </ul>
                                 

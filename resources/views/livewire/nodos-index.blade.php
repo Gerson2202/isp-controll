@@ -32,9 +32,13 @@
                          @foreach($nodos as $nodo)
                             <div class="col-md-4">
                                 <div class="card">
-                                    <div class="card-header">
-                                        <h5 class="card-title">Nodo {{ $nodo->nombre }}</h5>
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">Nodo {{ $nodo->nombre }}</h5>
+                                        <a href="{{ route('nodos.show', $nodo->id) }}" class="btn btn-outline-info btn-sm">
+                                            <i class="fas fa-eye"></i> Ver detalle
+                                        </a>
                                     </div>
+
                                     <div class="card-body">
                                         <p><strong>Ip:</strong> {{ $nodo->ip }}</p>
                                         <p><strong>Latitud:</strong> {{ $nodo->latitud }}</p>
