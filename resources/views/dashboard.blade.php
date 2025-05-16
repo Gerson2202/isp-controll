@@ -94,7 +94,7 @@
                     <tr>
                         <td><a href="#">#{{ $ticket->id }}</a></td>
                         <td>{{ $ticket->cliente->nombre }}</td>
-                        <td>{{ Str::limit($ticket->asunto, 30) }}</td>
+                        <td>{{ Str::limit($ticket->tipo_reporte, 30) }}</td>
                         <td>
                             <span class="badge badge-{{ $ticket->estado == 'Abierto' ? 'danger' : 'success' }}">
                                 {{ $ticket->estado }}

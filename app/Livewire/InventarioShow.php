@@ -108,6 +108,14 @@ public function guardar()
 
         public function mostrarModal()
     {
+        // Cargar el valor inicial si hay un cliente asignado
+        if ($this->inventario && $this->inventario->cliente_id) {
+            $this->cliente_id = $this->inventario->cliente_id;
+            $this->clienteSearch = $this->inventario->cliente->nombre;
+        } else {
+            $this->cliente_id = null;
+            $this->clienteSearch = '';
+        }
         $this->modalVisible = true;
     }
 
