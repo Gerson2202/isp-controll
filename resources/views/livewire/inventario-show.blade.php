@@ -126,17 +126,50 @@
                             
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="cliente_id" class="form-label">Asignar a Cliente</label>
-                                    <select id="cliente_id" class="form-select select2" wire:model="cliente_id">
-                                        <option value="">Seleccionar Cliente</option>
-                                        @if(!$nodo_id)
-                                            <option value="" class="text-primary">Desvincular Cliente</option>
-                                        @endif
-                                        @foreach($clientes as $cliente)
-                                            <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+    <label for="clienteSearch" class="form-label">Asignar a Cliente</label>
+    <div class="position-relative">
+        <input 
+            type="text" 
+            id="clienteSearch" 
+            class="form-control" 
+            wire:model.live.debounce.300ms="clienteSearch"
+            placeholder="Buscar por nombre..."
+            autocomplete="off"
+            @if($cliente_id) disabled @endif
+        >
+        
+        @if($cliente_id)
+            <button 
+                type="button" 
+                class="btn btn-sm btn-outline-danger position-absolute end-0 top-0"
+                style="height: 100%; border-radius: 0 0.375rem 0.375rem 0;"
+                wire:click="selectCliente('')"
+            >
+                <i class="fas fa-times"></i>
+            </button>
+        @endif
+        
+        @if(count($clientesFiltrados) > 0 && !$cliente_id)
+            <div class="list-group position-absolute w-100 z-3 shadow-sm" style="max-height: 200px; overflow-y: auto;">
+                @foreach($clientesFiltrados as $cliente)
+                    <button 
+                        type="button"
+                        class="list-group-item list-group-item-action small py-2"
+                        wire:click="selectCliente({{ $cliente['id'] }})"
+                    >
+                        {{ $cliente['nombre'] }}
+                    </button>
+                @endforeach
+            </div>
+        @endif
+    </div>
+    
+    <input type="hidden" wire:model="cliente_id">
+    
+    @if(!$cliente_id)
+        <div class="form-text">Escribe al menos 2 caracteres para buscar clientes</div>
+    @endif
+</div>
                                 
                                 <div class="col-md-6 mb-3">
                                     <label for="nodo_id" class="form-label">Asignar a Nodo</label>

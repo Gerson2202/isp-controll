@@ -23,7 +23,40 @@ class InventarioShow extends Component
     public $nodo_id;
     public $modalVisible = false;
     
+// En tu componente Livewire
+public $clienteSearch = '';
+public $clientesFiltrados = [];
 
+public function updatedClienteSearch($value)
+{
+    if (strlen($value) < 2) {
+        $this->clientesFiltrados = [];
+        return;
+    }
+    
+    $this->clientesFiltrados = Cliente::where('nombre', 'like', '%'.$value.'%')
+        ->limit(10)
+        ->get()
+        ->toArray();
+}
+
+public function selectCliente($clienteId)
+{
+    $this->cliente_id = $clienteId;
+    
+    // Verifica si se está deseleccionando (clienteId vacío)
+    if (empty($clienteId)) {
+        $this->clienteSearch = '';
+        $this->clientesFiltrados = [];
+        return;
+    }
+    
+    // Solo busca el nombre si hay un ID válido
+    $cliente = Cliente::find($clienteId);
+    $this->clienteSearch = $cliente ? $cliente->nombre : '';
+    $this->clientesFiltrados = [];
+    $this->nodo_id = null; // Limpiar nodo si se selecciona cliente
+}
 #[On('clienteSeleccionado')]
 public function setCliente($data)
 {
