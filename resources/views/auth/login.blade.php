@@ -33,16 +33,16 @@
             padding: 2rem;
         }
         .login-card {
-            background-color: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 420px;
-            padding: 2.5rem;
-            color: white;
-            margin: auto;
+        background-color: rgba(255, 255, 255, 0.3); /* Cambiado de 0.1 a 0.3 (más opaco) */
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.3); /* Ajustado para coincidir */
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 450px;
+        padding: 2.5rem;
+        color: white;
+        margin: auto;
         }
         .form-control {
             background-color: rgba(255, 255, 255, 0.1);
@@ -84,10 +84,10 @@
             text-align: center;
             margin-bottom: 2rem;
         }
-        .logo-icon {
-            height: 60px;
+        .logo-img {
+            height: 150px;
             width: auto;
-            margin-bottom: 0.5rem;
+            /* margin-bottom: 0.5rem; */
         }
         .text-muted {
             color: rgba(255, 255, 255, 0.7) !important;
@@ -141,14 +141,8 @@
             <div class="login-card">
                 <!-- Logo -->
                 <div class="logo-container">
-                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M19.4 15C19.2669 15.3016 19.227 15.6362 19.2863 15.9606C19.3456 16.285 19.5009 16.5834 19.7316 16.8141C19.9623 17.0448 20.2607 17.2001 20.5851 17.2594C20.9095 17.3187 21.2441 17.2788 21.5457 17.1457" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2.45426 6.85431C2.75593 6.72118 3.09047 6.68133 3.41489 6.74062C3.73931 6.79991 4.03772 6.95523 4.26841 7.18592C4.4991 7.41661 4.65442 7.71502 4.71371 8.03944C4.773 8.36386 4.73315 8.6984 4.60002 9.00006" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M4.60002 15C4.73315 15.3016 4.773 15.6362 4.71371 15.9606C4.65442 16.285 4.4991 16.5834 4.26841 16.8141C4.03772 17.0448 3.73931 17.2001 3.41489 17.2594C3.09047 17.3187 2.75593 17.2788 2.45426 17.1457" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M19.4 9.00006C19.2669 8.6984 19.227 8.36386 19.2863 8.03944C19.3456 7.71502 19.5009 7.41661 19.7316 7.18592C19.9623 6.95523 20.2607 6.79991 20.5851 6.74062C20.9095 6.68133 21.2441 6.72118 21.5457 6.85431" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    <h1 class="text-2xl font-bold text-white">Isprotik</h1>
+                    <img src="{{ asset('img/logo.png') }}" alt="Isprotik Logo" class="logo-img">
+                    {{-- <h1 class="fs-3 fw-bold text-white">Isprotik</h1> --}}
                     <p class="text-muted mt-1">Administrador de ISP</p>
                 </div>
 
@@ -212,7 +206,7 @@
                     <!-- Enlace a registro -->
                     @if (Route::has('register'))
                         <div class="text-center mt-3">
-                            <p class="text-muted">¿No tienes una cuenta? <a href="{{ route('register') }}" class="font-semibold">Regístrate</a></p>
+                            <p class="text-muted">¿No tienes una cuenta? <a href="{{ route('register') }}" class="fw-semibold">Regístrate</a></p>
                         </div>
                     @endif
                 </form>

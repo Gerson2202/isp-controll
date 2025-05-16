@@ -38,40 +38,98 @@
 @stop
 
 @section('content')
-<div class="container-fluid min-vh-100 d-flex flex-column">
-    <div class="card">
-        
-            <div id="calendar"></div>
-        
-    </div>
+    <div class="container-fluid min-vh-100 d-flex flex-column">
+        <div class="card">
+            
+                <div id="calendar"></div>
+            
+        </div>
 
-    <!-- Modal para detalles -->
-    <div id="eventDetails" class="event-details" style="display: none;">
-        <span class="close-btn" style="float:right;cursor:pointer;font-size:20px;">&times;</span>
-        <h3 id="eventTitle"></h3>
-        <p><strong>Ticket ID:</strong> <span id="eventTicketId"></span></p>
-        <p><strong>Estado:</strong> <span id="eventStatus" class="badge"></span></p>
-        <p><strong>Inicio:</strong> <span id="eventStart"></span></p>
-        <p><strong>Fin:</strong> <span id="eventEnd"></span></p>
-        <p><strong>Descripción:</strong> <span id="eventDescription"></span></p>
-        <button id="btnVerMapa" class="btn btn-success mt-2" style="display: none;">
-            📍 Ver en Mapa
-        </button>
-
-
-
-
-        <div class="modal-footer" style="margin-top: 20px; text-align: right;">
-            <button id="viewClientBtn" class="btn btn-info" style="display: none;">
-                <i class="fas fa-user"></i> Ver Cliente
+        <!-- Modal para detalles -->
+        <div id="eventDetails" class="event-details" style="display: none;">
+            <span class="close-btn" style="float:right;cursor:pointer;font-size:20px;">&times;</span>
+            <h3 id="eventTitle"></h3>
+            <p><strong>Ticket ID:</strong> <span id="eventTicketId"></span></p>
+            <p><strong>Estado:</strong> <span id="eventStatus" class="badge"></span></p>
+            <p><strong>Inicio:</strong> <span id="eventStart"></span></p>
+            <p><strong>Fin:</strong> <span id="eventEnd"></span></p>
+            <p><strong>Descripción:</strong> <span id="eventDescription"></span></p>
+            <button id="btnVerMapa" class="btn btn-success mt-2" style="display: none;">
+                📍 Ver en Mapa
             </button>
-            <button id="editEventBtn" class="btn btn-primary">
-                <i class="fas fa-edit"></i> Editar Programación
-            </button>
+
+
+
+
+            <div class="modal-footer" style="margin-top: 20px; text-align: right;">
+                <button id="viewClientBtn" class="btn btn-info" style="display: none;">
+                    <i class="fas fa-user"></i> Ver Cliente
+                </button>
+                <button id="editEventBtn" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Editar Programación
+                </button>
+            </div>
         </div>
     </div>
-</div>
-    
+  
+@stop
+
+{{-- Footer section --}}
+@section('footer')
+    <footer class="main-footer text-xs py-1" style="line-height: 1.2;">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <!-- Logo y texto -->
+                <div class="col-8 col-sm-6">
+                    <div class="d-flex align-items-center">
+                        <img src="{{ asset('img/logo.png') }}" alt="Isprotik Logo" style="height: 18px; margin-right: 8px;">
+                        <div>
+                            <strong class="text-sm">© {{ date('Y') }} <a href="{{ route('dashboard') }}" class="text-primary" style="text-decoration: none;">Isprotik</a></strong>
+                            <span class="text-muted d-none d-md-inline" style="font-size: 0.75rem;"> | Gestión para ISPs</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Versión y soporte -->
+                <div class="col-4 col-sm-6 text-right">
+                    <span class="d-none d-sm-inline text-muted mr-2" style="font-size: 0.75rem;"><strong>v1.2.3</strong></span>
+                    <a href="https://wa.me/573215852059" target="_blank" class="text-muted" style="font-size: 0.75rem; text-decoration: none;">
+                        <i class="fas fa-headset"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        .main-footer {
+            background: #f4f6f9;
+            border-top: 1px solid #dee2e6;
+            padding: 4px 0 !important;
+        }
+        .main-footer a:hover {
+            color: var(--primary) !important;
+        }
+        .main-footer img {
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        .main-footer img:hover {
+            opacity: 1;
+        }
+    </style>
+
+    <style>
+        .main-footer {
+            background: #f4f6f9;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+        .main-footer a:hover {
+            color: var(--primary) !important;
+            text-decoration: none;
+        }
+    </style>
 @stop
 
 @section('js')

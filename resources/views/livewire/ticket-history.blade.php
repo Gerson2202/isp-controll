@@ -20,19 +20,14 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    {{-- <div class="col-md-3">
                         <select class="form-select" wire:model.live="perPage">
                             <option value="10">10 por página</option>
                             <option value="25">25 por página</option>
                             <option value="50">50 por página</option>
                             <option value="100">100 por página</option>
                         </select>
-                    </div>
-                    <div class="col-md-2 text-end">
-                        <button class="btn btn-outline-secondary" wire:click="$refresh">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
             <div class="card-body">
