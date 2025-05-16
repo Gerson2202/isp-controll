@@ -3,7 +3,7 @@
 @section('title', 'Calendario de Visitas')
 
 @section('content_header')
-    <h1><i class="fas fa-calendar-alt"></i> Calendario de Visitas</h1>
+    <h1 class="ml-2"><i class="fas fa-calendar-alt"></i> Calendario de Visitas</h1>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
     <style>
@@ -38,6 +38,7 @@
 @stop
 
 @section('content')
+<div class="container-fluid min-vh-100 d-flex flex-column">
     <div class="card">
         
             <div id="calendar"></div>
@@ -69,6 +70,8 @@
             </button>
         </div>
     </div>
+</div>
+    
 @stop
 
 @section('js')
@@ -216,6 +219,14 @@
             });
         });
     </script>
-
-     {{-- Fin de logica para fullcalendar --}}
+    {{-- Fin de logica para fullcalendar --}}
+    <!-- Logo en sidebar-->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var logoItem = document.querySelector('li#sidebar-logo-item');
+            if (logoItem) {
+                logoItem.innerHTML = '<img src="{{ asset('img/logo.png') }}" style="max-width:120px;max-height:90px; margin-left:70px; margin-top:30px;" alt="Logo" />';
+            }
+        });
+    </script>
 @stop

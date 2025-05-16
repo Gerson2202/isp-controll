@@ -1,4 +1,4 @@
-<div>
+<div class="container-fluid min-vh-100 d-flex flex-column">
 
     <div class="card text-center">
         <div class="card-header">

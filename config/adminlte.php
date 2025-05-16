@@ -489,7 +489,15 @@ return [
                 
             ],
         ],
-
+        // Este es el menú vacío para el logo:
+        [
+            'text'    => '',
+            'url'     => '',
+            'icon'    => '',
+            'id'      => 'sidebar-logo-item',
+            'classes' => 'd-flex justify-content-center mt-5',
+        ],
+        
 ],
 
 

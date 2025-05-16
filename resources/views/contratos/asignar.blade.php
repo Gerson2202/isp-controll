@@ -29,42 +29,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <!-- Agregar SweetAlert2 desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Aquí incluye tus scripts personalizados -->
+    <!-- Logo en sidebar-->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var logoItem = document.querySelector('li#sidebar-logo-item');
+            if (logoItem) {
+                logoItem.innerHTML = '<img src="{{ asset('img/logo.png') }}" style="max-width:120px;max-height:90px; margin-left:70px;" alt="Logo" />';
+            }
+        });
+    </script>
+
     @stack('scripts')
-        <script>
-            
-            // 1. Primero verificamos si Livewire está cargado
-            function initializeLivewireEvents() {
-                // Configuración de Toastr
-                toastr.options = {
-                    "positionClass": "toast-top-right",
-                    "progressBar": true,
-                    "timeOut": 5000,
-                    "closeButton": true,
-                    "debug": false,
-                    "newestOnTop": true,
-                    "preventDuplicates": true
-                };
-
-                // Eventos Livewire
-                window.Livewire.on('notify', (data) => {
-                    toastr[data.type](data.message, data.title || 'Mensaje del sistema');
-                });
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var logoItem = document.querySelector('li#sidebar-logo-item');
+            if (logoItem) {
+                logoItem.innerHTML = '<img src="{{ asset('img/logo.png') }}" style="max-width:120px;max-height:90px; margin-left:70px; margin-top:30px;" alt="Logo" />';
             }
-
-            // 2. Esperamos a que todo esté listo
-            if (window.Livewire) {
-                initializeLivewireEvents();
-            } else {
-                document.addEventListener('livewire:load', function () {
-                    initializeLivewireEvents();
-                });
-            }
-
-            // 3. Manejador alternativo por si falla lo anterior
-            document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(initializeLivewireEvents, 1000);
-            });
-        </script>
+        });
+    </script>
 @stop
 

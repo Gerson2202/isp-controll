@@ -1,4 +1,5 @@
-<div>
+<div class="container-fluid min-vh-100 d-flex flex-column">
+
         @if ($errors->has('activation'))
             <div class="alert alert-danger alert-dismissible fade show">
                 {{ $errors->first('activation') }}

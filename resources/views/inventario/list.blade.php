@@ -86,22 +86,32 @@
     <!-- Agregar jQuery (DataTables depende de jQuery) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- JS de DataTables Responsive -->
-<script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
 
 
 <!-- Agregar el archivo JS de DataTables -->
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     <script>
-    $(document).ready(function() {
-        $('#inventarios-table').DataTable({
-            "responsive": true,  // Hace que la tabla sea responsive
-            "language": {
-                "url": "https://cdn.datatables.net/plug-ins/1.11.5/i18n/Spanish.json" // Configuración en español
+        $(document).ready(function() {
+            $('#inventarios-table').DataTable({
+                "responsive": true,  // Hace que la tabla sea responsive
+                "language": {
+                    "url": "https://cdn.datatables.net/plug-ins/1.11.5/i18n/Spanish.json" // Configuración en español
+                }
+            });
+        });
+    </script>
+    <!-- Logo en sidebar-->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var logoItem = document.querySelector('li#sidebar-logo-item');
+            if (logoItem) {
+                logoItem.innerHTML = '<img src="{{ asset('img/logo.png') }}" style="max-width:120px;max-height:90px; margin-left:70px; margin-top:30px;" alt="Logo" />';
             }
         });
-    });
     </script>
+
     @stack('scripts')
 @stop
 

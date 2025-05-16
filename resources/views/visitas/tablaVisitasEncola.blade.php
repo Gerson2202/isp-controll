@@ -74,7 +74,16 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Agregar SweetAlert2 desde CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Aquí incluye tus scripts personalizados -->
+    <!-- Logo en sidebar-->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var logoItem = document.querySelector('li#sidebar-logo-item');
+            if (logoItem) {
+                logoItem.innerHTML = '<img src="{{ asset('img/logo.png') }}" style="max-width:120px;max-height:90px; margin-left:70px;" alt="Logo" />';
+            }
+        });
+    </script>
+
     @stack('scripts')
 @stop
 

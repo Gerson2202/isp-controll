@@ -16,7 +16,15 @@
 @stop
 
 @section('js')
-    
+    <!-- Logo en sidebar-->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var logoItem = document.querySelector('li#sidebar-logo-item');
+            if (logoItem) {
+                logoItem.innerHTML = '<img src="{{ asset('img/logo.png') }}" style="max-width:120px;max-height:90px; margin-left:70px; margin-top:30px;" alt="Logo" />';
+            }
+        });
+    </script>
 @stop
 
 

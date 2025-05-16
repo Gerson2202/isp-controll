@@ -1,5 +1,6 @@
 <div>
-    <div>
+    <div class="container-fluid min-vh-100 d-flex flex-column">
+
         <!-- Barra de búsqueda -->
         <div class="card mb-4 shadow-sm">
             <div class="card-body">

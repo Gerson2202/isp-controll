@@ -13,11 +13,57 @@ class NodoSeeder extends Seeder
     public function run(): void
     {
         DB::table('nodos')->insert([
-            [
-                'nombre' => 'Sabana',
-                'ip' => '192.168.23.1',
+              [
+                'nombre' => 'CerroCapote',
+                'ip' => '45.65.136.244',
                 'latitud' => 7.8939,   // Coordenada de Cúcuta
                 'longitud' => -72.5071,
+                'puerto_api' => 7185,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Sabana',
+                'ip' => '45.65.136.244',
+                'latitud' => 7.8939,   // Coordenada de Cúcuta
+                'longitud' => -72.5071,
+                'puerto_api' => 7186,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Portico',
+                'ip' => '45.65.136.244',
+                'latitud' => 7.8939,   // Coordenada de Cúcuta
+                'longitud' => -72.5071,
+                'puerto_api' => 7187,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Chicaro',
+                'ip' => '45.65.136.244',
+                'latitud' => 7.8939,   // Coordenada de Cúcuta
+                'longitud' => -72.5071,
+                'puerto_api' => 7188,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Pabellon',
+                'ip' => '45.65.136.244',
+                'latitud' => 7.8939,   // Coordenada de Cúcuta
+                'longitud' => -72.5071,
+                'puerto_api' => 7189,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Epon_Fibra_Sabana',
+                'ip' => '45.65.136.244',
+                'latitud' => 7.8939,   // Coordenada de Cúcuta
+                'longitud' => -72.5071,
+                'puerto_api' => 7190,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
