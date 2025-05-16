@@ -71,7 +71,15 @@
                         <tbody>
                             @forelse($tickets as $ticket)
                             <tr>
-                                <td>{{ $ticket->tipo_reporte }}</td>
+                                <td>
+                                    <a href="{{ route('tickets.edit', $ticket->id) }}"
+                                    title="Click para editar"
+                                    class="btn btn-sm btn-primary">
+                                        {{ $ticket->tipo_reporte }}
+                                    </a>
+                                </td>
+
+
                                 <td>{{ Str::limit($ticket->situacion, 50) }}</td>
                                 <td>
                                     <a href="{{ route('clientes.show', $ticket->cliente_id) }}" class="client-link text-success">
@@ -85,7 +93,9 @@
                                         N/A
                                     @endif
                                 </td>
-                                <td>{{ Str::limit($ticket->solucion, 50) }}</td>
+                                <td>
+                                    {{ $ticket->solucion ? Str::limit($ticket->solucion, 50) : 'Sin solución' }}
+                                </td>
                                 <td>
                                     <span class="badge bg-{{ 
                                         $ticket->estado === 'cerrado' ? 'success' : 
@@ -104,8 +114,26 @@
                     </table>
                 </div>
                 
-                <div class="mt-3">
-                    {{ $tickets->links() }}
+                <div class="mt-3 flex justify-between items-center">
+                    @if ($tickets->onFirstPage())
+                        <span class="px-4 py-2 bg-gray-200 rounded text-gray-500">Anterior</span>
+                    @else
+                        <button wire:click="previousPage" class="px-4 py-2 bg-blue-500 text-info rounded hover:bg-blue-600">
+                            Anterior
+                        </button>
+                    @endif
+                    
+                    <span class="text-sm text-gray-600">
+                        Página {{ $tickets->currentPage() }} de {{ $tickets->lastPage() }}
+                    </span>
+                    
+                    @if ($tickets->hasMorePages())
+                        <button wire:click="nextPage" class="px-4 py-2 bg-blue-500 text-info rounded hover:bg-blue-600">
+                            Siguiente
+                        </button>
+                    @else
+                        <span class="px-4 py-2 bg-gray-200 rounded text-gray-500">Siguiente</span>
+                    @endif
                 </div>
             </div>
         </div>

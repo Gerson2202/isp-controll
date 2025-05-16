@@ -62,7 +62,7 @@
         </div>
     
         <!-- Gráficos -->
-        <div class="row">
+        {{-- <div class="row">
             <div class="col-md-6 mb-4">
                 <div class="card shadow">
                     <div class="card-header py-3">
@@ -75,7 +75,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
     </div>
     
     @push('scripts')

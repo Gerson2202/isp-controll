@@ -82,8 +82,6 @@ class NodosIndex extends Component
             'ip' => $this->ip,
             'latitud' => $this->latitud,
             'longitud' => $this->longitud,
-            // 'user' => $this->user,
-            // 'pass' => $this->pass,
             // 'puerto_api' => $this->puerto_api,
         ]);
 

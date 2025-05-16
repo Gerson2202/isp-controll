@@ -43,8 +43,6 @@
                                         <p><strong>Ip:</strong> {{ $nodo->ip }}</p>
                                         <p><strong>Latitud:</strong> {{ $nodo->latitud }}</p>
                                         <p><strong>longitud:</strong> {{ $nodo->longitud }} </p>
-                                        <p><strong>User:</strong> {{ $nodo->user }}</p>
-                                        <p><strong>pass:</strong> {{ $nodo->pass }} </p>
                                         <p><strong>Puerto Api:</strong> {{ $nodo->puerto_api }} </p>
                                         <p><strong>Coordenadas:</strong> 
                                             <a href="https://www.google.com/maps?q={{ $nodo->latitud }},{{ $nodo->longitud }}" target="_blank">

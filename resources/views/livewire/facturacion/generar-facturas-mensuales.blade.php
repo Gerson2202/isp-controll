@@ -22,9 +22,9 @@
                         <input type="number" wire:model="anio" class="form-control" 
                                min="{{ now()->year - 1 }}" max="{{ now()->year + 1 }}">
                     </div>
-                </div>  --}}
+                </div>   --}}
                 <!-- Selectores de Fecha -->
-                 <div class="row mb-4">
+                  <div class="row mb-4">
                     <div class="col-md-6">
                         <label class="form-label">Mes</label>
                         <select class="form-select" disabled>
@@ -47,12 +47,26 @@
                         </select>
                         <input type="hidden" wire:model="anio" value="{{ $currentYear }}">
                     </div>
-                </div> 
+                </div>  
                 
                 <!-- Botón de Acción -->
                 <button wire:click="generarFacturas" wire:loading.attr="disabled" class="btn btn-success">
                     <i class="fas fa-play-circle me-2"></i> Generar Facturas
                     <span wire:loading class="spinner-border spinner-border-sm ms-2"></span>
+                </button>
+                
+                <button 
+                    type="button"
+                    onclick="if(confirm('¿Estás seguro de eliminar todas las facturas del período {{ $mes }}/{{ $anio }}?\\n\\nEsta acción no se puede deshacer.')) { @this.eliminarUltimoLote() }"
+                    wire:loading.attr="disabled"
+                    class="btn btn-danger"
+                >
+                    <span wire:loading.remove>
+                        <i class="fas fa-trash-alt me-1"></i> Eliminar facturas del periodo actual
+                    </span>
+                    <span wire:loading>
+                        <i class="fas fa-spinner fa-spin me-1"></i> Eliminando...
+                    </span>
                 </button>
                 
     
@@ -107,4 +121,14 @@
             </div>
         </div>
     </div>
+    @push('scripts')
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('notify', (data) => {
+                toastr[data.type](data.message);
+            });
+        });
+    </script>
+    @endpush
+
 </div>

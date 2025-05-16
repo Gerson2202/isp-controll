@@ -78,18 +78,7 @@
                                 @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                 
-                            <div class="form-group mb-3">
-                                <label for="estado" class="form-label">
-                                    <i class="fas fa-power-off me-2 text-primary"></i>Estado
-                                </label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fas fa-power-off text-muted"></i></span>
-                                    <select wire:model="estado" class="form-control" id="estado" disabled>
-                                        <option value="suspendido" selected>Suspendido</option>
-                                    </select>
-                                </div>
-                                @error('estado') <span class="text-danger small">{{ $message }}</span> @enderror
-                            </div>
+                            
                         </div>
                     </div>
                 

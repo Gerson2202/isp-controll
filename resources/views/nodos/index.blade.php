@@ -16,7 +16,11 @@
   {{-- @livewire('modal-component') --}}
 
 @stop
-
+@section('sidebar_footer')
+    <div class="text-center my-3">
+        <img src="{{ asset('img/logo.png') }}" alt="Logo" style="max-width: 120px; max-height: 80px;">
+    </div>
+@endsection
 @section('css')
     <!-- Puedes agregar estilos personalizados aquí si es necesario -->
 @stop

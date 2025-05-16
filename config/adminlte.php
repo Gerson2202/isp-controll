@@ -113,7 +113,7 @@ return [
         'enabled' => true,
         'mode' => 'fullscreen',
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png', //imagen de logo cargando
+            'path' => '/img/logo.png', //imagen de logo cargando
             'alt' => 'AdminLTE Preloader Image',
             'effect' => 'animation__shake',
             'width' => 60,
@@ -322,175 +322,177 @@ return [
             'can' => 'manage-blog',
         ],
    
-       // Botón para Clientes con submenú
-    [
-        'text'    => 'Clientes', // Texto principal
-        'icon'    => 'fas fa-users', // Icono principal
-        'submenu' => [
-            [
-                'text' => 'Agregar Cliente',
-                'route' => 'clientesCreate', // Ruta para agregar cliente
-                'icon' => 'fas fa-plus', // Icono para agregar
-            ],
-            [
-                'text' => 'Ver Clientes',
-                'route' => 'clientesBuscar', // Ruta para ver clientes
-                'icon' => 'fas fa-list', // Icono para listar
-            ],
-        ],
-    ],
-
-     // Seccion Contratos
-     [
-        'text'    => 'Contratos', // Texto principal
-        'icon'    => 'fas fa-file-contract', // Icono principal
-        'submenu' => [
-            [
-                'text' => 'Crear contrato',
-                'route' => 'contratoIndex', // 
-                'icon' => 'fas fa-plus', // Icono para agregar
-            ],
-            [
-                'text' => 'Lista de Contratos',
-                'route' => 'contratos.list', // Ruta para agregar cliente
-                'icon' => 'fas fa-list', // Icono para agregar
-            ],
-             
-        ],
-    ],
-     // Seccion facturacion
-    [
-        'text'    => 'Facturacion', // Texto principal
-        'icon'    => 'fas fa-credit-card', // Icono principal
-        'submenu' => [
-            [
-                'text' => 'Dashboard',
-                'route' => 'facturacion.dashboard', // Ruta paraDashboard
-                'icon' => 'fas fa-chart-line', 
-            ],
-            [
-                'text' => 'Crear Facturas',
-                 'route' => 'facturacion.index', // Ruta para ver clientes
-                 'icon' => 'fas fa-file-invoice-dollar', // Icono para listar
-            ],
-            [
-                'text' => 'Pagos',
-                 'route' => 'pagos.index', // Ruta para ver clientes
-                 'icon' => 'fas fa-money-bill-wave', // Icono para listar
-            ],
-        ],
-    ],
-
-      // Seccion Centro de Gestion
-    [
-        'text'    => 'Centro de Gestion', // Texto principal
-        'icon'    => 'fas fa-cogs', // Icono principal
-        'submenu' => [
-            [
-                'text' => 'Asignar Ip',
-                'route' => 'asignarIPindex', // Ruta para agregar cliente
-                'icon' => 'fas fa-network-wired', // Icono para agregar
-            ],
-            [
-                 'text' => 'Crear Pool',
-                 'route' => 'poolIndex', // Ruta para ver clientes
-                 'icon' => 'fa-exchange-alt', // Icono para listar
-            ],
-           [
-            'text' => 'Cortes y activaciones',
-            'route' => 'facturacion.corte', // Ruta para ver nodos 
-            'icon' => 'fas fa-plug', // Icono para listar
-            ],
-        ],
-    ],
-    // Botón para Planes con submenú
-    
-    [
-            'text'   => 'Planes',
-            'route'  => 'planesCreate', // Nombre de la ruta
-            'icon'   => 'fas fa-chart-line', // Icono de FontAwesome
-    ],
-    
-     // Seccion Inventario
-    [
-        'text'    => 'Inventario', // Texto principal
-        'icon'    => 'fas fa-box', // Icono principal
-        'submenu' => [
-            [
-                'text' => 'Agregar Modelo',
-                'route' => 'ModeloIndex', // Ruta para agregar cliente
-                'icon' => 'fas fa-plus', // Icono para agregar
-            ],
-            [
-                'text' => 'Agregar equipo',
-                'route' => 'inventarioIndex', // Ruta para agregar cliente
-                'icon' => 'fas fa-plus-circle', // Icono para agregar
-            ],
-            [
-                 'text' => 'Ver equipos',
-                 'route' => 'inventarioList', // Ruta para ver clientes
-                 'icon' => 'fas fa-eye', // Icono para listar
-            ],
-        ],
-    ],
-    
-    // Botón para Fotos de Tickets
-    [
-            'text'    => 'Tickets', // Texto principal
-            'icon'    => 'fas fa-ticket-alt', // Icono principal
+        // Botón para Clientes con submenú
+        [
+            'text'    => 'Clientes', // Texto principal
+            'icon'    => 'fas fa-users', // Icono principal
             'submenu' => [
                 [
-                    'text' => 'Tickets Abiertos',
-                    'route' => 'ticketsIndex', // Ruta para agregar cliente
-                    'icon' => 'fas fa-bolt', // Icono para agregar
+                    'text' => 'Agregar Cliente',
+                    'route' => 'clientesCreate', // Ruta para agregar cliente
+                    'icon' => 'fas fa-plus', // Icono para agregar
                 ],
                 [
-                    'text' => 'Historial de tickets',
-                    'route' => 'tickets.historial', // Ruta para agregar cliente
-                    'icon' => 'fas fa-history', // Icono para agregar
+                    'text' => 'Ver Clientes',
+                    'route' => 'clientesBuscar', // Ruta para ver clientes
+                    'icon' => 'fas fa-list', // Icono para listar
+                ],
+            ],
+        ],
+
+        // Seccion Contratos
+        [
+            'text'    => 'Contratos', // Texto principal
+            'icon'    => 'fas fa-file-contract', // Icono principal
+            'submenu' => [
+                [
+                    'text' => 'Crear contrato',
+                    'route' => 'contratoIndex', // 
+                    'icon' => 'fas fa-plus', // Icono para agregar
+                ],
+                [
+                    'text' => 'Lista de Contratos',
+                    'route' => 'contratos.list', // Ruta para agregar cliente
+                    'icon' => 'fas fa-list', // Icono para agregar
                 ],
                 
             ],
-    ],
-    // Botón Programacion
-    [
-        'text'    => 'Calendario', // Texto principal
-        'icon'    => 'fas fa-calendar', // Icono principal
-        'submenu' => [
-            [
-                'text' => 'Ver calendario',
-                'route' => 'calendarioIndex', // Ruta para agregar cliente
-                'icon' => 'fas fa-calendar-check', // Icono para agregar
-            ],
-            [
-                'text' => 'Visitas sin programar',
-                'route' => 'visitas.cola', // Ruta para agregar cliente
-                'icon' => 'fas fa-list-alt', // Icono para agregar
-            ],
-            
         ],
-    ],
-        // Botón de monitoreo
+        // Seccion facturacion
+        [
+            'text'    => 'Facturacion', // Texto principal
+            'icon'    => 'fas fa-credit-card', // Icono principal
+            'submenu' => [
+                [
+                    'text' => 'Dashboard',
+                    'route' => 'facturacion.dashboard', // Ruta paraDashboard
+                    'icon' => 'fas fa-chart-line', 
+                ],
+                [
+                    'text' => 'Crear Facturas',
+                    'route' => 'facturacion.index', // Ruta para ver clientes
+                    'icon' => 'fas fa-file-invoice-dollar', // Icono para listar
+                ],
+                [
+                    'text' => 'Pagos',
+                    'route' => 'pagos.index', // Ruta para ver clientes
+                    'icon' => 'fas fa-money-bill-wave', // Icono para listar
+                ],
+            ],
+        ],
 
-    [
-        'text'    => 'Nodos', // Texto principal
-        'icon'    => 'fas fa-broadcast-tower', // Icono principal
-        'submenu' => [
+        // Seccion Centro de Gestion
+        [
+            'text'    => 'Centro de Gestion', // Texto principal
+            'icon'    => 'fas fa-cogs', // Icono principal
+            'submenu' => [
+                [
+                    'text' => 'Asignar Ip',
+                    'route' => 'asignarIPindex', // Ruta para agregar cliente
+                    'icon' => 'fas fa-network-wired', // Icono para agregar
+                ],
+                [
+                    'text' => 'Crear Pool',
+                    'route' => 'poolIndex', // Ruta para ver clientes
+                    'icon' => 'fa-exchange-alt', // Icono para listar
+                ],
             [
-                'text' => 'Mis nodos',
-                'route' => 'nodosIndex', // Ruta para ver nodos 
-                'icon' => 'fas fa-server', // Icono para listar
-           ],
-            [
-            'text'   => 'Monitoreo',
-            'route'  => 'MonitoreoIndex', // Nombre de la ruta
-            'icon'   => 'fas fa-network-wired', // Icono de FontAwesome
-             ],
-            
+                'text' => 'Cortes y activaciones',
+                'route' => 'facturacion.corte', // Ruta para ver nodos 
+                'icon' => 'fas fa-plug', // Icono para listar
+                ],
+            ],
         ],
-    ],
-    
+        // Botón para Planes con submenú
+        
+        [
+                'text'   => 'Planes',
+                'route'  => 'planesCreate', // Nombre de la ruta
+                'icon'   => 'fas fa-chart-line', // Icono de FontAwesome
+        ],
+        
+        // Seccion Inventario
+        [
+            'text'    => 'Inventario', // Texto principal
+            'icon'    => 'fas fa-box', // Icono principal
+            'submenu' => [
+                [
+                    'text' => 'Agregar Modelo',
+                    'route' => 'ModeloIndex', // Ruta para agregar cliente
+                    'icon' => 'fas fa-plus', // Icono para agregar
+                ],
+                [
+                    'text' => 'Agregar equipo',
+                    'route' => 'inventarioIndex', // Ruta para agregar cliente
+                    'icon' => 'fas fa-plus-circle', // Icono para agregar
+                ],
+                [
+                    'text' => 'Ver equipos',
+                    'route' => 'inventarioList', // Ruta para ver clientes
+                    'icon' => 'fas fa-eye', // Icono para listar
+                ],
+            ],
+        ],
+        
+        // Botón para Fotos de Tickets
+        [
+                'text'    => 'Tickets', // Texto principal
+                'icon'    => 'fas fa-ticket-alt', // Icono principal
+                'submenu' => [
+                    [
+                        'text' => 'Tickets Abiertos',
+                        'route' => 'ticketsIndex', // Ruta para agregar cliente
+                        'icon' => 'fas fa-bolt', // Icono para agregar
+                    ],
+                    [
+                        'text' => 'Historial de tickets',
+                        'route' => 'tickets.historial', // Ruta para agregar cliente
+                        'icon' => 'fas fa-history', // Icono para agregar
+                    ],
+                    
+                ],
+        ],
+        // Botón Programacion
+        [
+            'text'    => 'Calendario', // Texto principal
+            'icon'    => 'fas fa-calendar', // Icono principal
+            'submenu' => [
+                [
+                    'text' => 'Ver calendario',
+                    'route' => 'calendarioIndex', // Ruta para agregar cliente
+                    'icon' => 'fas fa-calendar-check', // Icono para agregar
+                ],
+                [
+                    'text' => 'Visitas sin programar',
+                    'route' => 'visitas.cola', // Ruta para agregar cliente
+                    'icon' => 'fas fa-list-alt', // Icono para agregar
+                ],
+                
+            ],
+        ],
+            // Botón de monitoreo
+
+        [
+            'text'    => 'Nodos', // Texto principal
+            'icon'    => 'fas fa-broadcast-tower', // Icono principal
+            'submenu' => [
+                [
+                    'text' => 'Mis nodos',
+                    'route' => 'nodosIndex', // Ruta para ver nodos 
+                    'icon' => 'fas fa-server', // Icono para listar
+            ],
+                [
+                'text'   => 'Monitoreo',
+                'route'  => 'MonitoreoIndex', // Nombre de la ruta
+                'icon'   => 'fas fa-network-wired', // Icono de FontAwesome
+                ],
+                
+            ],
+        ],
+
 ],
+
+
 
     /*
     |--------------------------------------------------------------------------

@@ -8,6 +8,7 @@ use App\Models\Contrato;
 use App\Models\Factura;
 use App\Models\ItemFactura;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
 
 class GenerarFacturasMensuales extends Component
 {
@@ -93,6 +94,55 @@ class GenerarFacturasMensuales extends Component
         return 'FAC-' . strtoupper(Str::random(6)) . '-' . now()->format('YmdHis');
     }
 
+    public function eliminarUltimoLote()
+    {
+        // Verificar si hay facturas en el período actual
+        $facturas = Factura::whereMonth('fecha_emision', $this->mes)
+            ->whereYear('fecha_emision', $this->anio)
+            ->get();
+
+        if ($facturas->isEmpty()) {
+            $this->dispatch('notify', 
+                type: 'warning',
+                message: 'No hay facturas para el período '.$this->mes.'/'.$this->anio
+            );
+            return;
+        }
+
+        // Verificar pagos
+        $facturasConPagos = $facturas->filter(function($factura) {
+            return $factura->pagos()->exists();
+        });
+
+        if ($facturasConPagos->isNotEmpty()) {
+            $this->dispatch('notify', 
+                type: 'error',
+                message: $facturasConPagos->count().' facturas no pueden eliminarse porque tienen pagos asociados'
+            );
+            return;
+        }
+
+        // Eliminar en transacción
+        try {
+            DB::transaction(function () use ($facturas) {
+                ItemFactura::whereIn('factura_id', $facturas->pluck('id'))->delete();
+                Factura::whereIn('id', $facturas->pluck('id'))->delete();
+            });
+
+            $this->dispatch('notify', 
+                type: 'success',
+                message: 'Se eliminaron '.$facturas->count().' facturas'
+            );
+            
+            $this->resultados = [];
+            
+        } catch (\Exception $e) {
+            $this->dispatch('notify', 
+                type: 'error',
+                message: 'Error al eliminar facturas: '.$e->getMessage()
+            );
+        }
+    }
     
     public function render()
     {

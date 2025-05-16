@@ -9,7 +9,7 @@ use Livewire\WithPagination;
 class TicketHistory extends Component
 {
     use WithPagination;
-
+    public $page = 1; // Para la opción con select
     public $search = '';
     public $perPage = 10;
     public $sortField = 'fecha_cierre';

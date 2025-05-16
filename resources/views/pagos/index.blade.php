@@ -14,15 +14,12 @@
 @stop
 
 @section('css')
-
-    @livewireStyles	
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Toastr -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <!-- Livewire Styles -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-
+    @livewireStyles	
 @stop
 
 @section('js')
@@ -34,6 +31,8 @@
     <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <!-- Livewire Scripts (DEBE ir antes de nuestro código) -->
+  
+
     <script>
         
         // 1. Primero verificamos si Livewire está cargado
@@ -69,36 +68,8 @@
             setTimeout(initializeLivewireEvents, 1000);
         });
     </script>
-    {{-- CREACION DE IMAGEN --}}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script>
-        function generarImagenComprobante() {
-            const comprobante = document.getElementById('comprobantePago');
-
-            if (!comprobante) {
-                alert('No se encontró el contenido del comprobante.');
-                return;
-            }
-
-            html2canvas(comprobante, {
-                scale: 2, // mejor calidad
-                useCORS: true
-            }).then(canvas => {
-                const imgData = canvas.toDataURL("image/png");
-
-                // Mostrar en nueva pestaña
-                const newTab = window.open();
-                newTab.document.body.innerHTML = `<img src="${imgData}" style="max-width:100%;">`;
-
-                // Opcional: permitir descarga directa (descomenta si quieres)
-                const link = document.createElement('a');
-                link.download = 'comprobante_pago.png';
-                link.href = imgData;
-                link.click();
-            });
-        }
-    </script>
 @stop
+
 
 
 

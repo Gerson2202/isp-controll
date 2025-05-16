@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->string('ip');
-            $table->string('user')->default('GerApi');
-            $table->string('pass')->default('12345678');
+            $table->string('user')->default('ger_api_xyz');
+            $table->string('pass')->default('Yt7!r9k@Dq#W1z');
             $table->decimal('latitud', 10, 8);
             $table->decimal('longitud', 11, 8);
-            $table->integer('puerto_api')->default(8728); // Valor por defecto           
+            $table->integer('puerto_api')->default(8233); // Valor por defecto           
             $table->timestamps();
         });
     }

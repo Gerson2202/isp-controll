@@ -14,9 +14,9 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                         <table class="table table-hover table-striped mb-0">
-                            <thead class="table-light">
+                            <thead class="table-light" style="position: sticky; top: 0; z-index: 1; background-color: #f8f9fa;">
                                 <tr>
                                     <th width="5%">ID</th>
                                     <th width="35%">Nombre</th>
@@ -50,7 +50,7 @@
         </div>
 
         <!-- Columna de monitor de nodo -->
-        <div class="col-lg-6">
+        <div class="col-lg-12">
             @if($selectedNodoId)
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-success text-white">
@@ -73,7 +73,9 @@
                                     <h6 class="card-title mb-2">
                                         <i class="bi bi-clock-history me-2"></i>Tiempo de Encendido
                                     </h6>
-                                    <p class="mb-0 fw-semibold">{{ $systemResources['uptime'] ?? 'N/A' }}</p>
+                                    <p class="mb-0 fw-semibold">
+                                        {{ $systemResources['formatted_uptime'] ?? 'N/A' }}
+                                    </p>                               
                                 </div>
                             </div>
                         </div>
@@ -163,7 +165,7 @@
 
                     <!-- Tabla de interfaces -->
                     @if(!empty($interfaces))
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                         <table class="table table-bordered table-hover">
                             <thead class="table-dark">
                                 <tr>
@@ -201,7 +203,7 @@
                                 @endforeach
                             </tbody>
                             {{-- Para que se actualice cada 1seg --}}
-                            <div wire:poll.1s="loadInterfaces">
+                            <div wire:poll.3s="loadInterfaces">
                               <!-- El contenido de la tabla y las estadísticas se actualizará cada 5 segundos -->
                             </div>
                         </table>
@@ -220,7 +222,7 @@
                         <i class="bi bi-info-circle me-1"></i>
                         Última actualización: {{ now()->format('d/m/Y H:i:s') }}
                         <span wire:poll.1s class="float-end">
-                            <i class="bi bi-arrow-clockwise me-1"></i>Actualizando cada 1s
+                            <i class="bi bi-arrow-clockwise me-1"></i>Actualizando cada 3s
                         </span>
                     </small>
                 </div>
