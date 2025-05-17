@@ -14,6 +14,7 @@
 @section('content')
     @livewire('nodo-monitoreo')
 @stop
+
 {{-- Footer section --}}
 @section('footer')
     <footer class="main-footer text-xs py-1" style="line-height: 1.2;">
@@ -32,7 +33,7 @@
                 
                 <!-- Versión y soporte -->
                 <div class="col-4 col-sm-6 text-right">
-                    <span class="d-none d-sm-inline text-muted mr-2" style="font-size: 0.75rem;"><strong>v1.2.3</strong></span>
+                    <span class="d-none d-sm-inline text-muted mr-2" style="font-size: 0.75rem;"><strong>v1.0</strong></span>
                     <a href="https://wa.me/573215852059" target="_blank" class="text-muted" style="font-size: 0.75rem; text-decoration: none;">
                         <i class="fas fa-headset"></i>
                     </a>

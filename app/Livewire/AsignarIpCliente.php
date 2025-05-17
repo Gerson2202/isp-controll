@@ -7,7 +7,7 @@ use App\Models\Cliente;
 use App\Services\MikroTikService;
 use Livewire\Component;
 use App\Models\Pool;
-
+use Illuminate\Support\Facades\DB; // Agrega esta línea
 class AsignarIpCliente extends Component
 {
     public $cliente_id;
@@ -95,25 +95,53 @@ class AsignarIpCliente extends Component
             return;
         }
 
-        try {       
-            
+        DB::beginTransaction();
+
+        try {
             // Obtener datos necesarios para MikroTik
             $clienteConRelaciones = $this->cliente->load('contrato.plan.nodo');
             
             // Llamar al método para crear cola hija
             $this->crearColaHija($clienteConRelaciones, $this->ip);
-             
-            // Guardar la IP en el cliente
+            
+            // Actualizaciones atómicas
             $this->cliente->update([
                 'ip' => $this->ip,
                 'pool_id' => $this->pool_id
             ]);
 
+            // Actualizar estado del contrato si existe
+            if ($this->cliente->contrato) {
+                $this->cliente->contrato->update([
+                    'estado' => 'Activo',
+                    'fecha_activacion' => now() // Opcional: registrar fecha de activación
+                ]);
+            }
+
+            DB::commit();
+
             session()->flash('success', 'IP asignada correctamente y cola hija configurada en MikroTik.');
             return redirect()->route('asignarIPindex');
             
-        } catch (\Exception $e) {
-            session()->flash('error', 'Ocurrió un error parece que no se tiene conexion con la mikrotik: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            
+            // Registro detallado del error
+            logger()->error('Error en asignarIp: ' . $e->getMessage(), [
+                'cliente_id' => $this->cliente->id ?? null,
+                'ip' => $this->ip,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $mensajeError = 'Ocurrió un error: ' . $e->getMessage();
+            
+            // Mensaje más específico para errores de MikroTik
+            if (str_contains($e->getMessage(), 'MikroTik')) {
+                $mensajeError = 'Error de conexión con MikroTik: ' . $e->getMessage();
+            }
+
+            session()->flash('error', $mensajeError);
+            return back();
         }
     }
 

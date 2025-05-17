@@ -101,6 +101,7 @@ class AsignarContrato extends Component
                 'fecha_inicio' => $this->fecha_inicio,
                 'fecha_fin' => $this->fecha_fin,
                 'precio' => $this->precio,
+                'estado' => 'suspendido',
             ]);
     
             session()->flash('message', 'Contrato asignado correctamente.');

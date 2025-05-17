@@ -25,11 +25,15 @@ class PlanesFormulario extends Component
     public $isProcessing = false;
     public $progress = 0;
     public $totalClients = 0;
-
+    public $filteredPlans; // Plans filtrados
+    public $plan;
+    public $planHasContracts = false; // Agrega esta propiedad
+    public $nodo_id_Filtro;
+    
     public function mount()
     {
         // Cargar todos los planes con su relación de nodo, ordenados por el nombre del nodo
-        $this->plans = Plan::with('nodo')->get();
+        $this->filteredPlans = Plan::with('nodo')->get();     
         $this->nodos = Nodo::all();
        
     }
@@ -40,10 +44,22 @@ class PlanesFormulario extends Component
         $this->resetForm();
     }
 
+    protected function applyFilter()
+    {
+        $query = Plan::with('nodo');
+        
+        if (!empty($this->nodo_id_Filtro)) {
+            $query->where('nodo_id', $this->nodo_id_Filtro);
+        }
+        
+        $this->filteredPlans = $query->get();
+    }
     // Mostrar el modal para actualizar
     public function editPlan($id)
-    {   
+    {       
+        
          $plan = Plan::find($id);
+         $this->planHasContracts = $plan->contratos()->exists(); // Asigna el resultado aquí
          $this->plan_id = $plan->id;
          $this->nombre = $plan->nombre;
          $this->descripcion = $plan->descripcion;
@@ -277,7 +293,12 @@ class PlanesFormulario extends Component
    
     public function render()
     {
-        return view('livewire.planes-formulario');
+        $this->applyFilter();
+        return view('livewire.planes-formulario', [
+            'nodos' => Nodo::all(),
+            // Resto de tus datos...
+        ]);
+       
     }
 
     // Función para activar un plan en MikroTik

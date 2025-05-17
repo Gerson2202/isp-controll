@@ -27,84 +27,94 @@
             <div class="tab-content" id="myTabContent">
                 <!-- Contenido Planes (Pestaña activa por defecto) -->
                 <div class="tab-pane fade show active" id="planes" role="tabpanel" aria-labelledby="planes-tab">
-                    <div class="row">
-                          <!-- Mostrar mensaje de éxito -->
-                          @if($successMessage)
-                          <div class="alert alert-success alert-dismissible fade show" id="successMessage" role="alert">
-                              {{ $successMessage }}
-                              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                          </div>
-                          @endif  
-                          @foreach($plans as $plan)
-                          <div class="col-md-3 col-sm-6 mb-4">
-                              <div class="card h-100 shadow-sm">
-                                  <div class="card-header py-2 bg-light">
-                                      <h6 class="card-title mb-0 d-flex justify-content-between align-items-center">
-                                          <span>{{ $plan->nombre }}</span>
-                                          <span class="badge bg-info">{{ $plan->nodo ? $plan->nodo->nombre : 'Sin nodo' }}</span>
-                                      </h6>
-                                  </div>
-                                  
-                                  <div class="card-body p-3">
-                                      <div class="d-flex justify-content-around mb-3">
-                                          <div class="text-center">
-                                              <i class="fas fa-upload text-primary mb-1"></i>
-                                              <h6 class="mb-0">{{ $plan->velocidad_subida }} Mbps</h6>
-                                              <small class="text-muted">Subida</small>
-                                          </div>
-                                          <div class="text-center">
-                                              <i class="fas fa-download text-success mb-1"></i>
-                                              <h6 class="mb-0">{{ $plan->velocidad_bajada }} Mbps</h6>
-                                              <small class="text-muted">Bajada</small>
-                                          </div>
-                                      </div>
-                                      
-                                      <div class="border-top pt-2">
-                                          <p class="small text-muted mb-1"><strong>Descripción:</strong> {{ Str::limit($plan->descripcion, 50) }}</p>
-                                          <p class="small text-muted mb-0"><strong>Rehuso:</strong> {{ $plan->rehuso }}</p>
-                                      </div>
-                                  </div>
-                                  
-                                  <div class="card-footer py-2 bg-white">
-                                      <div class="d-flex justify-content-between align-items-center">
-                                          <div class="btn-group btn-group-sm">
-                                              <button wire:click="editPlan({{ $plan->id }})" 
-                                                      class="btn btn-outline-primary">
-                                                  <i class="fas fa-edit"></i>
-                                              </button>
-                                              <button 
-                                                    x-data
-                                                    @click.prevent="if (confirm('¿Estás seguro de que deseas eliminar este plan?')) { $wire.deletePlan({{ $plan->id }}) }" 
-                                                    class="btn btn-outline-danger">
-                                                    <i class="fas fa-trash"></i>
-                                               </button>
-                                          </div>
-                                          
-                                          @if($plan->nodo)
-                                              <button wire:click="activatePlan({{ $plan->id }})" 
-                                                      wire:loading.attr="disabled"
-                                                      class="btn btn-sm btn-{{ $currentPlanActivating == $plan->id ? 'warning' : 'success' }}">
-                                                  @if($currentPlanActivating == $plan->id)
-                                                      <span class="spinner-border spinner-border-sm" role="status"></span>
-                                                      <span class="d-none d-md-inline">Activando...</span>
-                                                  @else
-                                                      <i class="fas fa-power-off"></i>
-                                                      <span class="d-none d-md-inline">Activar</span>
-                                                  @endif
-                                              </button>
-                                          @else
-                                              <button class="btn btn-sm btn-outline-secondary" disabled>
-                                                  <i class="fas fa-exclamation-circle"></i>
-                                                  <span class="d-none d-md-inline">Sin nodo</span>
-                                              </button>
-                                          @endif
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-                      @endforeach
+                    @if($successMessage)
+                    <div class="alert alert-success alert-dismissible fade show mb-3" id="successMessage" role="alert">
+                        {{ $successMessage }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-                    {{-- <a href="#" class="btn btn-primary">Ver más planes</a> --}}
+                    @endif
+
+                    <!-- Filtro por nodos funcional -->
+                    <div class="mb-3">
+                        <label for="nodoFilter" class="form-label">Filtrar por nodo:</label>
+                        <select class="form-select" id="nodoFilter" wire:model.live="nodo_id_Filtro">
+                            <option value="">Todos los nodos</option>
+                            @foreach($nodos as $nodo)
+                                <option value="{{ $nodo->id }}">{{ $nodo->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Tabla con scroll -->
+                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                        <table class="table table-hover table-striped">
+                            <thead class="sticky-top bg-light">
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Velocidad</th>
+                                    <th>Rehuso</th>
+                                    <th>Nodo</th>
+                                    <th>Descripción</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($filteredPlans as $plan)
+                                <tr>
+                                    <td><strong>{{ $plan->nombre }}</strong></td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-download me-1"></i>{{ $plan->velocidad_bajada }} Mbps
+                                            </span>
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-upload me-1"></i>{{ $plan->velocidad_subida }} Mbps
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-info">{{ $plan->rehuso }}</span></td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ $plan->nodo ? $plan->nodo->nombre : 'Sin nodo' }}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ Str::limit($plan->descripcion, 40) }}</small>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <button wire:click="editPlan({{ $plan->id }})" 
+                                                    class="btn btn-outline-primary" 
+                                                    title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button x-data
+                                                    @click.prevent="if (confirm('¿Estás seguro de eliminar este plan?')) { $wire.deletePlan({{ $plan->id }}) }" 
+                                                    class="btn btn-outline-danger"
+                                                    title="Eliminar">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            @if($plan->nodo)
+                                                <button wire:click="activatePlan({{ $plan->id }})" 
+                                                        wire:loading.attr="disabled"
+                                                        class="btn btn-sm btn-{{ $currentPlanActivating == $plan->id ? 'warning' : 'success' }}"
+                                                        title="Activar">
+                                                    @if($currentPlanActivating == $plan->id)
+                                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                                    @else
+                                                        <i class="fas fa-power-off"></i>
+                                                    @endif
+                                                </button>
+                                            @else
+                                                <button class="btn btn-sm btn-outline-secondary" disabled title="Sin nodo asignado">
+                                                    <i class="fas fa-exclamation-circle"></i>
+                                                </button>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
                 <!-- Contenido Link (Pestaña 2) -->
                 <div class="tab-pane fade" id="link" role="tabpanel" aria-labelledby="link-tab">
@@ -282,12 +292,19 @@
                                     <label for="nodo_id" class="form-label">
                                         <i class="fas fa-server me-1"></i>Nodo
                                     </label>
-                                <select class="form-control shadow-sm" id="nodo_id" wire:model="nodo_id" required>
+                                    <select class="form-control shadow-sm" id="nodo_id" wire:model="nodo_id" required
+                                            @if($planHasContracts) disabled @endif>
                                         <option value="">Seleccione un nodo</option>
                                         @foreach($nodos as $nodo)
                                             <option value="{{ $nodo->id }}">{{ $nodo->nombre }}</option>
                                         @endforeach
                                     </select>
+
+                                    @if($planHasContracts)
+                                    <div class="alert alert-warning alert-sm mt-2">
+                                        <i class="fas fa-lock me-1"></i> No se puede modificar el nodo porque el plan tiene contratos asociados
+                                    </div>
+                                    @endif
 
                                 </div>
                             </div>

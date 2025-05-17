@@ -203,7 +203,7 @@
                                 @endforeach
                             </tbody>
                             {{-- Para que se actualice cada 1seg --}}
-                            <div wire:poll.3s="loadInterfaces">
+                            <div wire:poll.5s="loadInterfaces">
                               <!-- El contenido de la tabla y las estadísticas se actualizará cada 5 segundos -->
                             </div>
                         </table>
@@ -221,8 +221,8 @@
                     <small class="text-muted">
                         <i class="bi bi-info-circle me-1"></i>
                         Última actualización: {{ now()->format('d/m/Y H:i:s') }}
-                        <span wire:poll.1s class="float-end">
-                            <i class="bi bi-arrow-clockwise me-1"></i>Actualizando cada 3s
+                        <span wire:poll.5s class="float-end">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Actualizando cada 5s
                         </span>
                     </small>
                 </div>

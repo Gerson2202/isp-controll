@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('plan_id')->constrained()->onDelete('cascade');
             $table->string('tecnologia')->nullable();
             $table->date('fecha_inicio');
-            $table->enum('estado', ['activo', 'suspendido', 'cancelado'])->default('activo');         
+            $table->enum('estado', ['activo', 'suspendido', 'cancelado'])->default('suspendido');         
             $table->date('fecha_fin')->nullable();
             $table->bigInteger('precio');
             $table->timestamps();
