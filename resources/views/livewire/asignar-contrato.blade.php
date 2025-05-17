@@ -64,7 +64,7 @@
                                 </div>
     
                                 <!-- Precio -->
-                                <div class="col-12">
+                                <div class="col-6">
                                     <label class="form-label fw-semibold">Precio</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
@@ -74,7 +74,14 @@
                                     </div>
                                     <small class="text-muted">Ejemplo: 80.000</small>
                                 </div>
-    
+                                <div class="col-md-6">
+                                        <label class="form-label">Tecnología</label>
+                                        <select class="form-select" wire:model="tecnologia" required>
+                                            <option value="">Seleccionar tecnología</option>
+                                            <option value="Radioenlace">Radioenlace</option>
+                                            <option value="Fibra óptica">Fibra óptica</option>
+                                        </select>
+                                </div>
                                 <!-- Botones -->
                                 <div class="col-12 mt-4">
                                     <div class="d-flex justify-content-end gap-2">

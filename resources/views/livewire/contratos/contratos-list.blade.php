@@ -144,6 +144,16 @@
                                         <label class="form-label">Fecha Fin</label>
                                         <input type="date" class="form-control" wire:model="fecha_fin">
                                     </div>
+                                    <div class="col-6">
+                                        <label class="form-label fw-semibold">Precio</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="text" class="form-control" 
+                                                wire:model="precio"
+                                                required>
+                                        </div>
+                                        <small class="text-muted">Ejemplo: 80.000</small>
+                                    </div>
                                 </div>
                                 <div class="modal-footer mt-4">
                                     <button wire:click="hide" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -173,6 +183,13 @@
             if (modal) {
                 modal.hide();
             }
+        });
+    </script>
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('notify', (data) => {
+                toastr[data.type](data.message);
+            });
         });
     </script>
 

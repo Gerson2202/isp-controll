@@ -27,6 +27,7 @@ class ContratosList extends Component
     public $fecha_inicio;
     public $fecha_fin;
     public $estado;
+    public $precio;
 
     protected $rules = [
         'cliente_id' => 'required|exists:clientes,id',
@@ -34,9 +35,34 @@ class ContratosList extends Component
         'tecnologia' => 'required|string|max:50',
         'fecha_inicio' => 'required|date_format:Y-m-d',
         'fecha_fin' => 'nullable|date_format:Y-m-d|after:fecha_inicio',
-        'estado' => 'required|in:activo,inactivo,suspendido'
+        'estado' => 'required|in:activo,cancelado,suspendido'
     ];
 
+    
+    public function updateContrato()
+    {
+       // Validar los datos usando las reglas definidas
+        $this->validate();
+        $contrato = Contrato::findOrFail($this->contratoId);
+
+        $contrato->update([
+            'cliente_id' => $this->cliente_id,
+            'plan_id' => $this->plan_id,
+            'tecnologia' => $this->tecnologia,
+            'fecha_inicio' => $this->fecha_inicio,
+            'fecha_fin' => $this->fecha_fin,
+            'estado' => $this->estado,
+            'precio' => $this->precio,
+        ]);
+
+        $this->dispatch('cerrar-modal');
+            
+        // Notificación Toastr
+        $this->dispatch('notify', 
+            type: 'success',
+            message: 'Contrato actualizado exitosamente!'
+            );
+    }
     public function sortBy($field)
     {
         if ($this->sortField === $field) {
@@ -46,12 +72,7 @@ class ContratosList extends Component
         }
         $this->sortField = $field;
     }
-      public function cargarDatos()
-    {
-        
-
-        // Dispara el evento para mostrar el modal en el navegador
-    }
+    
     // Funcion oculatar modal
     public function hide()
     {
@@ -70,31 +91,9 @@ class ContratosList extends Component
         $this->estado = $contrato->estado;
         $this->fecha_inicio = $contrato->fecha_inicio; // Formato Y-m-d
         $this->fecha_fin = $contrato->fecha_fin;       // Formato Y-m-d o null
+        $this->precio = $contrato->precio;
         
     }
-
-    public function updateContrato()
-    {
-       
-        $contrato = Contrato::findOrFail($this->contratoId);
-
-        $contrato->update([
-            'cliente_id' => $this->cliente_id,
-            'plan_id' => $this->plan_id,
-            'tecnologia' => $this->tecnologia,
-            'fecha_inicio' => $this->fecha_inicio,
-            'fecha_fin' => $this->fecha_fin,
-            'estado' => $this->estado
-        ]);
-
-        $this->dispatch('cerrar-modal');
-            
-        // Notificación Toastr
-        $this->dispatch('notify', 
-        type: 'success',
-        message: 'Contrato actualizado exitosamente!'
-        );
-        }
 
     public function render()
     {
