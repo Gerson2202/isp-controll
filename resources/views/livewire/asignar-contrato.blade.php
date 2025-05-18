@@ -22,7 +22,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <strong>Estado:</strong> 
-                                    <span class="badge bg-success">Activo</span>
+                                    <span class="badge bg-danger">{{ $cliente->estado}}</span>
                                 </div>
                             </div>
                         </div>
@@ -72,7 +72,7 @@
                                                wire:model="precio"
                                                required>
                                     </div>
-                                    <small class="text-muted">Ejemplo: 80.000</small>
+                                    <small class="text-muted">Ejemplo: 10</small>
                                 </div>
                                 <div class="col-md-6">
                                         <label class="form-label">Tecnología</label>

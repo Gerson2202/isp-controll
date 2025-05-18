@@ -52,7 +52,7 @@ class TicketEdit extends Component
         $this->validate([
             'tipo_reporte' => 'required|string',
             'situacion' => 'required|string',
-            'solucion' => 'required|string',
+            'solucion' => 'string|nullable',
         ]);
 
         // Actualizar el ticket con los nuevos valores
@@ -60,12 +60,12 @@ class TicketEdit extends Component
             'tipo_reporte' => $this->tipo_reporte,
             'situacion' => $this->situacion,
             'solucion' => $this->solucion,
-            'estado' => 'cerrado', // Cambiar estado a cerrado
-            'fecha_cierre' => now(), // Asignar la fecha actual al campo fecha_cierre
+            'estado' => !empty($this->solucion) ? 'cerrado' : 'abierto',
+            'fecha_cierre' => !empty($this->solucion) ? now() : null,
+            'isUpdated' => !empty($this->solucion), // true si hay solución, false si no
         ]);
 
-        // Activar el flag isUpdated para que se deshabiliten los campos
-        $this->isUpdated = true;
+        $this->isUpdated = !empty($this->solucion); // Actualiza la propiedad del componente
         $this->showMessage = true; // Mostrar mensaje de éxito
     }
 

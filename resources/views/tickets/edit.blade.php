@@ -12,8 +12,7 @@
 @stop
 
 @section('content')
-   @livewire('ticket-edit', ['ticketId' => $ticketId->id])@stop
-
+   @livewire('ticket-edit', ['ticketId' => $ticketId->id])
 @stop
 
 {{-- Footer section --}}
@@ -73,9 +72,11 @@
         }
     </style>
 @stop
+
 @section('css')
     <!-- Puedes agregar estilos personalizados aquí si es necesario -->
 @stop
+
 @section('js')
     @livewireScripts  <!-- Livewire debe cargarse antes que cualquier otro script -->
     <!-- Agregar los scripts de Bootstrap -->

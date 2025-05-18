@@ -133,6 +133,35 @@
             }
         });
     </script>
+    {{-- CREACION DE IMAGEN --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        function generarImagenComprobante() {
+            const comprobante = document.getElementById('comprobantePago');
+
+            if (!comprobante) {
+                alert('No se encontró el contenido del comprobante.');
+                return;
+            }
+
+            html2canvas(comprobante, {
+                scale: 2, // mejor calidad
+                useCORS: true
+            }).then(canvas => {
+                const imgData = canvas.toDataURL("image/png");
+
+                // Mostrar en nueva pestaña
+                const newTab = window.open();
+                newTab.document.body.innerHTML = `<img src="${imgData}" style="max-width:100%;">`;
+
+                // Opcional: permitir descarga directa (descomenta si quieres)
+                const link = document.createElement('a');
+                link.download = 'comprobante_pago.png';
+                link.href = imgData;
+                link.click();
+            });
+        }
+    </script>
 
 @stop
 
