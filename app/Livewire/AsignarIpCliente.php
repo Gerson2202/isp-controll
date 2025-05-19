@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Log; // Importar la clase Log
 use App\Models\Cliente;
 use App\Services\MikroTikService;
 use Livewire\Component;
-use App\Models\Pool;
+use App\Models\pool;
 use Illuminate\Support\Facades\DB; // Agrega esta línea
 class AsignarIpCliente extends Component
 {

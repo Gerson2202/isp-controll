@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Nodo;
-use App\Models\Pool;
+use App\Models\pool;
 use Livewire\Component;
 
 class PoolComponent extends Component

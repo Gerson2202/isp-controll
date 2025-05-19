@@ -107,7 +107,7 @@
                                             @endif
                                         </li>
                                     </ul>
-                                
+                                    
                                     <!-- Modal de Edición -->
                                     <div class="modal fade" id="editClienteModal" tabindex="-1" aria-labelledby="editClienteModalLabel" aria-hidden="true">
                                         <div class="modal-dialog modal-lg">
@@ -167,6 +167,42 @@
                                     </div>
                                 </div>
                                 <hr>
+                                <h5 class="mt-1 text-center text-muted"><strong>Datos de contrato</strong></h5>
+                                <ul class="list-unstyled">
+                                    <li class="text-secondary">
+                                        <i class="fas fa-file-contract fa-fw me-1 text-primary"></i>
+                                        <strong>Contrato:</strong> #{{ $cliente->contrato->id ?? 'N/A' }}
+                                    </li>
+
+                                    <li class="text-secondary">
+                                        <i class="fas fa-dollar-sign fa-fw me-1 text-success"></i>
+                                        <strong>Precio:</strong> 
+                                        @if(isset($cliente->contrato->precio))
+                                            ${{ number_format($cliente->contrato->precio, 2) }}
+                                        @else
+                                            N/A
+                                        @endif
+                                    </li>
+
+                                    <li>
+                                        @php
+                                            $estado = strtolower($cliente->contrato->estado ?? '');
+                                            $estados = [
+                                                'activo' => ['icon' => 'fas fa-check-circle', 'color' => 'text-success'],
+                                                'suspendido' => ['icon' => 'fas fa-exclamation-circle', 'color' => 'text-warning'],
+                                                'cancelado' => ['icon' => 'fas fa-times-circle', 'color' => 'text-danger'],
+                                            ];
+                                            $icon = $estados[$estado]['icon'] ?? 'fas fa-question-circle';
+                                            $color = $estados[$estado]['color'] ?? 'text-muted';
+                                            $estadoTexto = ucfirst($estado ?: 'N/A');
+                                        @endphp
+                                        <i class="{{ $icon }} fa-fw me-1 {{ $color }}"></i>
+                                        <strong class="{{ $color }}">Estado:</strong> 
+                                        <span class="{{ $color }}">{{ $estadoTexto }}</span>
+                                    </li>
+                                </ul>
+
+
                                 <hr class="my-4 border-opacity-25">
                                 <div class="card border-0 shadow-sm mb-4">
                                     <div class="card-header bg-white border-0 py-3">

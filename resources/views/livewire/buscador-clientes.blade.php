@@ -3,7 +3,7 @@
     <input 
         type="text" 
         wire:model.live="query" 
-        placeholder="Buscar cliente..." 
+        placeholder="Buscar cliente por nombre o ID..." 
         class="form-control mb-3"
     >
 
@@ -14,7 +14,7 @@
         <tr class="small">
             <th>Cliente</th>
             <th>Ubicación</th>
-            <th>Contrato</th>
+            <th>id</th>
             <th class="text-end"><i class="fas fa-cog"></i></th>
         </tr>
     </thead>
@@ -25,7 +25,7 @@
             <td class="small">{{ Str::limit($cliente->direccion, 25) }}</td>
             <td>
                 <span class="badge bg-primary">
-                    #{{ $cliente->contrato->id ?? '--' }}
+                    #{{ $cliente->id ?? '--' }}
                 </span>
             </td>
             <td class="text-end">

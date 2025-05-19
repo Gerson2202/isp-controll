@@ -16,9 +16,14 @@ class BuscadorClientes extends Component
         if (empty($this->query)) {
             $this->clientes = [];
         } else {
-            // Filtrar clientes por nombre
-            $this->clientes = Cliente::where('nombre', 'like', '%' . $this->query . '%')
-                ->limit(10) // Limitar resultados
+            $query = $this->query;
+            $this->clientes = Cliente::where('nombre', 'like', '%' . $query . '%')
+                ->when(is_numeric($query), function($q) use ($query) {
+                    $q->orWhere('id', $query);
+                }, function($q) use ($query) {
+                    $q->orWhere('id', 'like', '%' . $query . '%');
+                })
+                ->limit(10)
                 ->get();
         }
     }
