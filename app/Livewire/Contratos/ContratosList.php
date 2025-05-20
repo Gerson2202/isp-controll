@@ -17,7 +17,7 @@ class ContratosList extends Component
     public $perPage = 10;
     public $sortField = 'fecha_inicio';
     public $sortDirection = 'desc';
-
+    protected $queryString = ['search', 'perPage', 'sortField', 'sortDirection'];
     // Variables para edición
     public $showModal = false;
     public $contratoId;
@@ -78,7 +78,14 @@ class ContratosList extends Component
     {
         $this->showModal = false;
     }
-
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
     public function openEditModal($contratoId)
     {
         $this->dispatch('abrir-modal');

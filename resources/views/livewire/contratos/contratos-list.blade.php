@@ -6,9 +6,11 @@
             <div class="card-body">
                 <div class="row g-3 align-items-center">
                     <div class="col-md-6">
-                        <input type="text" class="form-control" 
-                               placeholder="Buscar por cliente, tecnología o estado..."
-                               wire:model.lazy="search">
+                        <input 
+                        type="text" 
+                        class="form-control" 
+                        placeholder="Buscar por cliente, tecnología o estado..."
+                        wire:model.live="search">
                     </div>
                 </div>
             </div>
@@ -80,7 +82,7 @@
     
                 <!-- Paginación -->
                 <div class="mt-3">
-                    {{ $contratos->links('pagination::bootstrap-5') }}
+                   {{ $contratos->onEachSide(1)->links('vendor.livewire.simple-pagination') }}
                 </div>
             </div>
         </div>
@@ -142,7 +144,7 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Fecha Fin</label>
-                                        <input type="date" class="form-control" wire:model="fecha_fin">
+                                        <input type="date" class="form-control" wire:model="fecha_fin" required>
                                     </div>
                                     <div class="col-6">
                                         <label class="form-label fw-semibold">Precio</label>
@@ -167,6 +169,7 @@
                     </div>
                 </div>
         </div>
+        
     </div>
     {{-- --------- --}}
     
