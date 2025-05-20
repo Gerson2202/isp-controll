@@ -46,35 +46,38 @@
                     <h4>Modelos</h4>
                 </div>
                 <div class="card-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Nombre</th>
-                                <th>Foto</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($modelos as $modelo)
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        <table class="table">
+                            <thead>
                                 <tr>
-                                    <td>{{ $modelo->id }}</td>
-                                    <td>{{ $modelo->nombre }}</td>
-                                    <td>
-                                        @if ($modelo->foto)
-                                            <img src="{{ asset('storage/' . $modelo->foto) }}" width="50" alt="Foto">
-                                        @else
-                                            N/A
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-warning btn-sm" wire:click="edit({{ $modelo->id }})">Editar</button>
-                                        {{-- <button class="btn btn-danger btn-sm" wire:click="delete({{ $modelo->id }})">Eliminar</button> --}}
-                                    </td>
+                                    <th>#</th>
+                                    <th>Nombre</th>
+                                    <th>Foto</th>
+                                    <th>Acciones</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach ($modelos as $modelo)
+                                    <tr>
+                                        <td>{{ $modelo->id }}</td>
+                                        <td>{{ $modelo->nombre }}</td>
+                                        <td>
+                                            @if ($modelo->foto)
+                                                <img src="{{ asset('storage/' . $modelo->foto) }}" width="50" alt="Foto">
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-warning btn-sm" wire:click="edit({{ $modelo->id }})">Editar</button>
+                                            {{-- <button class="btn btn-danger btn-sm" wire:click="delete({{ $modelo->id }})">Eliminar</button> --}}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
                 </div>
             </div>
         </div>
