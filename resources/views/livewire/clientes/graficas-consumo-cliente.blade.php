@@ -152,7 +152,7 @@
                             // Actualizar gráfica con los datos acumulados
                             updateChart($wire.get('labels'), $wire.get('subidaData'), $wire.get('bajadaData'));
                         });
-                }, 1000); // Cada 1 segundo
+                }, 3000); // Cada 3 segundo
             });
 
             // Inicializar gráfica

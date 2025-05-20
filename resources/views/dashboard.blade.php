@@ -92,8 +92,18 @@
                     <tbody>
                         @foreach($ticketsRecientes as $ticket)
                         <tr>
-                            <td><a href="#">#{{ $ticket->id }}</a></td>
-                            <td>{{ $ticket->cliente->nombre }}</td>
+                            <td>
+                                <a href="{{ route('tickets.edit', $ticket->id) }}">
+                                    #{{ $ticket->id }}
+                                </a>
+                            </td>
+
+                            <td>
+                                <a href="{{ route('clientes.show', $ticket->cliente->id) }}">
+                                    {{ $ticket->cliente->nombre }}
+                                </a>
+                            </td>
+
                             <td>{{ Str::limit($ticket->tipo_reporte, 30) }}</td>
                             <td>
                                 <span class="badge badge-{{ $ticket->estado == 'Abierto' ? 'danger' : 'success' }}">
