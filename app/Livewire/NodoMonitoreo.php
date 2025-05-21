@@ -45,6 +45,7 @@ class NodoMonitoreo extends Component
 
     public function selectNodo($nodoId)
     {
+        $this->isLoading = true;
         // Restablecer estados al seleccionar un nuevo nodo
         $this->reset(['interfaces', 'interfaceStats', 'systemResources', 'systemHealth', 'errorMessage']);
 

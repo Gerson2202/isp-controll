@@ -8,10 +8,10 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <h3 class="card-title mb-0"><i class="bi bi-server me-2"></i>Lista de Nodos</h3>
                             {{-- Implementación básica de búsqueda (requiere lógica en el componente) --}}
-                            <div class="input-group input-group-sm" style="width: 200px;">
-                                <input type="text" class="form-control" placeholder="Buscar nodo..." wire:model.live="search"> {{-- wire:model.live para búsqueda reactiva --}}
+                            {{-- <div class="input-group input-group-sm" style="width: 200px;">
+                                <input type="text" class="form-control" placeholder="Buscar nodo..." > 
                                 <button class="btn btn-light" type="button"><i class="bi bi-search"></i></button>
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                     <div class="card-body p-0">
@@ -280,10 +280,11 @@
                                 <p class="text-muted">Asegúrate de que el nodo esté accesible y tenga interfaces configuradas.</p>
                             </div>
                          @endif
+                         
                         @endif
 
                         @endif {{-- Fin del if(!$isLoading && ($interfacesWithStats->isNotEmpty() ...)) --}}
-
+                            
                     </div>
                     <div class="card-footer bg-light">
                         <small class="text-muted">
@@ -299,10 +300,21 @@
                 </div>
                 @else
                 <div class="card shadow-sm h-100">
-                    <div class="card-body d-flex flex-column justify-content-center align-items-center">
-                        <i class="bi bi-pc-display-horizontal display-4 text-muted mb-3"></i>
-                        <h4 class="text-muted mb-3">No hay nodo seleccionado</h4>
-                        <p class="text-muted text-center">Selecciona un nodo de la lista para ver su monitorización</p>
+                    <!-- Esta sección desaparecerá completamente cuando loading esté activo -->
+                    <div class="card shadow-sm h-100" wire:loading.remove>
+                        <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                            <i class="bi bi-pc-display-horizontal display-6 text-muted mb-3"></i>
+                            <h5 class="text-muted mb-3">No hay nodo seleccionado</h5>
+                            <p class="text-muted text-center">Selecciona un nodo de la lista para ver su monitorización</p>
+                        </div>
+                    </div>
+
+                    <!-- Spinner de carga (solo aparece cuando loading está activo) -->
+                    <div wire:loading.delay class="text-center my-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="text-muted mt-2">Cargando datos del nodo...</p>
                     </div>
                 </div>
                 @endif
