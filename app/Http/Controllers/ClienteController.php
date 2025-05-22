@@ -107,6 +107,7 @@ class ClienteController extends Controller
             'direccion' => 'required|string',
             'latitud' => 'nullable|numeric',
             'longitud' => 'nullable|numeric',
+            'nombre' => 'nullable|string',
         ]);
     
         $cliente = Cliente::findOrFail($id);

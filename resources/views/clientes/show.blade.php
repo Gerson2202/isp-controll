@@ -121,6 +121,12 @@
                                                     @method('PUT')
                                                     <div class="modal-body">
                                                         <div class="row">
+                                                            <div class="col-md-12">
+                                                                <div class="mb-3">
+                                                                    <label for="nombre" class="form-label">Nombre</label>
+                                                                    <input type="text" class="form-control" id="nombre" name="nombre" value="{{ $cliente->nombre }}">
+                                                                </div>                      
+                                                            </div>
                                                             <div class="col-md-6">
                                                                 <div class="mb-3">
                                                                     <label for="cedula" class="form-label">Cédula</label>
@@ -142,20 +148,28 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div class="row">
-                                                            <div class="col-md-6">
-                                                                <div class="mb-3">
-                                                                    <label for="latitud" class="form-label">Latitud</label>
-                                                                    <input type="text" class="form-control" id="latitud" name="latitud" value="{{ $cliente->latitud }}">
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <div class="mb-3">
-                                                                    <label for="longitud" class="form-label">Longitud</label>
-                                                                    <input type="text" class="form-control" id="longitud" name="longitud" value="{{ $cliente->longitud }}">
-                                                                </div>
+                                                      <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="latitud" class="form-label">Latitud</label>
+                                                                <input type="number" class="form-control" id="latitud" name="latitud" 
+                                                                    value="{{ $cliente->latitud }}"
+                                                                    min="-90" max="90" step="0.000001"
+                                                                    placeholder="Ej: -12.345678"
+                                                                    title="La latitud debe ser entre -90 y 90 con hasta 6 decimales">
                                                             </div>
                                                         </div>
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="longitud" class="form-label">Longitud</label>
+                                                                <input type="number" class="form-control" id="longitud" name="longitud" 
+                                                                    value="{{ $cliente->longitud }}"
+                                                                    min="-180" max="180" step="0.000001"
+                                                                    placeholder="Ej: -76.123456"
+                                                                    title="La longitud debe ser entre -180 y 180 con hasta 6 decimales">
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>

@@ -87,12 +87,21 @@
                                     <input type="text" class="form-control" id="ip" wire:model="ip" pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$" required></input>
                                 </div>
                                 <div class="form-group">
-                                    <label for="precio">Latitud</label>
-                                    <input type="number" class="form-control" id="latitud" wire:model="latitud" step="any" required>
+                                    <label for="latitud">Latitud</label>
+                                    <input type="number" class="form-control" id="latitud" wire:model="latitud" 
+                                        min="-90" max="90" step="0.000001" 
+                                        placeholder="Ej: -12.345678"
+                                        title="Debe ser entre -90 y 90 con hasta 6 decimales"
+                                        required>
                                 </div>
+
                                 <div class="form-group">
-                                    <label for="velocidad_bajada">longitud</label>
-                                    <input type="number" class="form-control" id="longitud" wire:model="longitud" step="any" required>
+                                    <label for="longitud">Longitud</label>
+                                    <input type="number" class="form-control" id="longitud" wire:model="longitud" 
+                                        min="-180" max="180" step="0.000001"
+                                        placeholder="Ej: -76.123456"
+                                        title="Debe ser entre -180 y 180 con hasta 6 decimales"
+                                        required>
                                 </div>
                                 {{-- <div class="form-group">
                                     <label for="velocidad_subida">puerto_api</label>
