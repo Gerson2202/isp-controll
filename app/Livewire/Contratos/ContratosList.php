@@ -35,14 +35,19 @@ class ContratosList extends Component
         'tecnologia' => 'required|string|max:50',
         'fecha_inicio' => 'required|date_format:Y-m-d',
         'fecha_fin' => 'nullable|date_format:Y-m-d|after:fecha_inicio',
-        'estado' => 'required|in:activo,cancelado,suspendido'
+        'estado' => 'required|in:activo,cancelado,suspendido',
+        'precio' => 'required|regex:/^[\d.,]+$/',
     ];
 
     
     public function updateContrato()
     {
-       // Validar los datos usando las reglas definidas
+        // Validar los datos usando las reglas definidas
         $this->validate();
+
+        // Formatear el precio: eliminar puntos y comas
+        $precioFormateado = str_replace(['.', ','], '', $this->precio);
+
         $contrato = Contrato::findOrFail($this->contratoId);
 
         $contrato->update([
@@ -52,7 +57,7 @@ class ContratosList extends Component
             'fecha_inicio' => $this->fecha_inicio,
             'fecha_fin' => $this->fecha_fin,
             'estado' => $this->estado,
-            'precio' => $this->precio,
+            'precio' => $precioFormateado, // Usamos el precio formateado
         ]);
 
         $this->dispatch('cerrar-modal');
@@ -61,7 +66,7 @@ class ContratosList extends Component
         $this->dispatch('notify', 
             type: 'success',
             message: 'Contrato actualizado exitosamente!'
-            );
+        );
     }
     public function sortBy($field)
     {

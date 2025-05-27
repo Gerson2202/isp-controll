@@ -41,24 +41,7 @@ class AsignarContrato extends Component
          $this->selectedPlanId = null;
      }
 
-  
-    // Función para guardar el contrato
-    public function validarPrecio()
-    {
-        $this->validate([
-            'precio' => [
-                'required',
-                'regex:/^\$?\d{1,3}(\.\d{3})*$/u', // Valida formato colombiano
-                function ($attribute, $value, $fail) {
-                    // Verifica que sea múltiplo de 1.000
-                    $numero = (int) str_replace('.', '', $value);
-                    if ($numero % 1000 != 0) {
-                        $fail('El precio debe ser múltiplo de 1.000 (ej: 10.000, 1.000.000)');
-                    }
-                },
-            ],
-        ]);
-    }
+
     public function guardarContrato()
     {
         try {
@@ -67,28 +50,7 @@ class AsignarContrato extends Component
                 'plan_id' => 'required|exists:plans,id',
                 'fecha_inicio' => 'required|date|before:fecha_fin',
                 'fecha_fin' => 'required|date|after:fecha_inicio',
-                'precio' => [
-                    'required',
-                    'regex:/^\d{1,3}(\.\d{3})*$/u', // Valida formato colombiano
-                    function ($attribute, $value, $fail) {
-                        // Verifica que cada grupo después del punto tenga 3 dígitos
-                        $partes = explode('.', $value);
-                        
-                        // El primer grupo puede tener 1-3 dígitos, los siguientes exactamente 3
-                        foreach (array_slice($partes, 1) as $grupo) {
-                            if (strlen($grupo) !== 3) {
-                                $fail('Formato incorrecto. Use puntos cada 3 dígitos (ej: 1.000.000, 25.550)');
-                                return;
-                            }
-                        }
-                        
-                        // Opcional: Validar que el número sea positivo
-                        $numero = (int) str_replace('.', '', $value);
-                        if ($numero <= 0) {
-                            $fail('El precio debe ser mayor a cero');
-                        }
-                    },
-                ],
+                'precio' => 'required|regex:/^[\d.,]+$/',
             ], 
             [
                 'fecha_inicio.before' => 'La fecha de inicio debe ser anterior a la fecha de fin',
@@ -96,13 +58,12 @@ class AsignarContrato extends Component
                 'precio.regex' => 'El precio debe tener formato X.000 (ej: 10.000, 300.000)',
                 ]);
             // Guardar el contrato
-            $this->precio = str_replace('.', '', $this->precio);
-            $contrato = Contrato::create([
+                 $precioLimpio = str_replace(['.', ','], '', $this->precio);            $contrato = Contrato::create([
                 'cliente_id' => $this->cliente_id, // Ya tenemos el cliente_id en la propiedad
                 'plan_id' => $this->plan_id,
                 'fecha_inicio' => $this->fecha_inicio,
                 'fecha_fin' => $this->fecha_fin,
-                'precio' => $this->precio,
+                'precio' => $precioLimpio,
                 'estado' => 'suspendido',
                 'tecnologia' => $this->tecnologia,
             ]);

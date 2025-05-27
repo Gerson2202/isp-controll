@@ -154,7 +154,7 @@
                                                 wire:model="precio"
                                                 required>
                                         </div>
-                                        <small class="text-muted">Ejemplo: 80.000</small>
+                                        {{-- <small class="text-muted">Ejemplo: 80.000</small> --}}
                                     </div>
                                 </div>
                                 <div class="modal-footer mt-4">

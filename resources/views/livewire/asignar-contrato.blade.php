@@ -72,7 +72,7 @@
                                                wire:model="precio"
                                                required>
                                     </div>
-                                    <small class="text-muted">Ejemplo: 10</small>
+                                    {{-- <small class="text-muted">Ejemplo: 10</small> --}}
                                 </div>
                                 <div class="col-md-6">
                                         <label class="form-label">Tecnología</label>
