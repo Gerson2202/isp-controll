@@ -25,7 +25,18 @@ class TicketHistory extends Component
             $this->sortDirection = 'asc';
         }
     }
+    
+    // Funciones para que sirva el buscador entando en cualquier pagina
+     public function updatingSearch()
+    {
+        $this->resetPage();
+    }
 
+    public function updatingSelectedStatus()
+    {
+        $this->resetPage();
+    }
+    // Fin
     public function render()
     {
         $tickets = Ticket::with('cliente')
