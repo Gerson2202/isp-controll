@@ -81,7 +81,7 @@
                                         <th>Fecha</th>
                                         <th>Método</th>
                                         <th>Monto</th>
-                                        <th>Referencia</th>
+                                        <th>Nota</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -90,7 +90,7 @@
                                         <td>{{ $pago->fecha_pago->format('d/m/Y') }}</td>
                                         <td>{{ ucfirst($pago->metodo_pago) }}</td>
                                         <td>${{ number_format($pago->monto, 2) }}</td>
-                                        <td>{{ $pago->referencia }}</td>
+                                        <td>{{ $pago->notas}}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>

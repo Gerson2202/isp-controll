@@ -109,14 +109,14 @@ class ClienteCortes extends Component
 
     public function render()
     {
-        // Obtener el mes y año anterior
-        $fechaMesAnterior = Carbon::now()->subMonth();
-        $mesAnterior = $fechaMesAnterior->month;
-        $anioAnterior = $fechaMesAnterior->year;
+        // Obtener el mes y año actual
+        $fechaActual = Carbon::now();
+        $mesActual = $fechaActual->month;
+        $anioActual = $fechaActual->year;
 
         $query = Factura::with(['contrato.cliente', 'contrato.plan.nodo'])
-        ->whereMonth('fecha_emision', $mesAnterior)
-        ->whereYear('fecha_emision', $anioAnterior);
+            ->whereMonth('fecha_emision', $mesActual)
+            ->whereYear('fecha_emision', $anioActual);
 
         if (!empty($this->search)) {
             $query->whereHas('contrato.cliente', function($q) {

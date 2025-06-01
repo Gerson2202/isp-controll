@@ -72,7 +72,8 @@ class RegistrarPago extends Component
                     'factura_id' => $this->facturaSeleccionada->id,
                     'monto' => $this->monto,
                     'metodo_pago' => $this->metodo_pago,
-                    'fecha_pago' => $this->fecha_pago
+                    'fecha_pago' => $this->fecha_pago,
+                    'notas' => 'Pago registrado por: ' . auth()->user()->name
                 ]);
 
                 $this->facturaSeleccionada->saldo_pendiente -= $this->monto;
