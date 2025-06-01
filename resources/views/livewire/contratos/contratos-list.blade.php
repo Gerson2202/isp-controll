@@ -36,12 +36,18 @@
                                         {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                                     @endif
                                 </th>
-                                <th wire:click="sortBy('fecha_inicio')" style="cursor: pointer;">
+                                 <th wire:click="sortBy('precio')" style="cursor: pointer;">
+                                    Precio
+                                    @if($sortField === 'precio')
+                                        {{ $sortDirection === 'asc' ? '↑' : '↓' }}
+                                    @endif
+                                </th>
+                                {{-- <th wire:click="sortBy('fecha_inicio')" style="cursor: pointer;">
                                     Inicio
                                     @if($sortField === 'fecha_inicio')
                                         {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                                     @endif
-                                </th>
+                                </th> --}}
                                 <th wire:click="sortBy('fecha_fin')" style="cursor: pointer;">
                                     Fin
                                     @if($sortField === 'fecha_fin')
@@ -63,7 +69,8 @@
                                 <td>{{ $contrato->cliente->nombre }}</td>
                                 <td>{{ $contrato->plan->nombre }}</td>
                                 <td>{{ ucfirst($contrato->tecnologia) }}</td>
-                                <td>{{ date('d/m/Y', strtotime($contrato->fecha_inicio)) }}</td>
+                                <td>{{ number_format($contrato->precio, 0, ',', '.') }}</td>
+                                {{-- <td>{{ date('d/m/Y', strtotime($contrato->fecha_inicio)) }}</td> --}}
                                 <td>{{ $contrato->fecha_fin ? date('d/m/Y', strtotime($contrato->fecha_fin)) : 'N/A' }}</td>
                                 <td>
                                     <span class="badge bg-{{ $contrato->estado === 'activo' ? 'success' : ($contrato->estado === 'cancelado' ? 'danger' : 'warning') }}">
@@ -78,12 +85,12 @@
                             @endforeach
                         </tbody>
                     </table>
+                    <!-- Paginación -->
+                    <div class="mt-3">
+                    {{ $contratos->onEachSide(1)->links('vendor.livewire.simple-pagination') }}
+                    </div>
                 </div>
     
-                <!-- Paginación -->
-                <div class="mt-3">
-                   {{ $contratos->onEachSide(1)->links('vendor.livewire.simple-pagination') }}
-                </div>
             </div>
         </div>
     
