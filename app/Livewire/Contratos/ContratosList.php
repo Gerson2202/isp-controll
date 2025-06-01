@@ -109,13 +109,22 @@ class ContratosList extends Component
 
     public function render()
     {
-        $contratos = Contrato::with(['cliente', 'plan'])
+        $contratos = Contrato::select('contratos.*')
+            ->with(['cliente', 'plan'])
+            ->join('clientes', 'clientes.id', '=', 'contratos.cliente_id')
             ->when($this->search, function ($query) {
-                $query->whereHas('cliente', fn($q) => $q->where('nombre', 'like', "%{$this->search}%"))
-                      ->orWhere('tecnologia', 'like', "%{$this->search}%")
-                      ->orWhere('estado', 'like', "%{$this->search}%");
+                $query->where(function($q) {
+                    $q->where('clientes.nombre', 'like', "%{$this->search}%")
+                    ->orWhere('clientes.ip', 'like', "%{$this->search}%")
+                    ->orWhere('contratos.tecnologia', 'like', "%{$this->search}%")
+                    ->orWhere('contratos.estado', 'like', "%{$this->search}%");
+                });
             })
-            ->orderBy($this->sortField, $this->sortDirection)
+            ->orderBy(
+                $this->sortField === 'ip' ? 'clientes.ip' : 
+                ($this->sortField === 'cliente_id' ? 'clientes.nombre' : 'contratos.'.$this->sortField),
+                $this->sortDirection
+            )
             ->paginate($this->perPage);
 
         return view('livewire.contratos.contratos-list', [

@@ -60,13 +60,26 @@
                                         {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                                     @endif
                                 </th>
+                                <th wire:click="sortBy('ip')" style="cursor: pointer;">
+                                    Ip
+                                    @if($sortField === 'ip')
+                                        {{ $sortDirection === 'asc' ? '↑' : '↓' }}
+                                    @endif
+                                </th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($contratos as $contrato)
                             <tr>
-                                <td>{{ $contrato->cliente->nombre }}</td>
+                                <td>
+                                    <a href="{{ route('clientes.show', $contrato->cliente->id) }}" 
+                                    class="text-primary text-decoration-none" 
+                                    target="_blank"
+                                    style="cursor: pointer;">
+                                        {{ $contrato->cliente->nombre }}
+                                    </a>
+                                </td>
                                 <td>{{ $contrato->plan->nombre }}</td>
                                 <td>{{ ucfirst($contrato->tecnologia) }}</td>
                                 <td>{{ number_format($contrato->precio, 0, ',', '.') }}</td>
@@ -77,6 +90,7 @@
                                         {{ ucfirst($contrato->estado) }}
                                     </span>
                                 </td>
+                                <td>{{ $contrato->cliente->ip ?? 'sin ip' }}</td>
                                 <td>
                                 
                                     <button wire:click="openEditModal({{ $contrato->id }})" class="btn btn-sm btn-primary">Editar</button>
