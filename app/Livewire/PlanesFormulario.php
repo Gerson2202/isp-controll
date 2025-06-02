@@ -76,14 +76,14 @@ class PlanesFormulario extends Component
         $plan = Plan::findOrFail($this->plan_id);
         // 1. Verificar si SOLO cambió la descripción (y ningún otro campo relevante para MikroTik)
         $soloDescripcionCambio = 
-        $plan->nombre === $this->nombre &&
-        $plan->velocidad_bajada == $this->velocidad_bajada &&
-        $plan->velocidad_subida == $this->velocidad_subida &&
-        $plan->rehuso === $this->rehuso &&
-        $plan->nodo_id == $this->nodo_id &&
-        $plan->descripcion !== $this->descripcion; // Solo esto cambió
+            $plan->nombre === $this->nombre &&
+            $plan->velocidad_bajada == $this->velocidad_bajada &&
+            $plan->velocidad_subida == $this->velocidad_subida &&
+            $plan->rehuso === $this->rehuso &&
+            $plan->nodo_id == $this->nodo_id &&
+            $plan->descripcion !== $this->descripcion; // Solo esto cambió
          // 2. Si solo es la descripción, actualiza directo en DB sin tocar MikroTik
-        if ($soloDescripcionCambio) {
+          if ($soloDescripcionCambio) {
             $plan->update(['descripcion' => $this->descripcion]);
             
             $this->dispatch('notify', 
@@ -94,6 +94,18 @@ class PlanesFormulario extends Component
             $this->resetForm();
             return; // Termina la ejecución aquí
         }
+        $ningunCambio = 
+            $plan->nombre === $this->nombre &&
+            $plan->velocidad_bajada == $this->velocidad_bajada &&
+            $plan->velocidad_subida == $this->velocidad_subida &&
+            $plan->rehuso === $this->rehuso &&
+            $plan->nodo_id == $this->nodo_id &&
+            $plan->descripcion === $this->descripcion; // Nada cambió
+        // Si no hay cambios, salir sin hacer nada
+        if ($ningunCambio) {
+            return;
+        }
+        
         //Verificar si el plan tiene contratos asociados
         if ($plan->contratos()->exists()) {
                 
