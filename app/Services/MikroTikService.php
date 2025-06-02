@@ -559,10 +559,13 @@ class MikroTikService
      */
     private function activarCliente($ipCliente)
     {
-        // Primero eliminar de la lista "cortado" si existe
+        // Primero eliminar de la lista "cortado"
         $this->eliminarDeAddressList($ipCliente, 'cortado');
         
-        // Agregar a la lista "activado"
+        // Pequeño delay para asegurar que la eliminación se complete
+        usleep(500000); // 500ms de espera (medio segundo)
+        
+        // Luego agregar a la lista "activado"
         $this->agregarAAddressList($ipCliente, 'activado');
     }
 
