@@ -1,10 +1,8 @@
 <div>
     <div class="container-fluid">
         <div class="card">
-            <!-- Filtros -->
             <div class="card-body border-bottom">
                 <div class="row g-3">
-                    <!-- Buscador -->
                     <div class="col-md-4">
                         <label for="search" class="form-label">Buscar Cliente</label>
                         <div class="input-group">
@@ -18,8 +16,6 @@
                             >
                         </div>
                     </div>
-
-                    <!-- Filtro por estado de factura -->
                     <div class="col-md-4">
                         <label for="filterEstado" class="form-label">Estado Factura</label>
                         <select 
@@ -32,8 +28,6 @@
                             <option value="pagada">Pagadas</option>
                         </select>
                     </div>
-                    
-                    <!-- Filtro para estado Mikrotik -->
                     <div class="col-md-4">
                         <label for="filterMikrotik" class="form-label">Estado Mikrotik</label>
                         <select 
@@ -49,8 +43,43 @@
                 </div>
             </div>
 
-           
-            <!-- Tabla con scroll -->
+           <div class="card">
+                <div class="card-body">
+                    <div class="d-grid gap-2 mb-3">
+                        <button 
+                            wire:click="iniciarCorteMasivo"
+                            wire:loading.attr="disabled"
+                            class="btn btn-danger btn-lg"
+                            @if($procesandoCorteMasivo) disabled @endif
+                        >
+                            <span wire:loading.remove wire:target="iniciarCorteMasivo">
+                                <i class="fas fa-bolt me-2"></i> Cortar Clientes Pendientes
+                            </span>
+                            <span wire:loading wire:target="iniciarCorteMasivo">
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                Procesando...
+                            </span>
+                        </button>
+                    </div>
+
+                    @if($procesandoCorteMasivo)
+                    <div class="alert alert-info">
+                        <div class="d-flex justify-content-between">
+                            <span>
+                                <i class="fas fa-sync-alt fa-spin me-2"></i>
+                                Procesando corte masivo:
+                            </span>
+                            <strong>
+                                {{ $clientesProcesados }} de {{ $totalClientes }} clientes procesados
+                            </strong>
+                        </div>
+                        <!-- Polling para procesar el siguiente chunk -->
+                        <div wire:poll.500ms="procesarChunk"></div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
             <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
                 <table class="table table-hover table-striped mb-0">
                     <thead class="table-light sticky-top bg-white">
@@ -68,7 +97,6 @@
                     <tbody>
                         @forelse($facturas as $factura)
                             <tr>
-                                <!-- Columna Cliente (simplificada para móvil) -->
                                 <td class="text-nowrap">
                                     <div class="fw-bold">{{ $factura->contrato->cliente->nombre }}</div>
                                     <div class="d-md-none small text-muted">
@@ -76,28 +104,22 @@
                                         <div>Monto: ${{ number_format($factura->monto_total, 2) }}</div>
                                     </div>
                                 </td>
-                                
-                                <!-- Columnas para desktop - Ocultas en móvil -->
                                 <td class="text-nowrap d-none d-md-table-cell">{{ $factura->numero_factura }}</td>
                                 <td class="text-nowrap d-none d-md-table-cell">
                                     {{ \Carbon\Carbon::parse($factura->fecha_vencimiento)->format('d/m/Y') }}
                                 </td>
                                 <td class="text-nowrap d-none d-md-table-cell">${{ number_format($factura->monto_total, 2) }}</td>
                                 <td class="text-nowrap d-none d-md-table-cell">${{ number_format($factura->saldo_pendiente, 2) }}</td>
-                                
-                                <!-- Estados y Acción - Siempre visibles -->
                                 <td class="text-nowrap d-table-cell">
                                     <span class="badge {{ $factura->estado == 'pagada' ? 'bg-success' : 'bg-warning text-dark' }}">
                                         {{ ucfirst($factura->estado) }}
                                     </span>
                                 </td>
-                                
                                 <td class="text-nowrap d-table-cell">
                                     <span class="badge {{ $factura->contrato->cliente->estado == 'activo' ? 'bg-success' : 'bg-danger' }}">
                                         {{ ucfirst($factura->contrato->cliente->estado) }}
                                     </span>
                                 </td>
-                                
                                 <td class="text-nowrap d-table-cell">
                                     <button 
                                         wire:click="cambiarEstado({{ $factura->contrato->cliente->id }})"
@@ -125,8 +147,6 @@
                     </tbody>
                 </table>
             </div>
-            
-            <!-- Contador de resultados -->
             <div class="card-footer small text-muted">
                 Mostrando {{ $facturas->count() }} registros
             </div>
