@@ -22,11 +22,23 @@ class ClienteController extends Controller
      */
     public function create()
     {
+        // Verificar si el usuario actual tiene ID 1 o 2
+        if (!in_array(auth()->id(), [1, 2,3])) {
+            abort(403, 'No tienes permiso para acceder a esta pagina');
+            // O puedes redirigirlo si prefieres:
+            // return redirect()->route('dashboard')->with('error', 'Acceso no autorizado');
+        }
+
         return view('clientes.create');
     }
 
     public function search()
     {
+         // Verificar si el usuario actual tiene ID 1 o 2
+         if (!in_array(auth()->id(), [1, 2,3])) {
+            abort(403, 'No tienes permiso para acceder a esta pagina');
+            
+        }
         return view('clientes.search');
     }
 
@@ -44,6 +56,11 @@ class ClienteController extends Controller
     // Funcion para mostrar clientes sin ip asignadas 
     public function asignarIPindex()
     {
+         // Verificar si el usuario actual tiene ID 1 o 2
+         if (!in_array(auth()->id(), [1, 2,3])) {
+            abort(403, 'No tienes permiso para acceder a esta pagina');
+            
+        }
        // Obtener todos los clientes donde el campo 'ip' sea nulo y que tengan un contrato asignado
             $clientes = Cliente::whereNull('ip')
             ->whereHas('contratos')  // Asegurarse de que el cliente tenga un contrato
@@ -74,6 +91,11 @@ class ClienteController extends Controller
      */
     public function show($id)
     {
+         // Verificar si el usuario actual tiene ID 1 o 2
+         if (!in_array(auth()->id(), [1, 2,3])) {
+            abort(403, 'No tienes permiso para acceder a esta pagina');
+          
+        }
         $inventarios = Inventario::where('cliente_id', $id)
         ->get();
         // Obtener los tickets del cliente

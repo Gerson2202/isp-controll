@@ -11,6 +11,11 @@ class ContratoController extends Controller
 {
     public function index()
     {
+         // Verificar si el usuario actual tiene ID 1 o 2
+         if (!in_array(auth()->id(), [1, 2,3])) {
+            abort(403, 'No tienes permiso para acceder a esta pagina');
+            
+        }
         // Obtener clientes que no tienen contrato asociado
         $clientesSinContrato = Cliente::doesntHave('contratos')->get();
         // return $clientesSinContrato;
@@ -21,7 +26,11 @@ class ContratoController extends Controller
     
     public function list()
     {
-        
+         // Verificar si el usuario actual tiene ID 1 o 2
+         if (!in_array(auth()->id(), [1, 2,3])) {
+            abort(403, 'No tienes permiso para acceder a esta página');
+            
+        }
         return view('contratos.list');
     }
     
