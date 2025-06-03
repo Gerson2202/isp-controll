@@ -120,7 +120,7 @@ class AsignarIpCliente extends Component
 
             DB::commit();
 
-            session()->flash('success', 'IP asignada correctamente y cola hija configurada en MikroTik.');
+            session()->flash('success', 'La IP fue asignada correctamente y la restricción se creó con éxito en MikroTik.');
             return redirect()->route('asignarIPindex');
             
         } catch (\Throwable $e) {
@@ -133,7 +133,7 @@ class AsignarIpCliente extends Component
                 'trace' => $e->getTraceAsString()
             ]);
 
-            $mensajeError = 'Ocurrió un error: ' . $e->getMessage();
+            $mensajeError = 'Error al crear la restricción: el plan no fue encontrado en MikroTik. Verifica si el plan está correctamente creado en tu router.' . $e->getMessage();
             
             // Mensaje más específico para errores de MikroTik
             if (str_contains($e->getMessage(), 'MikroTik')) {

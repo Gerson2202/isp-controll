@@ -52,7 +52,7 @@ class ClienteCortes extends Component
             $cliente->update(['estado' => $nuevoEstado]);
             
             // 2. Crear ticket de reporte
-            $situacionTexto = "Se actualizó estado del cliente de {$this->estadoAnterior} a {$nuevoEstado}. Actualizado por el usuario: " . auth()->user()->name;
+            $situacionTexto = "Se actualizo estado del cliente de {$this->estadoAnterior} a {$nuevoEstado}. Actualizado por el usuario: " . auth()->user()->name;
             
             Ticket::create([
                 'tipo_reporte' => 'cambio de estado',

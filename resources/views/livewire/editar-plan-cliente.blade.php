@@ -5,7 +5,7 @@
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Cargando...</span>
                 </div>
-                <p class="mt-2 text-muted">Cargando información del cliente...Cliente no tiene contrato</p>
+                <p class="mt-2 text-muted">Cargando informaci贸n del cliente...Cliente no tiene contrato</p>
             </div>
         @else
             <div class="card">
@@ -62,17 +62,21 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="precio" class="form-label">Precio</label>
-                                    <input
-                                        type="text"
-                                        wire:model="precio"
-                                        id="precio"
-                                        class="form-control @error('precio') is-invalid @enderror"
-                                        placeholder="Ej: 80.000, 50.000, 1.000"
-                                    >
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input 
+                                            type="number" 
+                                            class="form-control" 
+                                            id="precio" 
+                                            wire:model="precio"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="0.00"
+                                        >
+                                    </div>
                                     @error('precio')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="text-danger mt-1">{{ $message }}</div>
                                     @enderror
-                                    <small class="text-muted">Formato aceptado: 80.000, 50.000, 1.000</small>
                                 </div>
 
                                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -96,4 +100,17 @@
             </div>
         @endif
     </div>
+    <!-- Script Para manejo de Notificaciones Tosatar -->
+      @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+         <script>
+            document.addEventListener('livewire:init', () => {
+                Livewire.on('notify', (data) => {
+                    toastr[data.type](data.message);
+                });
+            });
+        </script>      
+      @endpush
+
 </div>

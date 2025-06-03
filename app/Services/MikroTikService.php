@@ -346,6 +346,15 @@ class MikroTikService
     public function actualizarPlanMikroTik($clienteId, $ipCliente, $planAnterior, $planNuevo, $subidaMbps, $bajadaMbps, $rehuso = '1:1')
     {
         try {
+            // 1. Verificar existencia de la cola padre NUEVA
+            $queryVerificarColaPadre = (new Query('/queue/simple/print'))
+                ->where('name', $planNuevo);
+
+            $colaPadreExistente = $this->client->query($queryVerificarColaPadre)->read();
+
+            if (empty($colaPadreExistente)) {
+                throw new \Exception("La cola padre '$planNuevo' no existe en el MikroTik");
+            }
             // 1. Calcular limit-at para el NUEVO plan
             $factorDivision = 1;
             if ($rehuso === '1:2') $factorDivision = 2;
@@ -557,7 +566,7 @@ class MikroTikService
     /**
      * Activa un cliente moviendo su IP a la lista "activado"
      */
-      private function activarCliente($ipCliente)
+    private function activarCliente($ipCliente)
     {
         
         // Agregar a la lista "activado"
@@ -568,6 +577,7 @@ class MikroTikService
         
         
     }
+
 
     /**
      * Corta un cliente moviendo su IP a la lista "cortado"

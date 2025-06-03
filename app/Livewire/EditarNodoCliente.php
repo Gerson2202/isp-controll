@@ -64,11 +64,13 @@ class EditarNodoCliente extends Component
 
     public function actualizarContrato()
     {
+        
         $this->validate([
             'plan_id' => 'required|exists:plans,id',
             'precio' => 'required|numeric|min:0',
         ]);
-
+         // 1. Elimina separadores de miles (puntos o comas) y normaliza decimales
+         $precioNormalizado = str_replace(['.', ','], ['', '.'], $this->precio);
         // Iniciamos la transacción
         DB::beginTransaction();
 
@@ -105,10 +107,10 @@ class EditarNodoCliente extends Component
             // 2. Si MikroTik se actualizó correctamente, actualizamos la base de datos
             $this->contrato->update([
                 'plan_id' => $this->plan_id,
-                'precio' => $this->precio,
+                'precio' =>  $precioNormalizado,
             ]);
 
-            $this->cliente->update(['ip' => null]);
+            $this->cliente->update(['ip' => null,'estado' => 'cortado']);
 
              // Creamos ticket de reporte de modificacion de plan 
              $situacionTexto = "Se realizó cambio de Nodo de {$nodoAnterior} con precio de : {$precioAnterior} y plan {$nombrePlan} al Nodo: {$nuevoNodoNombre} con precio $ {$this->precio} con nuevo plan {$nuevoPlanNombre}, Ip anterior :{$ipCliente}. Actualizado por el usuario: " . auth()->user()->name;
@@ -124,7 +126,7 @@ class EditarNodoCliente extends Component
             // Confirmamos la transacción
             DB::commit();
 
-            session()->flash('success', 'Contrato actualizado y colas en MikroTik eliminadas correctamente.');
+            session()->flash('success', 'Contrato actualizado y restricciones eliminadas correctamente en MikroTik.');
             return redirect()->route('asignarIPindex');
 
         } catch (\Exception $e) {
