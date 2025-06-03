@@ -21,6 +21,8 @@ use App\Livewire\Facturacion\ProcesarCortes;
 use App\Models\Cliente;
 use App\Models\Inventario;
 use App\Models\Nodo;
+use App\Models\Contrato;
+
 use App\Models\Ticket;
 
 Route::get('/', function () {
@@ -158,13 +160,31 @@ Route::patch('/visitas/{visita}/actualizar-fechas', function($visita) {
  Route::get('/pagos/index', [PagoController::class, 'index'])->name('pagos.index');
  Route::get('/facturacion/dashboard', [FacturaController::class, 'dashboard'])->name('facturacion.dashboard');
  Route::get('/facturacion/corte', [FacturaController::class, 'cortes'])->name('facturacion.corte');
+ 
+//  RUTA PARA EXPORTAR EXCEL
 
+Route::get('/exportar-contratos-excel', function () {
+    $contratos = Contrato::query()
+        ->with(['cliente', 'plan.nodo'])
+        ->join('clientes', 'clientes.id', '=', 'contratos.cliente_id')
+        ->join('plans', 'plans.id', '=', 'contratos.plan_id')
+        ->join('nodos', 'nodos.id', '=', 'plans.nodo_id')
+        ->get()
+        ->map(function ($contrato) {
+            return [
+                'Cliente' => $contrato->cliente->nombre,
+                'Plan' => str_replace('_REHUSO', '', $contrato->plan->nombre),
+                'Tecnologia' => ucfirst($contrato->tecnologia),
+                'Precio' => number_format($contrato->precio, 0, ',', '.'),
+                'Fecha inicio' => $contrato->fecha_inicio ? date('d/m/Y', strtotime($contrato->fecha_inicio)) : 'N/A',
+                'Fecha Fin' => $contrato->fecha_fin ? date('d/m/Y', strtotime($contrato->fecha_fin)) : 'N/A',
+                'Estado' => ucfirst($contrato->estado),
+                'IP' => $contrato->cliente->ip ?? 'sin ip',
+                'Nodo' => $contrato->plan->nodo->nombre ?? 'sin Nodo',
+            ];
+        });
 
-//  Route::prefix('facturacion')->group(function () {
-//     Route::get('/panel', PanelFacturacion::class)->name('facturacion.panel');
-//     Route::get('/facturas', ListaFacturas::class)->name('facturas.index');
-//     Route::get('/generar-facturas', GenerarFacturasMensuales::class)->name('facturas.generar');
-//     Route::get('/procesar-cortes', ProcesarCortes::class)->name('facturas.cortes');
-//     });
+    return response()->json($contratos);
+});
 
 });

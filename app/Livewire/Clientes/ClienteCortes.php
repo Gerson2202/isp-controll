@@ -76,7 +76,7 @@ class ClienteCortes extends Component
                     // 2. Crear ticket
                     Ticket::create([
                         'tipo_reporte' => 'corte masivo',
-                        'situacion' => 'Corte automático por factura pendiente',
+                        'situacion' => 'Corte automatico por factura pendiente',
                         'estado' => 'cerrado',
                         'fecha_cierre' => now(),
                         'cliente_id' => $cliente->id,

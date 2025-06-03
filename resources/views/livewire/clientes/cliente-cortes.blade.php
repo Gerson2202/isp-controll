@@ -2,8 +2,8 @@
     <div class="container-fluid">
         <div class="card">
             <div class="card-body border-bottom">
-                <div class="row g-3">
-                    <div class="col-md-4">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
                         <label for="search" class="form-label">Buscar Cliente</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
@@ -16,7 +16,8 @@
                             >
                         </div>
                     </div>
-                    <div class="col-md-4">
+
+                    <div class="col-md-3">
                         <label for="filterEstado" class="form-label">Estado Factura</label>
                         <select 
                             id="filterEstado" 
@@ -28,7 +29,8 @@
                             <option value="pagada">Pagadas</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+
+                    <div class="col-md-3">
                         <label for="filterMikrotik" class="form-label">Estado Mikrotik</label>
                         <select 
                             id="filterMikrotik" 
@@ -40,28 +42,22 @@
                             <option value="cortado">Cortados</option>
                         </select>
                     </div>
+
+                    <div class="col-md-3 d-grid">
+                        <button 
+                            onclick="confirmarCorteSweet()"
+                            wire:loading.attr="disabled"
+                            class="btn btn-danger"
+                        >
+                            Cortar Clientes Pendientes
+                        </button>
+                    </div>
                 </div>
             </div>
 
+
            <div class="card">
                 <div class="card-body">
-                    <div class="d-grid gap-2 mb-3">
-                        <button 
-                            wire:click="iniciarCorteMasivo"
-                            wire:loading.attr="disabled"
-                            class="btn btn-danger btn-lg"
-                            @if($procesandoCorteMasivo) disabled @endif
-                        >
-                            <span wire:loading.remove wire:target="iniciarCorteMasivo">
-                                <i class="fas fa-bolt me-2"></i> Cortar Clientes Pendientes
-                            </span>
-                            <span wire:loading wire:target="iniciarCorteMasivo">
-                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                Procesando...
-                            </span>
-                        </button>
-                    </div>
-
                     @if($procesandoCorteMasivo)
                     <div class="alert alert-info">
                         <div class="d-flex justify-content-between">
@@ -152,4 +148,20 @@
             </div>
         </div>
     </div>
+    <script>
+        function confirmarCorteSweet() {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: '¿Deseas cortar todos los clientes pendientes?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cortar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    @this.iniciarCorteMasivo();
+                }
+            });
+        }
+    </script>   
 </div>

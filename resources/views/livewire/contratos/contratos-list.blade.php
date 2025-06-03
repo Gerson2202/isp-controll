@@ -15,7 +15,10 @@
                 </div>
             </div>
         </div>
-    
+        <button onclick="exportarExcel()" class="btn btn-success btn-sm">
+            <i class="fas fa-file-excel"></i> Exportar TODO a Excel
+        </button>
+
         <!-- Tabla de contratos -->
         <div class="card shadow-sm">
             <div class="card-body">
@@ -66,6 +69,12 @@
                                         {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                                     @endif
                                 </th>
+                                <th wire:click="sortBy('nodo')" style="cursor: pointer;">
+                                    Nodo
+                                    @if($sortField === 'nodo')
+                                        {{ $sortDirection === 'asc' ? '↑' : '↓' }}
+                                    @endif
+                                </th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -80,7 +89,7 @@
                                         {{ $contrato->cliente->nombre }}
                                     </a>
                                 </td>
-                                <td>{{ $contrato->plan->nombre }}</td>
+                                <td>{{ \Illuminate\Support\Str::before($contrato->plan->nombre, '_REHUSO') }}</td>
                                 <td>{{ ucfirst($contrato->tecnologia) }}</td>
                                 <td>{{ number_format($contrato->precio, 0, ',', '.') }}</td>
                                 {{-- <td>{{ date('d/m/Y', strtotime($contrato->fecha_inicio)) }}</td> --}}
@@ -91,6 +100,7 @@
                                     </span>
                                 </td>
                                 <td>{{ $contrato->cliente->ip ?? 'sin ip' }}</td>
+                                <td>{{ $contrato->plan->nodo->nombre ?? 'sin nodo' }}</td>
                                 <td>
                                 
                                     <button wire:click="openEditModal({{ $contrato->id }})" class="btn btn-sm btn-primary">Editar</button>
@@ -110,7 +120,7 @@
     
         <!-- Modal de edición -->
         <div wire:ignore.self class="modal fade" id="modalCliente" tabindex="-1" aria-labelledby="modalClienteLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header bg-primary text-white">
                             <h5 class="modal-title">Editar Contrato #{{ $contratoId ?? '' }}</h5>
@@ -219,5 +229,29 @@
 
     @push('scripts')
     
+<!-- Incluir SheetJS desde CDN -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+    async function exportarExcel() {
+        try {
+            // 1. Obtener datos desde la API
+            const response = await fetch('/exportar-contratos-excel');
+            const contratos = await response.json();
+
+            // 2. Crear hoja de cálculo
+            const worksheet = XLSX.utils.json_to_sheet(contratos);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Contratos");
+
+            // 3. Descargar archivo Excel
+            XLSX.writeFile(workbook, "contratos_completos.xlsx");
+
+        } catch (error) {
+            console.error("Error al exportar:", error);
+            alert("Hubo un error al generar el Excel");
+        }
+    }
+</script>
     @endpush
 </div>

@@ -45,9 +45,20 @@ class ContratosList extends Component
         // Validar los datos usando las reglas definidas
         $this->validate();
 
+        // Buscar el cliente por ID
+        $cliente = Cliente::find($this->cliente_id);
+
+        // Verificar si el cliente tiene IP asignada
+        if (!$cliente || empty($cliente->ip)) {
+            $this->dispatch('notify', 
+                type: 'error',
+                message: 'El cliente no tiene una IP asignada, no se puede actualizar el contrato.'
+            );
+            return; // Detener la ejecución
+        }
         // Formatear el precio: eliminar puntos y comas
         $precioFormateado = str_replace(['.', ','], '', $this->precio);
-
+        
         $contrato = Contrato::findOrFail($this->contratoId);
 
         $contrato->update([
@@ -106,23 +117,27 @@ class ContratosList extends Component
         $this->precio = $contrato->precio;
         
     }
-
+    
     public function render()
     {
         $contratos = Contrato::select('contratos.*')
-            ->with(['cliente', 'plan'])
+            ->with(['cliente', 'plan.nodo'])
             ->join('clientes', 'clientes.id', '=', 'contratos.cliente_id')
+            ->join('plans', 'plans.id', '=', 'contratos.plan_id')  // tabla correcta aquí
+            ->join('nodos', 'nodos.id', '=', 'plans.nodo_id')
             ->when($this->search, function ($query) {
                 $query->where(function($q) {
                     $q->where('clientes.nombre', 'like', "%{$this->search}%")
                     ->orWhere('clientes.ip', 'like', "%{$this->search}%")
                     ->orWhere('contratos.tecnologia', 'like', "%{$this->search}%")
-                    ->orWhere('contratos.estado', 'like', "%{$this->search}%");
+                    ->orWhere('contratos.estado', 'like', "%{$this->search}%")
+                    ->orWhere('nodos.nombre', 'like', "%{$this->search}%");
                 });
             })
             ->orderBy(
                 $this->sortField === 'ip' ? 'clientes.ip' : 
-                ($this->sortField === 'cliente_id' ? 'clientes.nombre' : 'contratos.'.$this->sortField),
+                ($this->sortField === 'cliente_id' ? 'clientes.nombre' : 
+                ($this->sortField === 'nodo' ? 'nodos.nombre' : 'contratos.'.$this->sortField)),
                 $this->sortDirection
             )
             ->paginate($this->perPage);
@@ -133,4 +148,5 @@ class ContratosList extends Component
             'planes' => Plan::orderBy('nombre')->get()
         ]);
     }
+
 }
