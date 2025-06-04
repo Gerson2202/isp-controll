@@ -89,11 +89,11 @@
                                     </button>
                                                     
                                     <ul class="list-unstyled">
-                                        <li class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Cedula:</strong> {{$cliente->cedula}}</li>
-                                        <li class="btn-link text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Telefono:</strong> {{$cliente->telefono}}</li>
-                                        <li class="btn-link text-secondary"><i class="far fa-fw fa-envelope"></i><strong> Correo:</strong> {{$cliente->correo}}</li>
-                                        <li class="btn-link text-secondary"><i class="far fa-fw fa-image"></i><strong> Direccion:</strong> {{$cliente->direccion}}</li>
-                                        <li class="btn-link text-secondary">
+                                        <li class="text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Cedula:</strong> {{$cliente->cedula}}</li>
+                                        <li class="text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Telefono:</strong> {{$cliente->telefono}}</li>
+                                        <li class="text-secondary"><i class="far fa-fw fa-envelope"></i><strong> Correo:</strong> {{$cliente->correo}}</li>
+                                        <li class="text-secondary"><i class="far fa-fw fa-image"></i><strong> Direccion:</strong> {{$cliente->direccion}}</li>
+                                        <li class="text-secondary">
                                             <i class="fas fa-map-marker-alt me-2"></i><strong> Coordenada:</strong>
                                             @if($cliente->latitud && $cliente->longitud)
                                                 <a href="https://www.google.com/maps?q={{ $cliente->latitud }},{{ $cliente->longitud }}" 
@@ -106,6 +106,7 @@
                                                 Sin datos de coordenadas
                                             @endif
                                         </li>
+                                        <li class=" text-secondary"><i class="far fa-calendar-alt fa-fw"></i><strong> Fecha de registro:</strong> {{$cliente->created_at}}</li>
                                     </ul>
                                     
                                     <!-- Modal de Edición -->
