@@ -53,8 +53,9 @@
                                     <td data-label="Acciones">
                                         <button wire:click="seleccionarFactura({{ $factura->id }})" 
                                                 class="btn btn-sm btn-success">
-                                            Registrar Pago
+                                            <i class="fas fa-dollar-sign me-1"></i> Registrar Pago
                                         </button>
+
                                     </td>
                                 </tr>
                                 @endforeach
@@ -103,9 +104,16 @@
                                             <label>Fecha de Pago</label>
                                             <input type="date" wire:model="fecha_pago" class="form-control">
                                         </div>
-                                        <button type="submit" class="btn btn-primary">
-                                            Confirmar Pago
+                                        <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                                            <span wire:loading.class="invisible">
+                                                <i class="fas fa-check me-1"></i> Confirmar Pago
+                                            </span>
+                                            <span wire:loading>
+                                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                Procesando...
+                                            </span>
                                         </button>
+
                                     </form>
                                 </div>
                             </div>

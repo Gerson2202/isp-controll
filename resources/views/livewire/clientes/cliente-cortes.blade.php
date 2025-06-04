@@ -75,7 +75,7 @@
                     <thead class="table-light sticky-top bg-white">
                         <tr>
                             <th class="text-nowrap">Cliente</th>
-                            <th class="text-nowrap d-none d-md-table-cell">N° Factura</th>
+                            <th class="text-nowrap d-none d-md-table-cell">N Factura</th>
                             <th class="text-nowrap d-none d-md-table-cell">Vencimiento</th>
                             <th class="text-nowrap d-none d-md-table-cell">Monto</th>
                             <th class="text-nowrap d-none d-md-table-cell">Saldo</th>
@@ -88,7 +88,12 @@
                         @forelse($facturas as $factura)
                             <tr>
                                 <td class="text-nowrap">
-                                    <div class="fw-bold">{{ $factura->contrato->cliente->nombre }}</div>
+                                    <div class="fw-bold">
+                                        <a href="{{ route('clientes.show', $factura->contrato->cliente->id) }}" target="_blank"  class="text-decoration-none text-primary fw-bold">
+                                            {{ $factura->contrato->cliente->nombre }}
+                                        </a>
+                                    </div>
+
                                     <div class="d-md-none small text-muted">
                                         <div>Vence: {{ \Carbon\Carbon::parse($factura->fecha_vencimiento)->format('d/m/Y') }}</div>
                                         <div>Monto: ${{ number_format($factura->monto_total, 2) }}</div>
