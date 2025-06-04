@@ -44,19 +44,21 @@
                     </div>
 
                     <div class="col-md-3 d-grid">
-                        <button 
-                            wire:click="iniciarCorteMasivo"
+                       <button 
                             wire:loading.attr="disabled"
                             class="btn btn-danger"
                             @if($procesando) disabled @endif
+                            onclick="confirmarCorteMasivo()"
                         >
                             <span wire:loading.remove wire:target="iniciarCorteMasivo">
                                 <i class="fas fa-power-off"></i> Cortar Pendientes
                             </span>
                             <span wire:loading wire:target="iniciarCorteMasivo">
-                                <i class="fas fa-spinner fa-spin"></i> Procesando , espere un momento porfavor...
+                                <i class="fas fa-spinner fa-spin"></i> Procesando, espere un momento por favor...
                             </span>
                         </button>
+
+
                     </div>
                 </div>
             </div>
@@ -117,10 +119,10 @@
                                 </td>
                                 <td class="text-nowrap d-table-cell">
                                     <button 
-                                        wire:click="cambiarEstado({{ $factura->contrato->cliente->id }})"
                                         wire:loading.attr="disabled"
                                         class="btn btn-sm {{ $factura->contrato->cliente->estado == 'activo' ? 'btn-danger' : 'btn-primary' }}"
                                         title="{{ $factura->contrato->cliente->estado == 'activo' ? 'Cortar servicio' : 'Activar servicio' }}"
+                                        onclick="confirmarCambioEstado({{ $factura->contrato->cliente->id }}, '{{ $this->getId() }}', '{{ $factura->contrato->cliente->estado }}')"
                                     >
                                         <span wire:loading.remove>
                                             <i class="fas {{ $factura->contrato->cliente->estado == 'activo' ? 'fa-power-off' : 'fa-plug' }}"></i>
@@ -130,6 +132,7 @@
                                             <i class="fas fa-spinner fa-spin"></i>
                                         </span>
                                     </button>
+
                                 </td>
                             </tr>
                         @empty
@@ -147,4 +150,53 @@
             </div>
         </div>
     </div>
+    <script>
+        function confirmarCorteMasivo() {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Se cortarán todos los contratos pendientes. Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, cortar ahora',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Encuentra el componente Livewire que emitió la vista
+                    let component = window.Livewire.find('{{ $this->getId() }}');
+                    component.call('iniciarCorteMasivo');
+                }
+            });
+        }
+    </script>
+    
+    <script>
+        function confirmarCambioEstado(clienteId, componentId, estadoActual) {
+            const accion = estadoActual === 'activo' ? 'cortar' : 'activar';
+            const titulo = estadoActual === 'activo' ? '¿Deseas cortar el servicio?' : '¿Deseas activar el servicio?';
+            const texto = estadoActual === 'activo'
+                ? 'El cliente perderá el acceso a internet inmediatamente.'
+                : 'El cliente volverá a tener acceso a internet.';
+
+            Swal.fire({
+                title: titulo,
+                text: texto,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: estadoActual === 'activo' ? '#d33' : '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: `Sí, ${accion}`,
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    let component = window.Livewire.find(componentId);
+                    component.call('cambiarEstado', clienteId);
+                }
+            });
+        }
+    </script>
+
+
+
 </div>
