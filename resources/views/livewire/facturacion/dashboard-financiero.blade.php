@@ -93,8 +93,7 @@
                     </div>
                 </div>
             </div>
-{{--             
-            <div class="col-xl-3 col-md-6 mb-4">
+            {{-- <div class="col-xl-4 col-md-6 mb-4">
                 <div class="card border-start border-danger border-5 shadow h-100 py-2">
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
@@ -110,10 +109,26 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="col-xl-4 col-md-6 mb-4">
+                <div class="card border-start border-info border-5 shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <div class="text-xs font-weight-bold text-info mb-1">
+                                    Clientes Activos
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                    {{ $estadisticas['clientesActivos'] }}
+                                </div>
+                            </div>
+                            <i class="fas fa-users fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
             </div> --}}
         </div>
        
-        
         <!-- Tabla de Pagos por Usuario -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -135,20 +150,28 @@
                                 <th>Usuario</th>
                                 <th class="text-end">Cantidad de Pagos</th>
                                 <th class="text-end">Total Recaudado</th>
-                                
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($estadisticas['pagosPorUsuario'] as $usuario => $data)
+                            @forelse($estadisticas['pagosPorUsuario'] as $userId => $data)
                             <tr>
-                                <td>{{ $usuario }}</td>
+                                <td>
+                                    <a href="#"
+                                    wire:click.prevent="verDetalleUsuario('{{ $userId }}')"
+                                    class="fw-medium text-info"
+                                    style="text-decoration: none; cursor: pointer;"
+                                    onmouseover="this.style.textDecoration='underline';"
+                                    onmouseout="this.style.textDecoration='none';"
+                                    >
+                                        {{ $data['nombre'] }}
+                                    </a>
+                                </td>
                                 <td class="text-end">{{ $data['count'] }}</td>
                                 <td class="text-end">${{ number_format($data['total'], 2) }}</td>
-                                
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="text-center">No hay pagos registrados en el período seleccionado</td>
+                                <td colspan="3" class="text-center">No hay pagos registrados en el período seleccionado</td>
                             </tr>
                             @endforelse
                         </tbody>
@@ -157,7 +180,6 @@
                                 <th>Total</th>
                                 <th class="text-end">{{ collect($estadisticas['pagosPorUsuario'])->sum('count') }}</th>
                                 <th class="text-end">${{ number_format(collect($estadisticas['pagosPorUsuario'])->sum('total'), 2) }}</th>
-                                <th></th>
                             </tr>
                         </tfoot>
                     </table>
@@ -169,46 +191,66 @@
     
     <!-- Modal para detalle de usuario -->
     @if($usuarioSeleccionado)
-    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detalle de pagos: {{ $usuarioSeleccionado }}</h5>
-                    <button wire:click="cerrarModal" class="btn-close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Fecha Pago</th>
-                                    <th>Cliente</th>
-                                    <th>Contrato</th>
-                                    <th class="text-end">Monto</th>
-                                    <th>Método</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($detallePagosUsuario as $pago)
-                                <tr>
-                                    <td>{{ \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y') }}</td>
-                                    <td>{{ $pago->factura->contrato->cliente->nombre ?? 'N/A' }}</td>
-                                    <td>Contrato #{{ $pago->factura->contrato->id ?? 'N/A' }}</td>
-                                    <td class="text-end">${{ number_format($pago->monto, 2) }}</td>
-                                    <td>{{ $pago->metodo_pago }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+        @php
+            $user = \App\Models\User::find($usuarioSeleccionado);
+            $nombreUsuario = $user ? ($user->name ?? $user->email ?? 'Usuario #'.$usuarioSeleccionado) : 'Desconocido';
+        @endphp
+        <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Detalle de pagos: {{ $nombreUsuario }}</h5>
+                        <button wire:click="cerrarModal" class="btn-close"></button>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button wire:click="cerrarModal" class="btn btn-secondary">Cerrar</button>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Fecha Pago</th>
+                                        <th>Cliente</th>
+                                        <th class="text-end">Monto</th>
+                                        <th>Método</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($detallePagosUsuario as $pago)
+                                    <tr>
+                                        <td>{{ \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y') }}</td>
+                                        <td>
+                                            @if($pago->factura->contrato->cliente)
+                                                <a href="{{ route('clientes.show', $pago->factura->contrato->cliente->id) }}" 
+                                                target="_blank"
+                                                style="text-decoration: none; color: inherit; font-weight: 500;"
+                                                onmouseover="this.style.textDecoration='underline';" 
+                                                onmouseout="this.style.textDecoration='none';"
+                                                >
+                                                    {{ $pago->factura->contrato->cliente->nombre }}
+                                                </a>
+                                            @else
+                                                N/A
+                                            @endif
+                                        </td>
+                                        <td class="text-end">${{ number_format($pago->monto, 2) }}</td>
+                                        <td>{{ $pago->metodo_pago }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button wire:click="cerrarModal" class="btn btn-secondary">Cerrar</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
     @endif
-    
-    
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Sin gráfica de ingresos por plan, solo mantener si tienes otros gráficos
+    </script>
+    @endpush
 </div>

@@ -6,11 +6,12 @@ use Livewire\Component;
 use App\Models\Factura;
 use App\Models\Pago;
 use App\Models\Contrato;
+use App\Models\User;
 use Carbon\Carbon;
 
 class DashboardFinanciero extends Component
 {
-    public $rangoFechas = 'mes_actual'; // mes_actual|mes_pasado|personalizado
+    public $rangoFechas = 'mes_actual';
     public $fechaInicio;
     public $fechaFin;
     public $mostrarPagosPorUsuario = false;
@@ -32,7 +33,6 @@ class DashboardFinanciero extends Component
             $this->fechaInicio = now()->subMonth()->startOfMonth()->toDateString();
             $this->fechaFin = now()->subMonth()->endOfMonth()->toDateString();
         }
-        // Para "personalizado", usa las fechas ya ingresadas
     }
 
     public function getEstadisticasProperty()
@@ -76,10 +76,11 @@ class DashboardFinanciero extends Component
 
     public function getPagosPorUsuario()
     {
-        $query = Pago::with(['factura.contrato.cliente'])
-            ->selectRaw('pagos.*, SUBSTRING_INDEX(SUBSTRING(pagos.notas, LOCATE("Pago registrado por:", pagos.notas) + 18), "\n", 1) as usuario')
-            ->where('pagos.notas', 'LIKE', 'Pago registrado por:%')
-            ->orderBy('fecha_pago', 'desc');
+        $query = Pago::with('usuario')
+            ->selectRaw('user_id, COUNT(*) as count, SUM(monto) as total')
+            ->whereNotNull('user_id')
+            ->groupBy('user_id')
+            ->orderByDesc('total');
 
         // Filtrar por rango de fechas
         if ($this->rangoFechas === 'mes_actual') {
@@ -92,40 +93,42 @@ class DashboardFinanciero extends Component
 
         $pagos = $query->get();
 
-        // Agrupar por usuario
-        $grouped = $pagos->groupBy('usuario')->map(function ($userPayments) {
+        // Agrupar por usuario real
+        $grouped = $pagos->mapWithKeys(function ($row) {
+            $usuario = $row->usuario;
+            $nombre = $usuario ? ($usuario->name ?? $usuario->email ?? 'Usuario #' . $row->user_id) : 'Desconocido';
             return [
-                'total' => $userPayments->sum('monto'),
-                'pagos' => $userPayments,
-                'count' => $userPayments->count()
+                $row->user_id => [
+                    'nombre' => $nombre,
+                    'total' => $row->total,
+                    'count' => $row->count,
+                    'user_id' => $row->user_id
+                ]
             ];
         });
 
-        return $grouped->sortByDesc('total');
+        return $grouped;
     }
 
-    public function verDetalleUsuario($usuario)
-{
-    $this->usuarioSeleccionado = $usuario;
-    
-    $query = Pago::with(['factura.contrato.cliente'])
-        ->where('notas', 'LIKE', '%Pago registrado por: '.trim($usuario).'%')
-        ->orderBy('fecha_pago', 'desc');
+    public function verDetalleUsuario($userId)
+    {
+        $this->usuarioSeleccionado = $userId;
 
-    // Filtrar por rango de fechas
-    if ($this->rangoFechas === 'mes_actual') {
-        $query->whereBetween('fecha_pago', [now()->startOfMonth(), now()->endOfMonth()]);
-    } elseif ($this->rangoFechas === 'mes_pasado') {
-        $query->whereBetween('fecha_pago', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()]);
-    } else {
-        $query->whereBetween('fecha_pago', [$this->fechaInicio, $this->fechaFin]);
+        $query = Pago::with(['factura.contrato.cliente'])
+            ->where('user_id', $userId)
+            ->orderBy('fecha_pago', 'desc');
+
+        // Filtrar por rango de fechas
+        if ($this->rangoFechas === 'mes_actual') {
+            $query->whereBetween('fecha_pago', [now()->startOfMonth(), now()->endOfMonth()]);
+        } elseif ($this->rangoFechas === 'mes_pasado') {
+            $query->whereBetween('fecha_pago', [now()->subMonth()->startOfMonth(), now()->subMonth()->endOfMonth()]);
+        } else {
+            $query->whereBetween('fecha_pago', [$this->fechaInicio, $this->fechaFin]);
+        }
+
+        $this->detallePagosUsuario = $query->get();
     }
-
-    $this->detallePagosUsuario = $query->get();
-    
-    // Debug: Verificar la consulta SQL y los resultados
-    dd($query->toSql(), $query->getBindings(), $this->detallePagosUsuario);
-}
 
     public function cerrarModal()
     {

@@ -19,6 +19,10 @@ return new class extends Migration
             $table->enum('metodo_pago', ['efectivo', 'transferencia', 'tarjeta', 'otro']);
             $table->string('referencia')->nullable();
             $table->text('notas')->nullable();
+             $table->foreignId('user_id')
+              ->nullable() // Temporalmente nullable para producción
+              ->constrained()
+              ->onDelete('set null'); // O 'cascade' según tu necesida
             $table->timestamps();
         });
     }

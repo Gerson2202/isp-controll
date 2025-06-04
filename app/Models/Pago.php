@@ -16,7 +16,8 @@ class Pago extends Model
         'fecha_pago',
         'metodo_pago',
         'referencia',
-        'notas'
+        'notas',
+        'user_id' // Nuevo campo
     ];
     
     protected $casts = [
@@ -28,4 +29,15 @@ class Pago extends Model
     {
         return $this->belongsTo(factura::class);
     }
+    // Relación con User
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+     public function usuario()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
 }
