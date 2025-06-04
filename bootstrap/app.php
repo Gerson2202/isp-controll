@@ -3,6 +3,10 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Console\Scheduling\Schedule;
+
+// Importa tu comando (ajusta el namespace si es necesario)
+use App\Console\Commands\CorteMasivoClientes;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -16,4 +20,13 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
-    })->create();
+    })
+    // Registra tus comandos artisan personalizados aquí
+    ->withCommands([
+        CorteMasivoClientes::class, // agrega aquí tu comando
+    ])
+    ->withSchedule(function (Illuminate\Console\Scheduling\Schedule $schedule) {
+    $schedule->command('clientes:corte-masivo')->monthlyOn(2, '23:22');
+    })
+    
+    ->create();

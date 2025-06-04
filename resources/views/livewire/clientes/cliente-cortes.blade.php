@@ -45,36 +45,30 @@
 
                     <div class="col-md-3 d-grid">
                         <button 
-                            onclick="confirmarCorteSweet()"
+                            wire:click="iniciarCorteMasivo"
                             wire:loading.attr="disabled"
                             class="btn btn-danger"
+                            @if($procesando) disabled @endif
                         >
-                            Cortar Clientes Pendientes
+                            <span wire:loading.remove wire:target="iniciarCorteMasivo">
+                                <i class="fas fa-power-off"></i> Cortar Pendientes
+                            </span>
+                            <span wire:loading wire:target="iniciarCorteMasivo">
+                                <i class="fas fa-spinner fa-spin"></i> Procesando , espere un momento porfavor...
+                            </span>
                         </button>
                     </div>
                 </div>
             </div>
 
-
-           <div class="card">
-                <div class="card-body">
-                    @if($procesandoCorteMasivo)
-                    <div class="alert alert-info">
-                        <div class="d-flex justify-content-between">
-                            <span>
-                                <i class="fas fa-sync-alt fa-spin me-2"></i>
-                                Procesando corte masivo:
-                            </span>
-                            <strong>
-                                {{ $clientesProcesados }} de {{ $totalClientes }} clientes procesados
-                            </strong>
-                        </div>
-                        <!-- Polling para procesar el siguiente chunk -->
-                        <div wire:poll.500ms="procesarChunk"></div>
-                    </div>
-                    @endif
+            @if($procesando)
+            <div class="card-body">
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Procesando corte masivo, por favor espere...
                 </div>
             </div>
+            @endif
 
             <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
                 <table class="table table-hover table-striped mb-0">
@@ -148,20 +142,4 @@
             </div>
         </div>
     </div>
-    <script>
-        function confirmarCorteSweet() {
-            Swal.fire({
-                title: '¿Estás seguro?',
-                text: '¿Deseas cortar todos los clientes pendientes?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, cortar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    @this.iniciarCorteMasivo();
-                }
-            });
-        }
-    </script>   
 </div>

@@ -21,13 +21,7 @@ class ClienteCortes extends Component
     public $filterMikrotik = '';
     public $estadoAnterior = '';
     public $perPage = 10;
-
-    // Progreso y corte masivo
-    public $procesandoCorteMasivo = false;
-    public $clientesProcesados = 0;
-    public $totalClientes = 0;
-    public $idsPendientes = [];
-    public $chunkSize = 1; // Uno por uno para ver el contador avanzar
+    public $procesando = false;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -35,55 +29,35 @@ class ClienteCortes extends Component
         'filterMikrotik' => ['except' => '']
     ];
 
-    // Iniciar el proceso de corte masivo (prepara la lista)
     public function iniciarCorteMasivo()
     {
-        $this->procesandoCorteMasivo = true;
-        $this->clientesProcesados = 0;
+        $this->procesando = true;
 
-        $facturasPendientes = Factura::with(['contrato.cliente', 'contrato.plan.nodo'])
-            ->whereMonth('fecha_emision', Carbon::now()->month)
-            ->whereYear('fecha_emision', Carbon::now()->year)
-            ->where('estado', 'pendiente')
-            ->whereHas('contrato.cliente', function($q) {
-                $q->where('estado', 'activo')
-                  ->whereNotNull('ip');
-            })
-            ->pluck('id')
-            ->toArray();
+        try {
+            $facturasPendientes = Factura::with(['contrato.cliente', 'contrato.plan.nodo'])
+                ->whereMonth('fecha_emision', Carbon::now()->month)
+                ->whereYear('fecha_emision', Carbon::now()->year)
+                ->where('estado', 'pendiente')
+                ->whereHas('contrato.cliente', function($q) {
+                    $q->where('estado', 'activo')
+                      ->whereNotNull('ip');
+                })
+                ->get();
 
-        $this->idsPendientes = $facturasPendientes;
-        $this->totalClientes = count($facturasPendientes);
-    }
-
-    // Procesa un cliente por vez
-    public function procesarChunk()
-    {
-        if (!$this->procesandoCorteMasivo) return;
-
-        $chunk = array_splice($this->idsPendientes, 0, $this->chunkSize);
-
-        foreach ($chunk as $facturaId) {
-            try {
-                DB::transaction(function() use ($facturaId) {
-                    $factura = Factura::with(['contrato.cliente', 'contrato.plan.nodo'])->find($facturaId);
-                    if (!$factura) return;
+            foreach ($facturasPendientes as $factura) {
+                DB::transaction(function() use ($factura) {
                     $cliente = $factura->contrato->cliente;
-
-                    // 1. Actualizar estado del cliente
                     $cliente->update(['estado' => 'cortado']);
 
-                    // 2. Crear ticket
                     Ticket::create([
                         'tipo_reporte' => 'corte masivo',
                         'situacion' => 'Corte automatico por factura pendiente',
                         'estado' => 'cerrado',
                         'fecha_cierre' => now(),
                         'cliente_id' => $cliente->id,
-                        'solucion' => 'Corte realizado automáticamente por sistema'
+                        'solucion' => 'Corte realizado automaticamente por sistema'
                     ]);
 
-                    // 3. Actualizar MikroTik
                     if ($nodo = $factura->contrato->plan->nodo) {
                         $mikroTikService = new MikroTikService(
                             $nodo->ip,
@@ -96,19 +70,20 @@ class ClienteCortes extends Component
                         }
                     }
                 });
-                $this->clientesProcesados++;
-            } catch (\Exception $e) {
-                Log::error("Error cortando cliente ID {$facturaId}: " . $e->getMessage());
-                continue;
             }
-        }
 
-        if (empty($this->idsPendientes)) {
-            $this->procesandoCorteMasivo = false;
             $this->dispatch('notify',
                 type: 'success',
-                message: "Corte masivo completado: {$this->clientesProcesados} de {$this->totalClientes} clientes procesados"
+                message: "Corte masivo completado: " . count($facturasPendientes) . " clientes procesados"
             );
+        } catch (\Exception $e) {
+            Log::error("Error en corte masivo: " . $e->getMessage());
+            $this->dispatch('notify',
+                type: 'error',
+                message: "Ocurrio un error durante el proceso: " . $e->getMessage()
+            );
+        } finally {
+            $this->procesando = false;
         }
     }
 
@@ -118,11 +93,10 @@ class ClienteCortes extends Component
         $this->estadoAnterior = $cliente->estado;
         $nuevoEstado = $cliente->estado == 'activo' ? 'cortado' : 'activo';
 
-        // Validar que el cliente tenga IP asignada
         if (empty($cliente->ip)) {
             $this->dispatch('notify',
                 type: 'error',
-                message: 'Error al actualizar el estado cliente sin ip',
+                message: 'Error: El cliente no tiene IP asignada',
             );
             return;
         }
@@ -131,7 +105,7 @@ class ClienteCortes extends Component
 
         try {
             $cliente->update(['estado' => $nuevoEstado]);
-            $situacionTexto = "Se actualizo estado del cliente de {$this->estadoAnterior} a {$nuevoEstado}. Actualizado por el usuario: " . auth()->user()->name;
+            $situacionTexto = "Estado cambiado de {$this->estadoAnterior} a {$nuevoEstado}. Usuario: " . auth()->user()->name;
 
             Ticket::create([
                 'tipo_reporte' => 'cambio de estado',
@@ -139,7 +113,7 @@ class ClienteCortes extends Component
                 'estado' => 'cerrado',
                 'fecha_cierre' => now(),
                 'cliente_id' => $cliente->id,
-                'solucion' => 'Estado actualizado correctamente desde el panel de cortes',
+                'solucion' => 'Estado actualizado desde panel de cortes',
             ]);
 
             $nodo = $cliente->contrato->plan->nodo;
@@ -152,7 +126,7 @@ class ClienteCortes extends Component
             );
 
             if (!$mikroTikService->isReachable()) {
-                throw new \Exception("No se pudo conectar al router MikroTik del nodo.");
+                throw new \Exception("No se pudo conectar al MikroTik");
             }
 
             $mikroTikService->manejarEstadoCliente($cliente->ip, $nuevoEstado);
@@ -161,16 +135,16 @@ class ClienteCortes extends Component
 
             $this->dispatch('notify',
                 type: 'success',
-                message: 'Estado actualizado correctamente en el sistema y en el router MikroTik.'
+                message: 'Estado actualizado correctamente'
             );
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al actualizar estado del cliente ID ' . $cliente->id . ': ' . $e->getMessage());
+            Log::error('Error al actualizar estado: ' . $e->getMessage());
 
             $this->dispatch('notify',
                 type: 'error',
-                message: 'Error al actualizar el estado: ' . $e->getMessage()
+                message: 'Error: ' . $e->getMessage()
             );
         }
     }
