@@ -130,6 +130,7 @@ class ClienteController extends Controller
             'latitud' => 'nullable|numeric',
             'longitud' => 'nullable|numeric',
             'nombre' => 'nullable|string',
+            'descripcion' => 'nullable|string',
         ]);
     
         $cliente = Cliente::findOrFail($id);

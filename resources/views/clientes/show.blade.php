@@ -93,6 +93,8 @@
                                         <li class="text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Telefono:</strong> {{$cliente->telefono}}</li>
                                         <li class="text-secondary"><i class="far fa-fw fa-envelope"></i><strong> Correo:</strong> {{$cliente->correo}}</li>
                                         <li class="text-secondary"><i class="far fa-fw fa-image"></i><strong> Direccion:</strong> {{$cliente->direccion}}</li>
+                                        <li class="text-secondary"><i class="fas fa-fw fa-file-lines"></i><strong> Descripcion:</strong> {{$cliente->descripcion ?? 'Sin datos'}}</li>
+
                                         <li class="text-secondary">
                                             <i class="fas fa-map-marker-alt me-2"></i><strong> Coordenada:</strong>
                                             @if($cliente->latitud && $cliente->longitud)
@@ -145,7 +147,7 @@
                                                                 </div>
                                                                 <div class="mb-3">
                                                                     <label for="direccion" class="form-label">Dirección</label>
-                                                                    <input type="text" class="form-control" id="direccion" name="direccion" value="{{ $cliente->direccion }}">
+                                                                    <input type="text" class="form-control" id="direccion" name="direccion" value="{{ $cliente->direccion }}" required>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -170,7 +172,16 @@
                                                                     title="La longitud debe ser entre -180 y 180 con hasta 6 decimales">
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                     </div>
+                                                     <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="mb-3">
+                                                                <label for="descripcion" class="form-label">Descripcion</label>
+                                                                <input type="text" class="form-control" id="descripcion" name="descripcion" value="{{ $cliente->descripcion }}">
+
+                                                            </div>
+                                                        </div>
+                                                     </div>
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>

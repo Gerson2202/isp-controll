@@ -87,7 +87,7 @@
                                 <tbody>
                                     @foreach($pagos as $pago)
                                     <tr>
-                                        <td>{{ $pago->fecha_pago->format('d/m/Y') }}</td>
+                                        <td>{{ $pago->created_at}}</td>
                                         <td>{{ ucfirst($pago->metodo_pago) }}</td>
                                         <td>${{ number_format($pago->monto, 2) }}</td>
                                         <td>{{ $pago->notas}}</td>
