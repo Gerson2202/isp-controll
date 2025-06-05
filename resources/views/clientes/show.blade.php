@@ -80,7 +80,7 @@
                         <div class="row">
                             <div class="col-lg-4">
                                 <h3 class="text-primary"><i class="fas fa-paint-brush"></i> {{$cliente->nombre}}</h3>
-                                <p class="text-muted">{{$cliente->descripcion}}</p>
+                                
                                 <h5 class="mt-5 text-center text-muted"><strong>Datos personales</strong></h5>
                                 <div>
                                     <!-- Botón para abrir el modal -->
