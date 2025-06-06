@@ -8,6 +8,7 @@ use App\Models\Pago;
 use App\Models\Contrato;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 
 class DashboardFinanciero extends Component
 {
@@ -16,12 +17,19 @@ class DashboardFinanciero extends Component
     public $fechaFin;
     public $mostrarPagosPorUsuario = false;
     public $usuarioSeleccionado = null;
-    public $detallePagosUsuario = [];
+    public Collection $detallePagosUsuario;   
+    public array $resumenPagos = [
+        'efectivo' => ['cantidad' => 0, 'total' => 0],
+        'transferencia' => ['cantidad' => 0, 'total' => 0],
+        'tarjeta' => ['cantidad' => 0, 'total' => 0],
+        'total_general' => 0
+    ];
 
     public function mount()
     {
         $this->fechaInicio = now()->startOfMonth()->toDateString();
         $this->fechaFin = now()->endOfMonth()->toDateString();
+        $this->detallePagosUsuario = collect();
     }
 
     public function updatedRangoFechas($value)
@@ -110,7 +118,7 @@ class DashboardFinanciero extends Component
         return $grouped;
     }
 
-    public function verDetalleUsuario($userId)
+     public function verDetalleUsuario($userId)
     {
         $this->usuarioSeleccionado = $userId;
 
@@ -128,12 +136,33 @@ class DashboardFinanciero extends Component
         }
 
         $this->detallePagosUsuario = $query->get();
+        
+        $this->calcularResumenPagos();
+    }
+
+    protected function calcularResumenPagos()
+    {
+        $this->resumenPagos = [
+            'efectivo' => [
+                'cantidad' => $this->detallePagosUsuario->where('metodo_pago', 'efectivo')->count(),
+                'total' => $this->detallePagosUsuario->where('metodo_pago', 'efectivo')->sum('monto')
+            ],
+            'transferencia' => [
+                'cantidad' => $this->detallePagosUsuario->where('metodo_pago', 'transferencia')->count(),
+                'total' => $this->detallePagosUsuario->where('metodo_pago', 'transferencia')->sum('monto')
+            ],
+            'tarjeta' => [
+                'cantidad' => $this->detallePagosUsuario->where('metodo_pago', 'tarjeta')->count(),
+                'total' => $this->detallePagosUsuario->where('metodo_pago', 'tarjeta')->sum('monto')
+            ],
+            'total_general' => $this->detallePagosUsuario->sum('monto')
+        ];
     }
 
     public function cerrarModal()
     {
         $this->usuarioSeleccionado = null;
-        $this->detallePagosUsuario = [];
+        $this->detallePagosUsuario = collect(); // Reiniciar como colección vacía
     }
 
     public function render()

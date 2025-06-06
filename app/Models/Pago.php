@@ -27,7 +27,7 @@ class Pago extends Model
     
     public function factura(): BelongsTo
     {
-        return $this->belongsTo(factura::class);
+        return $this->belongsTo(Factura::class);
     }
     // Relación con User
     public function user()

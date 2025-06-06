@@ -190,62 +190,113 @@
     </div>
     
     <!-- Modal para detalle de usuario -->
-    @if($usuarioSeleccionado)
-        @php
-            $user = \App\Models\User::find($usuarioSeleccionado);
-            $nombreUsuario = $user ? ($user->name ?? $user->email ?? 'Usuario #'.$usuarioSeleccionado) : 'Desconocido';
-        @endphp
-        <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Detalle de pagos: {{ $nombreUsuario }}</h5>
-                        <button wire:click="cerrarModal" class="btn-close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha Pago</th>
-                                        <th>Cliente</th>
-                                        <th class="text-end">Monto</th>
-                                        <th>Método</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($detallePagosUsuario as $pago)
-                                    <tr>
-                                        <td>{{ \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y') }}</td>
-                                        <td>
-                                            @if($pago->factura->contrato->cliente)
-                                                <a href="{{ route('clientes.show', $pago->factura->contrato->cliente->id) }}" 
-                                                target="_blank"
-                                                style="text-decoration: none; color: inherit; font-weight: 500;"
-                                                onmouseover="this.style.textDecoration='underline';" 
-                                                onmouseout="this.style.textDecoration='none';"
-                                                >
-                                                    {{ $pago->factura->contrato->cliente->nombre }}
-                                                </a>
-                                            @else
-                                                N/A
-                                            @endif
-                                        </td>
-                                        <td class="text-end">${{ number_format($pago->monto, 2) }}</td>
-                                        <td>{{ $pago->metodo_pago }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+    <!-- Modal para detalle de usuario -->
+@if($usuarioSeleccionado)
+    @php
+        $user = \App\Models\User::find($usuarioSeleccionado);
+        $nombreUsuario = $user ? ($user->name ?? $user->email ?? 'Usuario #'.$usuarioSeleccionado) : 'Desconocido';
+    @endphp
+    <div class="modal fade show" style="display: block; background-color: rgba(0,0,0,0.5);" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Detalle de pagos: {{ $nombreUsuario }}</h5>
+                    <button wire:click="cerrarModal" class="btn-close btn-close-white"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Resumen de pagos -->
+                    <div class="card mb-4 border-0 shadow-sm">
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold text-primary mb-3">Resumen de Pagos</h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <div class="border p-3 rounded bg-light">
+                                        <h6 class="text-center text-success fw-bold">Efectivo</h6>
+                                        <p class="text-center mb-1 fw-semibold">Cantidad: {{ $resumenPagos['efectivo']['cantidad'] }}</p>
+                                        <p class="text-center mb-0 fw-bold">${{ number_format($resumenPagos['efectivo']['total'], 2) }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="border p-3 rounded bg-light">
+                                        <h6 class="text-center text-info fw-bold">Transferencia</h6>
+                                        <p class="text-center mb-1 fw-semibold">Cantidad: {{ $resumenPagos['transferencia']['cantidad'] }}</p>
+                                        <p class="text-center mb-0 fw-bold">${{ number_format($resumenPagos['transferencia']['total'], 2) }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="border p-3 rounded bg-light">
+                                        <h6 class="text-center text-warning fw-bold">Tarjeta</h6>
+                                        <p class="text-center mb-1 fw-semibold">Cantidad: {{ $resumenPagos['tarjeta']['cantidad'] }}</p>
+                                        <p class="text-center mb-0 fw-bold">${{ number_format($resumenPagos['tarjeta']['total'], 2) }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3 p-3 bg-primary text-white rounded">
+                                <h5 class="mb-0 text-end fw-bold">Total General: ${{ number_format($resumenPagos['total_general'], 2) }}</h5>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button wire:click="cerrarModal" class="btn btn-secondary">Cerrar</button>
+                    
+                    <!-- Tabla de detalle -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Fecha Pago</th>
+                                    <th>Cliente</th>
+                                    <th class="text-end">Monto</th>
+                                    <th>Método</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($detallePagosUsuario as $pago)
+                                <tr>
+                                    <td>{{ \Carbon\Carbon::parse($pago->fecha_pago)->format('d/m/Y') }}</td>
+                                    <td>
+                                        @if($pago->factura->contrato->cliente)
+                                            <a href="{{ route('clientes.show', $pago->factura->contrato->cliente->id) }}" 
+                                            target="_blank"
+                                            class="text-decoration-none text-dark fw-medium"
+                                            onmouseover="this.style.textDecoration='underline';" 
+                                            onmouseout="this.style.textDecoration='none';"
+                                            >
+                                                {{ $pago->factura->contrato->cliente->nombre }}
+                                            </a>
+                                        @else
+                                            N/A
+                                        @endif
+                                    </td>
+                                    <td class="text-end fw-bold">${{ number_format($pago->monto, 2) }}</td>
+                                    <td>
+                                        @php
+                                            $badgeClass = [
+                                                'efectivo' => 'bg-success',
+                                                'transferencia' => 'bg-info',
+                                                'tarjeta' => 'bg-warning'
+                                            ][$pago->metodo_pago] ?? 'bg-secondary';
+                                        @endphp
+                                        <span class="badge {{ $badgeClass }}">{{ ucfirst($pago->metodo_pago) }}</span>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">No se encontraron pagos para este usuario en el período seleccionado</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
+                </div>
+                <div class="modal-footer">
+                    <button wire:click="cerrarModal" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cerrar
+                    </button>
+                    
                 </div>
             </div>
         </div>
-    @endif
+    </div>
+@endif
 
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
