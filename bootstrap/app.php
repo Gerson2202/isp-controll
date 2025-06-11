@@ -26,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         CorteMasivoClientes::class, // agrega aquí tu comando
     ])
     ->withSchedule(function (Illuminate\Console\Scheduling\Schedule $schedule) {
-    $schedule->command('clientes:corte-masivo')->monthlyOn(2, '23:22');
+    $schedule->command('clientes:corte-masivo')->monthlyOn(4, '00:00');
     })
     
     ->create();

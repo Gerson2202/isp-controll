@@ -3,7 +3,10 @@
 @section('title', 'Editar Visita')
 
 @section('content_header')
-    <h1 class="ml-1">Editar Visita</h1>
+    <h1 class="ml-3">
+        <i class="fas fa-edit text-blue-500 mr-2"></i>
+        Editar Visita
+    </h1>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 
 @stop
@@ -12,7 +15,12 @@
     <div class="container-fluid">
        <div class="card">
         <div class="card-header">
-            <h5>Editar visita</h5>
+            <h5>
+                Editar visita a 
+                <a href="{{ route('clientes.show', $visita->ticket->cliente->id) }}" class="text-blue font-bold hover:underline" target="_blank">
+                    {{ $visita->ticket->cliente->nombre }}
+                </a>
+            </h5>
             @if (session('error'))
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     {{ session('error') }}
@@ -69,6 +77,14 @@
                 @endif
             </form>
             
+        </div>
+       </div>
+       <div class="card">
+        <div class="card-header">
+            <h5 >Agregar fotos a la visita</h5>
+        </div>
+        <div class="card-body">
+            @livewire('visitas.editar-visita', ['visita' => $visita])
         </div>
        </div>
     </div>

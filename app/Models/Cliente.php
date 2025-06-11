@@ -59,4 +59,10 @@ class Cliente extends Model
     {
         return $this->hasMany(HistorialCorte::class);
     }
+
+    
+    public function fotos()
+    {
+        return $this->hasMany(ClienteFoto::class);
+    }
 }

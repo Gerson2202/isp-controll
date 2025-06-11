@@ -19,4 +19,9 @@ class Ticket extends Model
     {
         return $this->belongsToMany(User::class, 'ticket_usuario');
     }
+
+    public function visita()
+    {
+        return $this->hasOne(Visita::class);
+    }
 }

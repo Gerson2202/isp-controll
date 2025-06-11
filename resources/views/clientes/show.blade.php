@@ -511,11 +511,20 @@
                                     @else
                                     N/A
                                     @endif
-                                </td>                          <td>
+                                <td>
                                     @if ($ticket->estado == 'abierto')
-                                    <span class="badge bg-warning">{{$ticket->estado}}</span>
+                                        <span class="badge bg-warning">{{ $ticket->estado }}</span>
                                     @else
-                                    <span class="text-success">{{$ticket->solucion}}</span>
+                                        @if ($ticket->solucion == 'Se agendo visita')
+                                            <a href="{{ route('visitas.show', $ticket->visita->id) }}" 
+                                            class="text-success"
+                                            title="Ver visita">
+                                                {{ $ticket->solucion }}
+                                            </a>
+
+                                        @else
+                                            <span class="text-success">{{ $ticket->solucion }}</span>
+                                        @endif
                                     @endif
                                 </td>
                                 </tr>

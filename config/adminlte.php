@@ -469,6 +469,11 @@ return [
                     'route' => 'visitas.cola', // Ruta para agregar cliente
                     'icon' => 'fas fa-list-alt', // Icono para agregar
                 ],
+                [
+                    'text' => 'Programacion',
+                    'route' => 'visitas.tabla', 
+                    'icon' => 'fas fa-th-list', 
+                ],
                 
             ],
         ],

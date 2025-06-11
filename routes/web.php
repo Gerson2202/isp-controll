@@ -109,6 +109,10 @@ Route::put('/visitas/{visita}/enviar-a-cola', [VisitaController::class, 'enviarA
 // Ruta para ver las visitas sin programar
 Route::get('/visitas/cola', [VisitaController::class, 'colaDeProgramacion'])->name('visitas.cola');
 Route::put('/events/{id}', [VisitaController::class, 'updateEvent'])->name('events.update');
+// Ruta para ver pagina de tabla de visitas
+Route::get('/visitas/tabla', [VisitaController::class, 'visitasTabla'])->name('visitas.tabla');
+Route::get('/visitas/show/{id}', [VisitaController::class, 'visitasShow'])->name('visitas.show');
+
 
 
 // RUTAS PARA CALENDARIO

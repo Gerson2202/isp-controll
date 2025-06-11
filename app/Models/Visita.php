@@ -32,4 +32,10 @@ class Visita extends Model
     {
         return $this->belongsTo(Ticket::class, 'ticket_id');
     }
+    
+    // app/Models/Visita.php
+    public function fotos()
+    {
+        return $this->hasMany(VisitaFoto::class);
+    }
 }

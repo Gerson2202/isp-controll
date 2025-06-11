@@ -14,7 +14,20 @@ class VisitaController extends Controller
     {
         return view('calendario.index');
     }
-    
+
+    // Enviar a pagina de tabla de visitas 
+    public function visitasTabla()
+    {
+        return view('visitas.tabla');
+    }
+
+    // Enviar a pagina de visita show
+
+    public function visitasShow($id)
+    {
+        $visita = Visita::with(['ticket.cliente', 'fotos'])->findOrFail($id);
+        return view('visitas.show', compact('visita'));
+    }
     
 
     // Mostrar el formulario de edición
@@ -54,6 +67,7 @@ class VisitaController extends Controller
         // Establecer los campos 'fecha_inicio' y 'fecha_cierre' a null
         $visita->fecha_inicio = null;
         $visita->fecha_cierre = null;
+        $visita->estado = 'Pendiente';
     
         // Guardar los cambios
         $visita->save();
