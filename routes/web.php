@@ -54,6 +54,7 @@ Route::get('/clientes/grafica/{id}', [ClienteController::class, 'graficas'])->na
 
 Route::put('/clientes/edit/{id}', [ClienteController::class, 'update'])->name('clientes.update');
 Route::get('/clientes/{cliente}/historial-facturas', [ClienteController::class, 'historialFacturas'])->name('clientes.historial-facturas');
+Route::get('/clientes/imagenes/{id}', [ClienteController::class, 'imagenes'])->name('cliente.imagenes');
 
 
 // Ruta para mostrar los clientes con IP nula

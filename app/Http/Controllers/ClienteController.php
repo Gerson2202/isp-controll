@@ -31,6 +31,13 @@ class ClienteController extends Controller
 
         return view('clientes.create');
     }
+    // Enviar ala vista imagenes
+    public function imagenes($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+        // Retorna la vista con las imágenes
+        return view('clientes.imagenes', compact('cliente'));
+    }
 
     public function search()
     {

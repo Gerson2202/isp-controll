@@ -81,12 +81,19 @@
                             <div class="col-lg-4">
                                 <h3 class="text-primary"><i class="fas fa-paint-brush"></i> {{$cliente->nombre}}</h3>
                                 
-                                <h5 class="mt-5 text-center text-muted"><strong>Datos personales</strong></h5>
+                                <h5 class="mt-3 text-center text-muted"><strong>Datos personales</strong></h5>
                                 <div>
                                     <!-- Botón para abrir el modal -->
-                                    <button class="btn btn-warning btn-sm mb-3" data-bs-toggle="modal" data-bs-target="#editClienteModal">
+                                    <button class="btn btn-warning btn-sm mb-3 me-2 mt-3" data-bs-toggle="modal" data-bs-target="#editClienteModal">
                                         <i class="fas fa-edit me-1"></i> Editar Información
                                     </button>
+
+                                    <!-- Botón para ir a la vista de imágenes del cliente -->
+                                    <a href="{{ route('cliente.imagenes', $cliente->id) }}" class="btn btn-info btn-sm mb-3 mt-3">
+                                        <i class="fas fa-image me-1"></i> Ver Imágenes
+                                    </a>
+
+
                                                     
                                     <ul class="list-unstyled">
                                         <li class="text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Cedula:</strong> {{$cliente->cedula}}</li>
@@ -267,7 +274,18 @@
                                                         <i class="fas fa-globe me-2 text-primary"></i>
                                                         <strong>IP:</strong>
                                                     </span>
-                                                    <span class="badge bg-primary bg-opacity-10 text-dark font-monospace">{{ $cliente->ip }}</span>
+                                                    @php
+                                                        $ip = $cliente->ip;
+                                                        $urlPrivada = "http://{$ip}:8080";
+                                                    @endphp
+
+                                                    <a 
+                                                        href="{{ $urlPrivada }}" 
+                                                        target="_blank"
+                                                        class="badge bg-primary bg-opacity-10 text-dark font-monospace text-decoration-none"
+                                                        title="Abrir {{ $urlPrivada }}">
+                                                        {{ $ip }}
+                                                    </a>
                                                 </li>
                                             @endif
                                         </ul>
