@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('solucion')->nullable();
             $table->enum('estado', ['abierto', 'cerrado']);
             $table->foreignId('cliente_id')->constrained('clientes')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); 
             $table->timestamps();
         });
     }

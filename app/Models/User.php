@@ -65,10 +65,9 @@ class User extends Authenticatable
         ];
     }
 
-    // Relación: Un usuario puede estar asignado a muchos tickets
     public function tickets()
     {
-        return $this->belongsToMany(Ticket::class, 'ticket_usuario');
+        return $this->hasMany(Ticket::class);
     }
 
     public function visitas()

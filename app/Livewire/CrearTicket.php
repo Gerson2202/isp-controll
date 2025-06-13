@@ -33,7 +33,8 @@ class CrearTicket extends Component
             'tipo_reporte' => $this->tipo_reporte,
             'situacion' => $this->situacion,
             'estado' => $this->estado,
-            'cliente_id' => $this->cliente_id,  // Asignar el cliente al ticket
+            'cliente_id' => $this->cliente_id,  
+            'user_id' => auth()->id(), // Asigna el ID del usuario autenticado
         ]);
 
         // Limpiar los campos del formulario después de crear el ticket

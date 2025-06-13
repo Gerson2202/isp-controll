@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Ticket extends Model
 {
     protected $fillable = [
-        'tipo_reporte', 'situacion', 'fecha_creacion', 'fecha_cierre', 'estado', 'cliente_id','solucion'
+        'tipo_reporte', 'situacion', 'fecha_creacion', 'fecha_cierre', 'estado', 'cliente_id','solucion','user_id'
     ];
 
     public function cliente()
@@ -23,5 +23,10 @@ class Ticket extends Model
     public function visita()
     {
         return $this->hasOne(Visita::class);
+    }
+    
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }
