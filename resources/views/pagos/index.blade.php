@@ -1,5 +1,5 @@
 @extends('adminlte::page')
-@section('title', 'Dashboard') <!-- Corregí "Dasboard" a "Dashboard" -->
+@section('title', 'Registro de pagos') <!-- Corregí "Dasboard" a "Dashboard" -->
 
 @section('content_header')
 

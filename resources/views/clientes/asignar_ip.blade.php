@@ -1,5 +1,5 @@
 @extends('adminlte::page')
-@section('title', 'Dashboard') <!-- Corregí "Dasboard" a "Dashboard" -->
+@section('title', 'Asignar Ip') 
 
 @section('content_header')
    <h1 class="ml-3">Clientes por asignar IP</h1>

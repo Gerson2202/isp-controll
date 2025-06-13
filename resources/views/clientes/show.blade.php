@@ -1,5 +1,5 @@
 @extends('adminlte::page')
-@section('title', 'Dashboard')
+@section('title', 'Informacion')
 @section('content_header')
    <h1 class="ml-3">Informacion del cliente</h1>
    @livewireStyles

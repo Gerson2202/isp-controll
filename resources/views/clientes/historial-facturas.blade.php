@@ -1,5 +1,5 @@
 @extends('adminlte::page')
-@section('title', 'Dashboard') <!-- Corregí "Dasboard" a "Dashboard" -->
+@section('title', 'Historial de facturas') 
 
 @section('content_header')
    <h1 class="ml-4">Histórico de Facturas</h1>

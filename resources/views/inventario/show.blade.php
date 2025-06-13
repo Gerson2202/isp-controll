@@ -1,5 +1,5 @@
 @extends('adminlte::page')
-@section('title', 'Dashboard')
+@section('title', 'Informacion de equipo')
 
 @section('content_header')
    <h1 class="ml-3">Vista de Equipo</h1>

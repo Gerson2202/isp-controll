@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Editar Visita')
+@section('title', 'Tabla')
 
 @section('content_header')
     <h1 class="ml-3">
