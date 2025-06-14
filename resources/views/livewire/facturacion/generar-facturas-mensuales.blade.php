@@ -6,7 +6,7 @@
             </div>
             <div class="card-body">
                 {{-- Poder selecionar mes y año libremente --}}
-                 {{-- <div class="row mb-4">
+                  {{-- <div class="row mb-4">
                     <div class="col-md-6">
                         <label class="form-label">Mes</label>
                         <select wire:model="mes" class="form-select">
@@ -22,7 +22,7 @@
                         <input type="number" wire:model="anio" class="form-control" 
                                min="{{ now()->year - 1 }}" max="{{ now()->year + 1 }}">
                     </div>
-                </div>   --}}
+                </div>    --}}
                 <!-- Selectores de Fecha -->
                   <div class="row mb-4">
                     <div class="col-md-6">
@@ -47,7 +47,7 @@
                         </select>
                         <input type="hidden" wire:model="anio" value="{{ $currentYear }}">
                     </div>
-                </div>  
+                </div>   
                 
                 <!-- Botón de Acción -->
                 <button wire:click="generarFacturas" wire:loading.attr="disabled" class="btn btn-success">
@@ -56,10 +56,10 @@
                 </button>
                 
                 <button 
-                    type="button"
-                    onclick="if(confirm('¿Estás seguro de eliminar todas las facturas del período {{ $mes }}/{{ $anio }}?\\n\\nEsta acción no se puede deshacer.')) { @this.eliminarUltimoLote() }"
                     wire:loading.attr="disabled"
                     class="btn btn-danger"
+                    onclick="confirmarEliminarFacturas('{{ $mes }}', '{{ $anio }}', '{{ $this->getId() }}')"
+                    title="Eliminar todas las facturas del período {{ $mes }}/{{ $anio }}"
                 >
                     <span wire:loading.remove>
                         <i class="fas fa-trash-alt me-1"></i> Eliminar facturas del periodo actual
@@ -72,7 +72,14 @@
     
                 <!-- Resultados -->
                 @if(!empty($resultados))
-                    <div class="mt-4">
+                <div class="mt-4">
+                    <!-- Mensaje general cuando no se generó ninguna factura -->
+                    @if(!collect($resultados)->contains('estado', 'éxito'))
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No se generaron facturas nuevas. Todos los contratos están al día o tienen pagos recientes.
+                        </div>
+                    @else
                         <div class="alert alert-primary d-flex justify-content-between align-items-center">
                             <div>
                                 <strong>{{ count($resultados) }}</strong> resultados de facturación procesados.
@@ -81,46 +88,68 @@
                                 Ver Detalles
                             </button>
                         </div>
+                    @endif
 
-                        <div class="collapse show" id="detalleResultados">
-                            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                                <table id="tablaResultados" class="table table-hover align-middle table-bordered text-sm">
-                                    <thead class="table-light sticky-top">
+                    <div class="collapse show" id="detalleResultados">
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table id="tablaResultados" class="table table-hover align-middle table-bordered text-sm">
+                                <thead class="table-light sticky-top">
+                                    <tr>
+                                        <th>Cliente</th>
+                                        <th>Estado</th>
+                                        <th>Mensaje</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($resultados as $resultado)
                                         <tr>
-                                            <th>Cliente</th>
-                                            <th>Estado</th>
-                                            <th>Mensaje</th>
+                                            <td>{{ $resultado['cliente'] ?? '--' }}</td>
+                                            <td>
+                                                @php
+                                                    $estado = $resultado['estado'];
+                                                    $badgeClass = match($estado) {
+                                                        'éxito' => 'success',
+                                                        'omitido' => 'warning',
+                                                        'error' => 'danger',
+                                                        'info' => 'info',
+                                                        default => 'secondary',
+                                                    };
+                                                @endphp
+                                                <span class="badge bg-{{ $badgeClass }}">{{ ucfirst($estado) }}</span>
+                                            </td>
+                                            <td>{{ $resultado['mensaje'] }}</td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($resultados as $resultado)
-                                            <tr>
-                                                <td>{{ $resultado['cliente'] }}</td>
-                                                <td>
-                                                    @php
-                                                        $estado = $resultado['estado'];
-                                                        $badgeClass = match($estado) {
-                                                            'éxito' => 'success',
-                                                            'omitido' => 'warning',
-                                                            'error' => 'danger',
-                                                            default => 'secondary',
-                                                        };
-                                                    @endphp
-                                                    <span class="badge bg-{{ $badgeClass }}">{{ ucfirst($estado) }}</span>
-                                                </td>
-                                                <td>{{ $resultado['mensaje'] }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                @endif
+                </div>
+            @endif
 
             </div>
         </div>
     </div>
+    <script>
+        function confirmarEliminarFacturas(mes, anio, componentId) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                html: `Se eliminarán <strong>TODAS</strong> las facturas del período <strong>${mes}/${anio}</strong>.<br><br>Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Llama al método Livewire usando el ID del componente
+                    Livewire.find(componentId).call('eliminarUltimoLote');
+                }
+            });
+        }
+    </script>
     @push('scripts')
     <script>
         document.addEventListener('livewire:init', () => {

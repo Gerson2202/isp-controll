@@ -25,6 +25,14 @@ class GenerarFacturasMensuales extends Component
         $this->anio = now()->year;
     }
 
+    // Validaciones implementadas:
+
+    // Clientes nuevos: Sin facturas → Genera factura normal
+
+    //  Facturas pendientes: No genera nueva factura
+
+    //  Pagos en mes actual: No genera factura (aunque el pago sea para meses anteriores)
+
     public function generarFacturas()
     {
         $this->validate([
@@ -32,29 +40,54 @@ class GenerarFacturasMensuales extends Component
             'anio' => 'required|numeric|digits:4',
         ]);
 
-        $contratos = Contrato::with(['cliente', 'plan'])
+        // Obtener contratos activos sin factura este mes
+        $contratos = Contrato::with(['cliente', 'plan', 'facturas.pagos'])
             ->where('estado', 'activo')
+            ->whereDoesntHave('facturas', function($query) {
+                $query->whereMonth('fecha_emision', $this->mes)
+                    ->whereYear('fecha_emision', $this->anio);
+            })
             ->get();
 
         foreach ($contratos as $contrato) {
             try {
-                // Verificar si ya existe factura para este período
-                $existeFactura = Factura::where('contrato_id', $contrato->id)
-                    ->whereMonth('fecha_emision', $this->mes)
-                    ->whereYear('fecha_emision', $this->anio)
+                // 1. Verificar facturas pendientes (sin pagos completos)
+                $tieneFacturasPendientes = $contrato->facturas()
+                    ->where('estado', 'pendiente')
                     ->exists();
 
-                if ($existeFactura) {
+                if ($tieneFacturasPendientes) {
                     $this->resultados[] = [
                         'cliente' => $contrato->cliente->nombre,
                         'estado' => 'omitido',
-                        'mensaje' => 'Ya tiene factura para este período'
+                        'mensaje' => 'Tiene facturas pendientes'
                     ];
                     continue;
                 }
 
+                // 2. Verificar si hay pagos recientes (a través de facturas)
+                $pagoEnMesActual = false;
+                foreach ($contrato->facturas as $factura) {
+                    if ($factura->pagos()
+                        ->whereMonth('fecha_pago', $this->mes)
+                        ->whereYear('fecha_pago', $this->anio)
+                        ->exists()) {
+                        $pagoEnMesActual = true;
+                        break;
+                    }
+                }
+
+                if ($pagoEnMesActual) {
+                    $this->resultados[] = [
+                        'cliente' => $contrato->cliente->nombre,
+                        'estado' => 'omitido',
+                        'mensaje' => 'Realizó pago en ' . $this->mes . '/' . $this->anio
+                    ];
+                    continue;
+                }
+
+                // 3. Generar nueva factura
                 $fechaEmision = now()->setDate($this->anio, $this->mes, 3);
-                // $fechaVencimiento = $fechaEmision->copy()->addDays(30);
                 $fechaVencimiento = $fechaEmision->copy()->addMonth()->day(3);
 
                 $factura = Factura::create([
@@ -67,7 +100,6 @@ class GenerarFacturasMensuales extends Component
                     'estado' => 'pendiente',
                 ]);
 
-                // Item principal
                 $factura->items()->create([
                     'descripcion' => 'Servicio de internet - ' . $contrato->plan->nombre,
                     'monto' => $contrato->precio,
@@ -87,6 +119,18 @@ class GenerarFacturasMensuales extends Component
                 ];
             }
         }
+        // === AGREGAR AQUÍ === //
+        if (empty(array_filter($this->resultados, function($item) {
+            return $item['estado'] === 'éxito';
+        }))) {
+            $this->resultados[] = [
+                'estado' => 'info',
+                'mensaje' => 'No se generaron facturas nuevas. Todos los contratos están al día, tienen pagos recientes o ya tienen facturas para este periodo.'
+            ];
+        }
+        // === FIN DEL BLOQUE NUEVO === //
+
+        return $this->resultados; // Si usas return
     }
 
     protected function generarNumeroFactura()

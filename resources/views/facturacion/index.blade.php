@@ -79,14 +79,18 @@
 @stop
 
 @section('js')
-    @livewireScripts <!-- Antes de tu script -->        
+    @livewireScripts  <!-- Livewire debe cargarse antes que cualquier otro script -->
     <!-- jQuery (requerido por Toastr) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap 5 JS Bundle -->
+    <!-- Agregar los scripts de Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-    <!-- Livewire Scripts (DEBE ir antes de nuestro código) -->
+    <!-- Agregar SweetAlert2 desde CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Aquí incluye tus scripts personalizados -->
+    @stack('scripts')
+
     <script>
         
         // 1. Primero verificamos si Livewire está cargado
