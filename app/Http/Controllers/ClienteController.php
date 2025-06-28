@@ -68,9 +68,12 @@ class ClienteController extends Controller
             abort(403, 'No tienes permiso para acceder a esta pagina');
             
         }
-       // Obtener todos los clientes donde el campo 'ip' sea nulo y que tengan un contrato asignado
+         // Obtener todos los clientes donde el campo 'ip' sea nulo y que tengan un contrato asignado y el contrato este activo o suspendido
+         //    contratos en cancelado no apareceran
             $clientes = Cliente::whereNull('ip')
-            ->whereHas('contratos')  // Asegurarse de que el cliente tenga un contrato
+            ->whereHas('contratos', function($query) {
+                $query->where('estado', '!=', 'cancelado');
+            })
             ->get();
 
         // Retornar la vista con los clientes
