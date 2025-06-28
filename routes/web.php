@@ -170,24 +170,31 @@ Route::patch('/visitas/{visita}/actualizar-fechas', function($visita) {
 
 Route::get('/exportar-contratos-excel', function () {
     $contratos = Contrato::query()
-        ->with(['cliente', 'plan.nodo'])
-        ->join('clientes', 'clientes.id', '=', 'contratos.cliente_id')
-        ->join('plans', 'plans.id', '=', 'contratos.plan_id')
-        ->join('nodos', 'nodos.id', '=', 'plans.nodo_id')
-        ->get()
-        ->map(function ($contrato) {
-            return [
-                'Cliente' => $contrato->cliente->nombre,
-                'Plan' => str_replace('_REHUSO', '', $contrato->plan->nombre),
-                'Tecnologia' => ucfirst($contrato->tecnologia),
-                'Precio' => number_format($contrato->precio, 0, ',', '.'),
-                'Fecha inicio' => $contrato->fecha_inicio ? date('d/m/Y', strtotime($contrato->fecha_inicio)) : 'N/A',
-                'Fecha Fin' => $contrato->fecha_fin ? date('d/m/Y', strtotime($contrato->fecha_fin)) : 'N/A',
-                'Estado' => ucfirst($contrato->estado),
-                'IP' => $contrato->cliente->ip ?? 'sin ip',
-                'Nodo' => $contrato->plan->nodo->nombre ?? 'sin Nodo',
-            ];
-        });
+    ->with(['cliente', 'plan.nodo'])
+    ->join('clientes', 'clientes.id', '=', 'contratos.cliente_id')
+    ->join('plans', 'plans.id', '=', 'contratos.plan_id')
+    ->join('nodos', 'nodos.id', '=', 'plans.nodo_id')
+    ->select([
+        'contratos.*', // Esto trae todos los campos de contratos
+        'clientes.nombre as cliente_nombre',
+        'clientes.ip as cliente_ip',
+        'plans.nombre as plan_nombre',
+        'nodos.nombre as nodo_nombre'
+    ])
+    ->get()
+    ->map(function ($contrato) {
+        return [
+            'Cliente' => $contrato->cliente_nombre,
+            'Plan' => str_replace('_REHUSO', '', $contrato->plan_nombre),
+            'Tecnologia' => ucfirst($contrato->tecnologia),
+            'Precio' => number_format($contrato->precio, 0, ',', '.'),
+            'Fecha inicio' => $contrato->fecha_inicio ? date('d/m/Y', strtotime($contrato->fecha_inicio)) : 'N/A',
+            'Fecha Fin' => $contrato->fecha_fin ? date('d/m/Y', strtotime($contrato->fecha_fin)) : 'N/A',
+            'Estado' => ucfirst($contrato->estado), // Ahora sí viene de contratos
+            'IP' => $contrato->cliente_ip ?? 'sin ip',
+            'Nodo' => $contrato->nodo_nombre ?? 'sin Nodo',
+        ];
+    });
 
     return response()->json($contratos);
 });
