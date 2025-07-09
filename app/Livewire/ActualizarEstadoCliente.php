@@ -44,6 +44,7 @@ class ActualizarEstadoCliente extends Component
             // Creamos ticket de reporte de modificacion de plan            
             $situacionTexto = "Se actualizo estado del cliente de  {$this->estadoAnterior} a {$this->estado} . Actualizado por el usuario: " . auth()->user()->name;
             Ticket::create([
+                'user_id' => auth()->id(), // O el ID del usuario correspondiente
                 'tipo_reporte' => 'cambio de estado',
                 'situacion' => $situacionTexto,
                 'estado' => 'cerrado',

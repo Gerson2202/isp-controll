@@ -37,6 +37,7 @@ class CorteMasivoClientes extends Command
                     $cliente->update(['estado' => 'cortado']);
 
                     Ticket::create([
+                        'user_id' => auth()->id(), // O el ID del usuario correspondiente
                         'tipo_reporte' => 'corte masivo',
                         'situacion' => 'Corte automático por factura pendiente',
                         'estado' => 'cerrado',

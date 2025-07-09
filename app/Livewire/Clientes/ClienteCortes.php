@@ -50,6 +50,7 @@ class ClienteCortes extends Component
                     $cliente->update(['estado' => 'cortado']);
 
                     Ticket::create([
+                        'user_id' => auth()->id(), // O el ID del usuario correspondiente
                         'tipo_reporte' => 'corte masivo',
                         'situacion' => 'Corte automatico por factura pendiente',
                         'estado' => 'cerrado',
@@ -108,6 +109,7 @@ class ClienteCortes extends Component
             $situacionTexto = "Estado cambiado de {$this->estadoAnterior} a {$nuevoEstado}. Usuario: " . auth()->user()->name;
 
             Ticket::create([
+                'user_id' => auth()->id(), // O el ID del usuario correspondiente
                 'tipo_reporte' => 'cambio de estado',
                 'situacion' => $situacionTexto,
                 'estado' => 'cerrado',

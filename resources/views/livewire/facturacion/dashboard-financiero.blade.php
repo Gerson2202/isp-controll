@@ -238,9 +238,9 @@
                     </div>
                     
                     <!-- Tabla de detalle -->
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                         <table class="table table-striped table-hover">
-                            <thead class="table-dark">
+                            <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
                                 <tr>
                                     <th>Fecha Pago</th>
                                     <th>Cliente</th>
