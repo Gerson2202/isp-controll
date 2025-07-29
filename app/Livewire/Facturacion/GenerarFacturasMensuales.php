@@ -21,9 +21,17 @@ class GenerarFacturasMensuales extends Component
 
     public function mount()
     {
-        $this->mes = now()->month;
-        $this->anio = now()->year;
+        $hoy = now();
+        $this->anio = $hoy->year;
+
+        if ($hoy->day > 25) {
+            $hoy = $hoy->addMonth(); // Pasa al mes siguiente
+        }
+
+        $this->mes = $hoy->month;
+        $this->anio = $hoy->year;
     }
+
 
     // Validaciones implementadas:
 

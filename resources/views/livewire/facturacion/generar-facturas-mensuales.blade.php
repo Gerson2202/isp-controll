@@ -6,25 +6,55 @@
             </div>
             <div class="card-body">
                 {{-- Poder selecionar mes y año libremente --}}
-                  {{-- <div class="row mb-4">
-                    <div class="col-md-6">
+                  <div class="row mb-4">
+                    <div class="col-md-6"> 
                         <label class="form-label">Mes</label>
                         <select wire:model="mes" class="form-select">
-                            @foreach(range(1, 12) as $month)
-                            <option value="{{ $month }}">
-                                {{ \Carbon\Carbon::createFromFormat('!m', $month)->locale('es')->monthName }}
-                            </option>                            
-                            @endforeach
+                            @php
+                                $hoy = \Carbon\Carbon::now();
+                                $mesActual = $hoy->month;
+                                $diaActual = $hoy->day;
+                                $mesInicio = $mesActual;
+                                $mesesMostrar = 4;
+
+                                for ($i = 0; $i < $mesesMostrar; $i++) {
+                                    $mes = ($mesInicio + $i - 1) % 12 + 1;
+                                    $anioDelMes = $hoy->copy()->addMonths($i)->year;
+                                    $nombreMes = \Carbon\Carbon::createFromDate(null, $mes)->locale('es')->monthName;
+                                    $deshabilitado = ($i === 0 && $diaActual > 25);
+                            @endphp
+
+                                <option value="{{ $mes }}"
+                                    @if($deshabilitado) disabled @endif>
+                                    {{ ucfirst($nombreMes) }} {{ $anioDelMes }}
+                                    @if($deshabilitado) — no disponible (supera día 25) @endif
+                                </option>
+
+                            @php
+                                }
+                            @endphp
                         </select>
                     </div>
-                    <div class="col-md-6">
+
+
+                     <div class="col-md-6">
+                        <label class="form-label">Año</label>
+                        <select class="form-select" disabled>
+                            @php
+                                $currentYear = now()->year;
+                            @endphp
+                            <option value="{{ $currentYear }}">{{ $currentYear }}</option>
+                        </select>
+                        <input type="hidden" wire:model="anio" value="{{ $currentYear }}">
+                    </div>
+                    {{-- <div class="col-md-6">
                         <label class="form-label">Año</label>
                         <input type="number" wire:model="anio" class="form-control" 
                                min="{{ now()->year - 1 }}" max="{{ now()->year + 1 }}">
-                    </div>
-                </div>    --}}
+                    </div> --}}
+                </div>    
                 <!-- Selectores de Fecha -->
-                  <div class="row mb-4">
+                  {{-- <div class="row mb-4">
                     <div class="col-md-6">
                         <label class="form-label">Mes</label>
                         <select class="form-select" disabled>
@@ -47,7 +77,7 @@
                         </select>
                         <input type="hidden" wire:model="anio" value="{{ $currentYear }}">
                     </div>
-                </div>   
+                </div>    --}}
                 
                 <!-- Botón de Acción -->
                 <button wire:click="generarFacturas" wire:loading.attr="disabled" class="btn btn-success">
