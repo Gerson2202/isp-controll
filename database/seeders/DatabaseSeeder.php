@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
             // PlanSeeder::class,  // Asegúrate de que este seeder esté siendo llamado
             UserSeeder::class,  // Llamamos al seeder de usuarios
             // NodoSeeder::class,
-              ClienteSeeder::class,
+            //   ClienteSeeder::class,
             // PoolSeeder::class,
             //  ContratoSeeder::class
         ]);
