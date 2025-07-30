@@ -90,7 +90,7 @@
                                         {{ $contrato->cliente->nombre }}
                                     </a>
                                 </td>
-                                <td>{{ \Illuminate\Support\Str::before($contrato->plan->nombre, '_REHUSO') }}</td>
+                                <td>{{ \Illuminate\Support\Str::before($contrato->plan->nombre, '-REHUSO') }}</td>
                                 <td>{{ ucfirst($contrato->tecnologia) }}</td>
                                 <td>{{ number_format($contrato->precio, 0, ',', '.') }}</td>
                                 <td>{{ $contrato->fecha_fin ? date('d/m/Y', strtotime($contrato->fecha_fin)) : 'N/A' }}</td>
