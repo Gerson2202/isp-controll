@@ -33,7 +33,7 @@
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-id-card text-muted"></i></span>
-                                    <input type="number" wire:model="cedula" class="form-control" id="cedula" required>
+                                    <input type="number" wire:model="cedula" class="form-control" id="cedula" >
                                 </div>
                                 @error('cedula') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
@@ -44,7 +44,7 @@
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-phone text-muted"></i></span>
-                                    <input type="text" wire:model="telefono" class="form-control" id="telefono" required>
+                                    <input type="text" wire:model="telefono" class="form-control" id="telefono" >
                                 </div>
                                 @error('telefono') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
@@ -62,7 +62,7 @@
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-map-marker-alt text-muted"></i></span>
-                                    <input type="text" wire:model="direccion" class="form-control" id="direccion" required>
+                                    <input type="text" wire:model="direccion" class="form-control" id="direccion" >
                                 </div>
                                 @error('direccion') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
@@ -73,7 +73,7 @@
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fas fa-envelope text-muted"></i></span>
-                                    <input type="email" wire:model="email" class="form-control" id="email" required>
+                                    <input type="email" wire:model="email" class="form-control" id="email" >
                                 </div>
                                 @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>

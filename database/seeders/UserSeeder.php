@@ -19,24 +19,38 @@ class UserSeeder extends Seeder
         [
             'name' => 'Gerson PSJ',
             'email' => 'gersonpsj@gmail.com',
-            'password' => Hash::make('12345678'),
+            'password' => Hash::make('12345678@'),
             'created_at' => now(),
             'updated_at' => now(),
         ],
-        [
-            'name' => 'Enio Peñaloza',
-            'email' => 'EnioP@gmail.com',
-            'password' => Hash::make('12345678'), // Cambia por una contraseña segura
+         [
+            'name' => 'Wilfredo Ortega',
+            'email' => 'wilfredo@gmail.com',
+            'password' => Hash::make('12345678@'),
             'created_at' => now(),
             'updated_at' => now(),
         ],
-        [
-            'name' => 'Admin',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('12345678'), // Cambia por una contraseña segura
+          [
+            'name' => 'Soporte 1',
+            'email' => 'Soporte1@gmail.com',
+            'password' => Hash::make('12345678@'),
             'created_at' => now(),
             'updated_at' => now(),
-        ]
+        ],
+        // [
+        //     'name' => 'Enio Peñaloza',
+        //     'email' => 'EnioP@gmail.com',
+        //     'password' => Hash::make('12345678'), // Cambia por una contraseña segura
+        //     'created_at' => now(),
+        //     'updated_at' => now(),
+        // ],
+        // [
+        //     'name' => 'Admin',
+        //     'email' => 'admin@gmail.com',
+        //     'password' => Hash::make('12345678'), // Cambia por una contraseña segura
+        //     'created_at' => now(),
+        //     'updated_at' => now(),
+        // ]
     ]);
 }
 }

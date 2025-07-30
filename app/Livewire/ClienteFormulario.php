@@ -25,7 +25,7 @@ class ClienteFormulario extends Component
         // Creamos un nuevo cliente en la base de datos
         Cliente::create([
             'nombre' => $this->nombre,
-            'telefono' => $this->telefono,
+            'telefono' => $this->telefono ?? '123456789',
             'direccion' => $this->direccion,
             'email' => $this->email,
             'cedula' => $this->cedula,
