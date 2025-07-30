@@ -39,18 +39,12 @@
                                         {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                                     @endif
                                 </th>
-                                 <th wire:click="sortBy('precio')" style="cursor: pointer;">
+                                <th wire:click="sortBy('precio')" style="cursor: pointer;">
                                     Precio
                                     @if($sortField === 'precio')
                                         {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                                     @endif
                                 </th>
-                                {{-- <th wire:click="sortBy('fecha_inicio')" style="cursor: pointer;">
-                                    Inicio
-                                    @if($sortField === 'fecha_inicio')
-                                        {{ $sortDirection === 'asc' ? '↑' : '↓' }}
-                                    @endif
-                                </th> --}}
                                 <th wire:click="sortBy('fecha_fin')" style="cursor: pointer;">
                                     Fin
                                     @if($sortField === 'fecha_fin')
@@ -58,11 +52,12 @@
                                     @endif
                                 </th>
                                 <th wire:click="sortBy('estado')" style="cursor: pointer;">
-                                    Estado
+                                    Contrato
                                     @if($sortField === 'estado')
                                         {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                                     @endif
                                 </th>
+                                
                                 <th wire:click="sortBy('ip')" style="cursor: pointer;">
                                     Ip
                                     @if($sortField === 'ip')
@@ -72,6 +67,12 @@
                                 <th wire:click="sortBy('nodo')" style="cursor: pointer;">
                                     Nodo
                                     @if($sortField === 'nodo')
+                                        {{ $sortDirection === 'asc' ? '↑' : '↓' }}
+                                    @endif
+                                </th>
+                                <th wire:click="sortBy('estado_cliente')" style="cursor: pointer;">
+                                    Estado
+                                    @if($sortField === 'estado_cliente')
                                         {{ $sortDirection === 'asc' ? '↑' : '↓' }}
                                     @endif
                                 </th>
@@ -89,20 +90,24 @@
                                         {{ $contrato->cliente->nombre }}
                                     </a>
                                 </td>
-                                <td>{{ \Illuminate\Support\Str::before($contrato->plan->nombre, '_REHUSO') }}</td>
+                                <td>{{ \Illuminate\Support\Str::before($contrato->plan->nombre, '-REHUSO') }}</td>
                                 <td>{{ ucfirst($contrato->tecnologia) }}</td>
                                 <td>{{ number_format($contrato->precio, 0, ',', '.') }}</td>
-                                {{-- <td>{{ date('d/m/Y', strtotime($contrato->fecha_inicio)) }}</td> --}}
                                 <td>{{ $contrato->fecha_fin ? date('d/m/Y', strtotime($contrato->fecha_fin)) : 'N/A' }}</td>
                                 <td>
                                     <span class="badge bg-{{ $contrato->estado === 'activo' ? 'success' : ($contrato->estado === 'cancelado' ? 'danger' : 'warning') }}">
                                         {{ ucfirst($contrato->estado) }}
                                     </span>
                                 </td>
+                                
                                 <td>{{ $contrato->cliente->ip ?? 'sin ip' }}</td>
                                 <td>{{ $contrato->plan->nodo->nombre ?? 'sin nodo' }}</td>
                                 <td>
-                                
+                                    <span class="badge bg-{{ $contrato->cliente->estado === 'activo' ? 'success' : 'danger' }}">
+                                        {{ ucfirst($contrato->cliente->estado) }}
+                                    </span>
+                                </td>
+                                <td>
                                     <button wire:click="openEditModal({{ $contrato->id }})" class="btn btn-sm btn-primary">Editar</button>
                                 </td>
                             </tr>

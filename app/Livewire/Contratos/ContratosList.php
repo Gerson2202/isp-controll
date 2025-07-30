@@ -123,7 +123,7 @@ class ContratosList extends Component
         $contratos = Contrato::select('contratos.*')
             ->with(['cliente', 'plan.nodo'])
             ->join('clientes', 'clientes.id', '=', 'contratos.cliente_id')
-            ->join('plans', 'plans.id', '=', 'contratos.plan_id')  // tabla correcta aquí
+            ->join('plans', 'plans.id', '=', 'contratos.plan_id')
             ->join('nodos', 'nodos.id', '=', 'plans.nodo_id')
             ->when($this->search, function ($query) {
                 $query->where(function($q) {
@@ -131,13 +131,15 @@ class ContratosList extends Component
                     ->orWhere('clientes.ip', 'like', "%{$this->search}%")
                     ->orWhere('contratos.tecnologia', 'like', "%{$this->search}%")
                     ->orWhere('contratos.estado', 'like', "%{$this->search}%")
-                    ->orWhere('nodos.nombre', 'like', "%{$this->search}%");
+                    ->orWhere('nodos.nombre', 'like', "%{$this->search}%")
+                    ->orWhere('clientes.estado', 'like', "%{$this->search}%");
                 });
             })
             ->orderBy(
                 $this->sortField === 'ip' ? 'clientes.ip' : 
                 ($this->sortField === 'cliente_id' ? 'clientes.nombre' : 
-                ($this->sortField === 'nodo' ? 'nodos.nombre' : 'contratos.'.$this->sortField)),
+                ($this->sortField === 'nodo' ? 'nodos.nombre' : 
+                ($this->sortField === 'estado_cliente' ? 'clientes.estado' : 'contratos.'.$this->sortField))),
                 $this->sortDirection
             )
             ->paginate($this->perPage);
