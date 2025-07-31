@@ -134,13 +134,13 @@ class ClienteController extends Controller
     {
         // return $request;
         $request->validate([
-            'cedula' => 'required|string|max:20',
-            'telefono' => 'required|string|max:20',
+            'cedula' => 'nullable|string|max:20',
+            'telefono' => 'nullable|string|max:20',
             'correo' => 'nullable|email',
-            'direccion' => 'required|string',
+            'direccion' => 'nullable|string',
             'latitud' => 'nullable|numeric',
             'longitud' => 'nullable|numeric',
-            'nombre' => 'nullable|string',
+            'nombre' => 'string',
             'descripcion' => 'nullable|string',
         ]);
     

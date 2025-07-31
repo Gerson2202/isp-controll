@@ -154,7 +154,7 @@
                                                                 </div>
                                                                 <div class="mb-3">
                                                                     <label for="direccion" class="form-label">Dirección</label>
-                                                                    <input type="text" class="form-control" id="direccion" name="direccion" value="{{ $cliente->direccion }}" required>
+                                                                    <input type="text" class="form-control" id="direccion" name="direccion" value="{{ $cliente->direccion }}" >
                                                                 </div>
                                                             </div>
                                                         </div>

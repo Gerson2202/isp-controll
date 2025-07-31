@@ -151,7 +151,7 @@
                                     <!-- Icono de éxito -->
                                     <div class="text-center">  <!-- Eliminé mb-4 del contenedor principal -->
                                         <!-- Logo con margen inferior reducido -->
-                                        <img src="{{ asset('img/logo-empresa.png') }}" 
+                                        <img src="{{ asset('img/logo-fernet.png') }}" 
                                              alt="Suministro e Instalaciones en Redes" 
                                              class="img-fluid" 
                                              style="height: 120px; width: auto; max-width: 120%; margin-bottom: 0.5rem !important;">  <!-- mb-2 -->
@@ -220,8 +220,8 @@
                                             <i class="fas fa-info-circle text-primary mt-1 me-2"></i>
                                             <div>
                                                 <p class="small mb-0 text-muted">
-                                                    <strong>Suministro e Instalaciones en Redes</strong><br>
-                                                    Este documento es un comprobante de pago válido. Para consultas contactar al: +58 412-5676329
+                                                    <strong>FerNet Sas </strong><br>
+                                                    Este documento es un comprobante de pago válido. Para consultas contactar al: +57 XX-XXXXXX
                                                 </p>
                                             </div>
                                         </div>
