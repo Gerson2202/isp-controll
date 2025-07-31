@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Contrato;
 use App\Models\Cliente;
+use App\Models\Nodo;
 use App\Models\Plan;
 
 class ContratosList extends Component
@@ -118,6 +119,18 @@ class ContratosList extends Component
         
     }
     
+     protected function getEstadisticasNodos()
+    {
+        return Nodo::select('nodos.id', 'nodos.nombre as nodo_nombre')
+            ->selectRaw('COUNT(DISTINCT clientes.id) as total_clientes')
+            ->selectRaw('SUM(CASE WHEN contratos.estado = "activo" THEN 1 ELSE 0 END) as total_activos')
+            ->leftJoin('plans', 'plans.nodo_id', '=', 'nodos.id')
+            ->leftJoin('contratos', 'contratos.plan_id', '=', 'plans.id')
+            ->leftJoin('clientes', 'clientes.id', '=', 'contratos.cliente_id')
+            ->groupBy('nodos.id', 'nodos.nombre')
+            ->orderBy('nodos.nombre')
+            ->get();
+    }
     public function render()
     {
         $contratos = Contrato::select('contratos.*')
@@ -147,7 +160,8 @@ class ContratosList extends Component
         return view('livewire.contratos.contratos-list', [
             'contratos' => $contratos,
             'clientes' => Cliente::orderBy('nombre')->get(),
-            'planes' => Plan::orderBy('nombre')->get()
+            'planes' => Plan::orderBy('nombre')->get(),
+            'estadisticasNodos' => $this->getEstadisticasNodos()
         ]);
     }
 

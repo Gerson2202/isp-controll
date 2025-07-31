@@ -15,6 +15,44 @@
                 </div>
             </div>
         </div>
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Estadísticas por Nodo</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr class="bg-light">
+                                <th class="pl-4">Nodo</th>
+                                <th class="text-center">Total Clientes</th>
+                                <th class="text-center">Clientes Activos</th>
+                                <th class="text-center pr-4">% Activos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($estadisticasNodos as $estadistica)
+                            <tr>
+                                <td class="pl-4 font-weight-bold">{{ $estadistica->nodo_nombre }}</td>
+                                <td class="text-center">{{ number_format($estadistica->total_clientes, 0) }}</td>
+                                <td class="text-center">{{ number_format($estadistica->total_activos, 0) }}</td>
+                                <td class="text-center pr-4">
+                                    @if($estadistica->total_clientes > 0)
+                                        {{ number_format(($estadistica->total_activos / $estadistica->total_clientes) * 100, 1) }}%
+                                    @else
+                                        0%
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+        
         <button onclick="exportarExcel()" class="btn btn-success btn-sm">
             <i class="fas fa-file-excel"></i> Exportar TODO a Excel
         </button>
