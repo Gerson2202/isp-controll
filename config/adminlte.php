@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'title' => 'Isprotik ',
+    'title' => 'Isprotik',
     'title_prefix' => '',
     'title_postfix' => '',
 
@@ -63,11 +63,7 @@ return [
     |
     */
 
-<<<<<<< HEAD
-    'logo' => '<b>Fer</b>NET</b>SAS',
-=======
-    'logo' => '<b>FerNET',
->>>>>>> 399c01c61387a153c78a0840b0d335337204100c
+    'logo' => '<b>Tu</b>Nombre</b>ISP',
     'logo_img' => '/img/Fernet_Sidebar_Logo_HQ.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
@@ -458,7 +454,7 @@ return [
                     
                 ],
         ],
-        // Botón Programacion
+         // Botón Programacion
         [
             'text'    => 'Calendario', // Texto principal
             'icon'    => 'fas fa-calendar', // Icono principal
