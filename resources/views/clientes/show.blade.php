@@ -100,8 +100,26 @@
                                         <li class="text-secondary"><i class="far fa-fw fa-file-word"></i><strong> Telefono:</strong> {{$cliente->telefono}}</li>
                                         <li class="text-secondary"><i class="far fa-fw fa-envelope"></i><strong> Correo:</strong> {{$cliente->correo}}</li>
                                         <li class="text-secondary"><i class="far fa-fw fa-image"></i><strong> Direccion:</strong> {{$cliente->direccion}}</li>
-                                        <li class="text-secondary"><i class="fas fa-fw fa-file-lines"></i><strong> Descripcion:</strong> {{$cliente->descripcion ?? 'Sin datos'}}</li>
-
+                                        <li class="text-secondary">
+                                            <i class="fas fa-fw fa-file-lines"></i>
+                                            <strong>Descripcion:</strong> 
+                                            @if($cliente->descripcion)
+                                                @php
+                                                    $partes = explode('-', $cliente->descripcion, 2);
+                                                    $texto = $partes[0];
+                                                    $url = count($partes) > 1 ? $partes[1] : null;
+                                                @endphp
+                                                
+                                                {{ $texto }}
+                                                @if($url && filter_var($url, FILTER_VALIDATE_URL))
+                                                    - <a href="{{ $url }}" target="_blank" class="text-primary">Acceder</a>
+                                                @elseif($url)
+                                                    - {{ $url }}
+                                                @endif
+                                            @else
+                                                Sin datos
+                                            @endif
+                                        </li>
                                         <li class="text-secondary">
                                             <i class="fas fa-map-marker-alt me-2"></i><strong> Coordenada:</strong>
                                             @if($cliente->latitud && $cliente->longitud)

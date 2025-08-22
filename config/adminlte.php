@@ -63,7 +63,7 @@ return [
     |
     */
 
-    'logo' => '<b>Suministros</b>y</b>Redes',
+    'logo' => '<b>Fer</b>NET</b>SAS',
     'logo_img' => '/img/Fernet_Sidebar_Logo_HQ.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
