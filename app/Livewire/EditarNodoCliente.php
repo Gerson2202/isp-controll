@@ -63,8 +63,11 @@ class EditarNodoCliente extends Component
     }
 
     public function actualizarContrato()
-    {
-        
+    {   
+        // Permiso para modificar nodo al cliente
+        if (!auth()->user()->can('modificar nodo de cliente')) {
+        abort(403, 'No tienes permiso para modificar nodo en clientes');
+    }
         $this->validate([
             'plan_id' => 'required|exists:plans,id',
             'precio' => 'required|numeric|min:0',

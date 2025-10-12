@@ -43,6 +43,9 @@ class ContratosList extends Component
     
     public function updateContrato()
     {
+         if (!auth()->user()->can('editar contrato')) {
+            abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
         // Validar los datos usando las reglas definidas
         $this->validate();
 

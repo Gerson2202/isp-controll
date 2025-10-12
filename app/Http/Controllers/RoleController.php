@@ -2,30 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Plan;
 use Illuminate\Http\Request;
 
-class PlanController extends Controller
+class RoleController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        //
+
+        if (!auth()->user()->can('gestionar roles')) {
+            abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
+       return view('roles.index');
+
     }
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
-    {   
-        // Permisos para pagina de planes
-         if (!auth()->user()->can('gestionar planes')) {
-        abort(403, 'No tienes permiso para acceder a esta pagina');
-        }
-        $planes = Plan::all();
-        return  view('planes.create', compact('planes'));
+    {
+        //
     }
 
     /**
@@ -39,7 +38,7 @@ class PlanController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Plan $plan)
+    public function show(string $id)
     {
         //
     }
@@ -47,7 +46,7 @@ class PlanController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Plan $plan)
+    public function edit(string $id)
     {
         //
     }
@@ -55,7 +54,7 @@ class PlanController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Plan $plan)
+    public function update(Request $request, string $id)
     {
         //
     }
@@ -63,7 +62,7 @@ class PlanController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Plan $plan)
+    public function destroy(string $id)
     {
         //
     }

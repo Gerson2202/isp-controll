@@ -6,12 +6,13 @@ use App\Models\Cliente;
 use App\Models\Inventario;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
+use Spatie\Permission\Exceptions\UnauthorizedException;
+
 
 class ClienteController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+   
+
     public function index()
     {
         //
@@ -22,40 +23,51 @@ class ClienteController extends Controller
      */
     public function create()
     {
-        // Verificar si el usuario actual tiene ID 1 o 2
-        if (!in_array(auth()->id(), [1, 2,3])) {
+        // Crear clientes
+        if (!auth()->user()->can('crear clientes')) {
             abort(403, 'No tienes permiso para acceder a esta pagina');
-            // O puedes redirigirlo si prefieres:
-            // return redirect()->route('dashboard')->with('error', 'Acceso no autorizado');
         }
-
         return view('clientes.create');
     }
     // Enviar ala vista imagenes
     public function imagenes($id)
     {
+        // Permiso para ver imagenes del cliente
+        if (!auth()->user()->can('ver imagenes del cliente')) {
+        abort(403, 'No tienes permiso para ver imagenes clientes');
+        } 
+
         $cliente = Cliente::findOrFail($id);
         // Retorna la vista con las imágenes
         return view('clientes.imagenes', compact('cliente'));
     }
 
+    // Funcion ver clientes pagina del buscado
     public function search()
     {
-         // Verificar si el usuario actual tiene ID 1 o 2
-         if (!in_array(auth()->id(), [1, 2,3])) {
-            abort(403, 'No tienes permiso para acceder a esta pagina');
-            
-        }
+        // Permiso para ver cliente
+        if (!auth()->user()->can('ver clientes')) {
+        abort(403, 'No tienes permiso para ver clientes');
+        }   
+
         return view('clientes.search');
     }
 
     public function historialFacturas(Cliente $cliente)
     {
+        // Ver historial de facturas
+         if (!auth()->user()->can('ver historico de facturas',)) {
+            abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
         return view('clientes.historial-facturas', compact('cliente'));
     }
 
     public function graficas($id)
-    {
+    {   
+        // Permiso para ver grafica del cliente
+        if (!auth()->user()->can('ver clientes')) {
+        abort(403, 'No tienes permiso para ver grafica clientes');
+        }   
         $cliente = Cliente::findOrFail($id);
         return view('clientes.graficas', compact('cliente'));
     }
@@ -63,11 +75,7 @@ class ClienteController extends Controller
     // Funcion para mostrar clientes sin ip asignadas 
     public function asignarIPindex()
     {
-         // Verificar si el usuario actual tiene ID 1 o 2
-         if (!in_array(auth()->id(), [1, 2,3])) {
-            abort(403, 'No tienes permiso para acceder a esta pagina');
-            
-        }
+        
          // Obtener todos los clientes donde el campo 'ip' sea nulo y que tengan un contrato asignado y el contrato este activo o suspendido
          //    contratos en cancelado no apareceran
             $clientes = Cliente::whereNull('ip')
@@ -84,6 +92,10 @@ class ClienteController extends Controller
 
     public function asignarIpCliente($id_cliente)
     {
+        // Permiso para asignar ip al cliente 
+        if (!auth()->user()->can('asignar ip')) {
+            abort(403, 'No tienes permiso asignar ip a clientes');
+        }     
        $cliente= Cliente::findOrFail($id_cliente);
        return view('clientes.asignaripshow', compact('cliente'));
     }
@@ -101,11 +113,11 @@ class ClienteController extends Controller
      */
     public function show($id)
     {
-         // Verificar si el usuario actual tiene ID 1 o 2
-         if (!in_array(auth()->id(), [1, 2,3])) {
-            abort(403, 'No tienes permiso para acceder a esta pagina');
-          
-        }
+       // Permiso para ver cliente
+         if (!auth()->user()->can('ver clientes')) {
+         abort(403, 'No tienes permiso para ver clientes');
+         } 
+
         $inventarios = Inventario::where('cliente_id', $id)
         ->get();
         
@@ -131,7 +143,11 @@ class ClienteController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, $id)
-    {
+    {   
+        // Permiso para editar cliente
+        if (!auth()->user()->can('editar informacion de cliente')) {
+        abort(403, 'No tienes permiso para editar clientes');
+        } 
         // return $request;
         $request->validate([
             'cedula' => 'nullable|string|max:20',

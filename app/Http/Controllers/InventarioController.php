@@ -12,11 +12,19 @@ class InventarioController extends Controller
      */
     public function index()
     {
+
+        if (!auth()->user()->can('agregar equipo')) {
+        abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
         return view('inventario.index');
     }
 
     public function ModeloIndex()
     {
+        // Permisos para crear modelos
+         if (!auth()->user()->can('agregar modelo de equipo',)) {
+        abort(403, 'No tienes permiso para acceder a esta pagina');
+    }
         return view('inventario.modeloIndex');
     }
     /**
@@ -28,7 +36,11 @@ class InventarioController extends Controller
     }
     // Enlistar equipos
     public function list()
-    {
+    {   
+        // Ver lista de equipos
+        if (!auth()->user()->can('ver equipos')) {
+        abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
         // Obtener todos los inventarios con sus relaciones de nodo y cliente
         $inventarios = Inventario::with(['nodo', 'cliente','modelo'])->get();
         return view('inventario.list',compact('inventarios'));

@@ -10,6 +10,10 @@ class PagoController extends Controller
 {
     public function index()
     {
+         // Registrar pagos
+        if (!auth()->user()->can('registrar pagos')) {
+          abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
         return view('pagos.index');
     }
 

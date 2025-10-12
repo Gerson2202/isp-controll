@@ -11,16 +11,19 @@ class NodoController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
-        // Verificar si el usuario actual tiene ID 1 o 2 solo permite esos usurios a esas paginas
-         if (!in_array(auth()->id(), [1, 2,3])) {
-            abort(403, 'No tienes permiso para acceder a esta pagina');
-            
+    {   
+        // Gestionar nodos
+        if (!auth()->user()->can('gestionar nodos')) {
+         abort(403, 'No tienes permiso para acceder a esta pagina');
         }
         return view('nodos.index');
     }
     public function index1()
     {
+        // Monitoreo de nodos
+        if (!auth()->user()->can('ver monitoreo de nodos')) {
+         abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
         return view('nodos.monitoreo');
     }
 

@@ -25,7 +25,12 @@ class ActualizarEstadoCliente extends Component
 
     // Funcion mejorada con 2 intentos
     public function actualizarEstado()
-    {
+    {   
+        // Permiso para editar estado del cliente 
+         if (!auth()->user()->can('modificar estado de cliente')) {
+         abort(403, 'No tienes permiso para editar estado de  clientes');
+         }
+         
         $this->validate([
             'estado' => 'required|in:activo,suspendido,cortado',
         ]);

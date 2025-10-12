@@ -7,11 +7,11 @@ use Illuminate\Http\Request;
 class PoolController extends Controller
 {
     public function index(){
-         // Verificar si el usuario actual tiene ID 1 o 2 solo permite esos usurios a esas paginas
-         if (!in_array(auth()->id(), [1, 2,3])) {
-            abort(403, 'No tienes permiso para acceder a esta pagina');
-            
-        }
+
+        // Permisos para acceder a crear pooles
+        if (!auth()->user()->can('crear pool')) {
+            abort(403, 'No tienes permiso para crear Pooles de ip');
+        }   
         return view('pooles.index');
     }
 }

@@ -11,6 +11,8 @@ use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\NodoController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\PoolController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\VisitaController;
 use Twilio\Rest\Client;
 
@@ -198,6 +200,12 @@ Route::get('/exportar-contratos-excel', function () {
 
     return response()->json($contratos);
 });
+
+// RUTAS ADMINISTRACION  
+
+    Route::get('/usuarios', [UsuarioController::class, 'index'])->name('usuarios.index');
+
+    Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
 
 // Route::get('/test-whatsapp', function() {
 //         // Configuración de Twilio

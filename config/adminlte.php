@@ -333,11 +333,13 @@ return [
                     'text' => 'Agregar Cliente',
                     'route' => 'clientesCreate', // Ruta para agregar cliente
                     'icon' => 'fas fa-plus', // Icono para agregar
+                    'can'   => 'crear clientes', // 👈 solo si tiene este permiso
                 ],
-                [
+                [   
                     'text' => 'Ver Clientes',
                     'route' => 'clientesBuscar', // Ruta para ver clientes
                     'icon' => 'fas fa-list', // Icono para listar
+                    'can'   => 'ver clientes', // 👈 solo si tiene este permiso
                 ],
             ],
         ],
@@ -351,11 +353,13 @@ return [
                     'text' => 'Crear contrato',
                     'route' => 'contratoIndex', // 
                     'icon' => 'fas fa-plus', // Icono para agregar
+                    'can'   => 'crear contrato', // 👈 solo si tiene este permiso
                 ],
                 [
                     'text' => 'Lista de Contratos',
                     'route' => 'contratos.list', // Ruta para agregar cliente
                     'icon' => 'fas fa-list', // Icono para agregar
+                    'can'   => 'ver lista de contrato', // 👈 solo si tiene este permiso
                 ],
                 
             ],
@@ -369,16 +373,19 @@ return [
                     'text' => 'Dashboard',
                     'route' => 'facturacion.dashboard', // Ruta paraDashboard
                     'icon' => 'fas fa-chart-line', 
+                    'can'   => 'ver dashborad financiero', // 👈 solo si tiene este permiso
                 ],
                 [
                     'text' => 'Crear Facturas',
                     'route' => 'facturacion.index', // Ruta para ver clientes
                     'icon' => 'fas fa-file-invoice-dollar', // Icono para listar
+                    'can'   => 'crear facturas', // 👈 solo si tiene este permiso
                 ],
                 [
                     'text' => 'Pagos',
                     'route' => 'pagos.index', // Ruta para ver clientes
                     'icon' => 'fas fa-money-bill-wave', // Icono para listar
+                    'can'   => 'registrar pagos', // 👈 solo si tiene este permiso
                 ],
             ],
         ],
@@ -392,16 +399,19 @@ return [
                     'text' => 'Asignar Ip',
                     'route' => 'asignarIPindex', // Ruta para agregar cliente
                     'icon' => 'fas fa-network-wired', // Icono para agregar
+                    'can'   => 'asignar ip', // 👈 solo si tiene este permiso
                 ],
                 [
                     'text' => 'Crear Pool',
                     'route' => 'poolIndex', // Ruta para ver clientes
                     'icon' => 'fa-exchange-alt', // Icono para listar
+                    'can'   => 'crear pool', // 👈 solo si tiene este permiso
                 ],
-            [
-                'text' => 'Cortes y activaciones',
-                'route' => 'facturacion.corte', // Ruta para ver nodos 
-                'icon' => 'fas fa-plug', // Icono para listar
+                [
+                    'text' => 'Cortes y activaciones',
+                    'route' => 'facturacion.corte', // Ruta para ver nodos 
+                    'icon' => 'fas fa-plug', // Icono para listar
+                    'can'   => 'cortar clientes masivos', // 👈 solo si tiene este permiso
                 ],
             ],
         ],
@@ -411,6 +421,7 @@ return [
                 'text'   => 'Planes',
                 'route'  => 'planesCreate', // Nombre de la ruta
                 'icon'   => 'fas fa-chart-line', // Icono de FontAwesome
+                'can'   => 'gestionar planes', // 👈 solo si tiene este permiso
         ],
         
         // Seccion Inventario
@@ -422,16 +433,19 @@ return [
                     'text' => 'Agregar Modelo',
                     'route' => 'ModeloIndex', // Ruta para agregar cliente
                     'icon' => 'fas fa-plus', // Icono para agregar
+                    'can'   => 'agregar modelo de equipo', // 👈 solo si tiene este permiso
                 ],
                 [
                     'text' => 'Agregar equipo',
                     'route' => 'inventarioIndex', // Ruta para agregar cliente
                     'icon' => 'fas fa-plus-circle', // Icono para agregar
+                    'can'   => 'agregar equipo', // 👈 solo si tiene este permiso
                 ],
                 [
                     'text' => 'Ver equipos',
                     'route' => 'inventarioList', // Ruta para ver clientes
                     'icon' => 'fas fa-eye', // Icono para listar
+                    'can'   => 'ver equipos', // 👈 solo si tiene este permiso
                 ],
             ],
         ],
@@ -445,11 +459,14 @@ return [
                         'text' => 'Tickets Abiertos',
                         'route' => 'ticketsIndex', // Ruta para agregar cliente
                         'icon' => 'fas fa-bolt', // Icono para agregar
+                        'can'   => 'editar tickets', // 👈 solo si tiene este permiso
                     ],
                     [
                         'text' => 'Historial de tickets',
                         'route' => 'tickets.historial', // Ruta para agregar cliente
                         'icon' => 'fas fa-history', // Icono para agregar
+                        'can'   => 'ver historial de tickets', // 👈 solo si tiene este permiso
+
                     ],
                     
                 ],
@@ -463,16 +480,20 @@ return [
                     'text' => 'Ver calendario',
                     'route' => 'calendarioIndex', // Ruta para agregar cliente
                     'icon' => 'fas fa-calendar-check', // Icono para agregar
+                    'can'   => 'ver calendario', // 👈 solo si tiene este permiso
                 ],
                 [
                     'text' => 'Visitas sin programar',
                     'route' => 'visitas.cola', // Ruta para agregar cliente
                     'icon' => 'fas fa-list-alt', // Icono para agregar
+                    'can'   => 'editar programacion', // 👈 solo si tiene este permiso
                 ],
                 [
                     'text' => 'Programacion',
                     'route' => 'visitas.tabla', 
                     'icon' => 'fas fa-th-list', 
+                    'can'   => 'ver programacion', // 👈 solo si tiene este permiso
+                   
                 ],
                 
             ],
@@ -480,22 +501,49 @@ return [
             // Botón de monitoreo
 
         [
-            'text'    => 'Nodos', // Texto principal
+            'text'    => 'Nodosss', // Texto principal
             'icon'    => 'fas fa-broadcast-tower', // Icono principal
             'submenu' => [
                 [
                     'text' => 'Mis nodos',
                     'route' => 'nodosIndex', // Ruta para ver nodos 
-                    'icon' => 'fas fa-server', // Icono para listar
+                    'icon' => 'fas fa-server', // Icono para listar,
+                    'can'   => 'gestionar nodos', // 👈 solo si tiene este permiso
+
             ],
                 [
                 'text'   => 'Monitoreo',
                 'route'  => 'MonitoreoIndex', // Nombre de la ruta
                 'icon'   => 'fas fa-network-wired', // Icono de FontAwesome
+                 'can'   => 'ver monitoreo de nodos', // 👈 solo si tiene este permiso
+
                 ],
                 
             ],
         ],
+            // Admnistracion
+
+        [
+            'text'    => 'Administración',
+            'icon'    => 'fas fa-cogs',
+            'submenu' => [
+                [
+                    'text'  => 'Usuarios',
+                    'route' => 'usuarios.index',
+                    'icon'  => 'fas fa-users',
+                    'can'   => 'gestionar usuarios', // 👈 solo si tiene este permiso
+                ],
+                [
+                    'text'  => 'Roles y Permisos',
+                    'route' => 'roles.index',
+                    'icon'  => 'fas fa-user-shield',
+                    'can'   => 'gestionar roles', // 👈 solo si tiene este permiso
+                ],
+            ],
+        ],
+
+
+        
         // Este es el menú vacío para el logo:
         [
             'text'    => '',

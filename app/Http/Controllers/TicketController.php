@@ -12,7 +12,10 @@ class TicketController extends Controller
      */
     public function index()
     {
-        
+        // Permisos para editar tickets
+        if (!auth()->user()->can('editar tickets',)) {
+        abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
         return view('tickets.index');
     }
 
@@ -26,7 +29,10 @@ class TicketController extends Controller
     
     public function Tablahistorial()
     {
-      
+         // Permisos para ver historial de  tickets
+        if (!auth()->user()->can('ver historial de tickets')) {
+        abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
         return view('tickets.historial');
     }
     /**

@@ -11,13 +11,21 @@ class VisitaController extends Controller
      * Display a listing of the resource.
      */
     public function index()
-    {
+    {   
+        // Ver calendario
+        if (!auth()->user()->can('ver calendario')) {
+        abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
         return view('calendario.index');
     }
 
     // Enviar a pagina de tabla de visitas 
     public function visitasTabla()
     {
+        // ver todas las  visitas 
+        if (!auth()->user()->can('ver programacion')) {
+        abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
         return view('visitas.tabla');
     }
 
@@ -25,6 +33,7 @@ class VisitaController extends Controller
 
     public function visitasShow($id)
     {
+        
         $visita = Visita::with(['ticket.cliente', 'fotos'])->findOrFail($id);
         return view('visitas.show', compact('visita'));
     }
@@ -32,7 +41,8 @@ class VisitaController extends Controller
 
     // Mostrar el formulario de edición
     public function edit($visita_id)
-    {
+    {   
+        
         $visita = Visita::findOrFail($visita_id); // Encuentra la visita por ID
     
         // Verificar si las fechas son null, si son null, no hacer nada, y si no lo son, convertirlas a Carbon
@@ -60,7 +70,6 @@ class VisitaController extends Controller
     public function enviarACola(Request $request, $id)
     {
 
-        
         // Obtener la visita por su ID
         $visita = Visita::findOrFail($id);
     
@@ -77,7 +86,11 @@ class VisitaController extends Controller
     }
     
     public function colaDeProgramacion()
-    {
+    {   
+        // Editar visitas 
+        if (!auth()->user()->can('editar programacion')) {
+        abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
         // Obtener las visitas que están en cola (fecha_inicio y fecha_cierre son null)
         $visitasEnCola = Visita::whereNull('fecha_inicio')
             ->whereNull('fecha_cierre')
