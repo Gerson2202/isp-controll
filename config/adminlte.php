@@ -300,8 +300,8 @@ return [
     |
     */
 
-    'menu' => 
-[
+    'menu' =>
+    [
         // Navbar items:
         [
             'type' => 'navbar-search',
@@ -323,7 +323,7 @@ return [
             'url' => 'admin/blog',
             'can' => 'manage-blog',
         ],
-   
+
         // Botón para Clientes con submenú
         [
             'text'    => 'Clientes', // Texto principal
@@ -335,7 +335,7 @@ return [
                     'icon' => 'fas fa-plus', // Icono para agregar
                     'can'   => 'crear clientes', // 👈 solo si tiene este permiso
                 ],
-                [   
+                [
                     'text' => 'Ver Clientes',
                     'route' => 'clientesBuscar', // Ruta para ver clientes
                     'icon' => 'fas fa-list', // Icono para listar
@@ -361,7 +361,7 @@ return [
                     'icon' => 'fas fa-list', // Icono para agregar
                     'can'   => 'ver lista de contrato', // 👈 solo si tiene este permiso
                 ],
-                
+
             ],
         ],
         // Seccion facturacion
@@ -372,7 +372,7 @@ return [
                 [
                     'text' => 'Dashboard',
                     'route' => 'facturacion.dashboard', // Ruta paraDashboard
-                    'icon' => 'fas fa-chart-line', 
+                    'icon' => 'fas fa-chart-line',
                     'can'   => 'ver dashborad financiero', // 👈 solo si tiene este permiso
                 ],
                 [
@@ -415,63 +415,123 @@ return [
                 ],
             ],
         ],
-        // Botón para Planes con submenú
-        
+
+        // Sección Centro de Gestión
         [
-                'text'   => 'Planes',
-                'route'  => 'planesCreate', // Nombre de la ruta
-                'icon'   => 'fas fa-chart-line', // Icono de FontAwesome
-                'can'   => 'gestionar planes', // 👈 solo si tiene este permiso
-        ],
-        
-        // Seccion Inventario
-        [
-            'text'    => 'Inventario', // Texto principal
-            'icon'    => 'fas fa-box', // Icono principal
+            'text'    => 'Área Técnica',
+            'icon'    => 'fas fa-tools',
             'submenu' => [
                 [
-                    'text' => 'Agregar Modelo',
-                    'route' => 'ModeloIndex', // Ruta para agregar cliente
-                    'icon' => 'fas fa-plus', // Icono para agregar
-                    'can'   => 'agregar modelo de equipo', // 👈 solo si tiene este permiso
+                    'text' => 'Bodega',
+                    'route' => 'tecnico.bodega',
+                    'icon' => 'fas fa-boxes', // inventario
                 ],
                 [
-                    'text' => 'Agregar equipo',
-                    'route' => 'inventarioIndex', // Ruta para agregar cliente
-                    'icon' => 'fas fa-plus-circle', // Icono para agregar
-                    'can'   => 'agregar equipo', // 👈 solo si tiene este permiso
+                    'text' => 'Visitas',
+                    'route' => 'tecnico.visitas',
+                    'icon' => 'fas fa-user-clock', // gestión de visitas
                 ],
                 [
-                    'text' => 'Ver equipos',
-                    'route' => 'inventarioList', // Ruta para ver clientes
-                    'icon' => 'fas fa-eye', // Icono para listar
-                    'can'   => 'ver equipos', // 👈 solo si tiene este permiso
+                    'text' => 'Actividades de Hoy',
+                    'route' => 'tecnico.actividades',
+                    'icon' => 'fas fa-calendar-day', // agenda diaria
+                ],
+                [
+                    'text' => 'Asignaciones',
+                    'route' => 'tecnico.asignaciones',
+                    'icon' => 'fas fa-people-carry', // tareas asignadas
                 ],
             ],
         ],
-        
+        // Botón para Planes con submenú
+
+        [
+            'text'   => 'Planes',
+            'route'  => 'planesCreate', // Nombre de la ruta
+            'icon'   => 'fas fa-chart-line', // Icono de FontAwesome
+            'can'   => 'gestionar planes', // 👈 solo si tiene este permiso
+        ],
+
+        // Seccion Inventario
+        [
+            'text'    => 'Inventario',
+            'icon'    => 'fas fa-box',
+            'submenu' => [
+                // --- CONFIGURACIÓN BÁSICA ---
+                [
+                    'text' => 'Bodegas',
+                    'route' => 'bodegasIndex',
+                    'icon' => 'fas fa-warehouse',
+                ],
+                [
+                    'text' => 'Modelos de equipo',
+                    'route' => 'ModeloIndex',
+                    'icon' => 'fas fa-network-wired',
+                    'can'   => 'agregar modelo de equipo',
+                ],
+                [
+                    'text' => 'Consumibles',
+                    'route' => 'consumiblesIndex',
+                    'icon' => 'fas fa-boxes',
+                ],
+
+                // --- GESTIÓN DE EQUIPOS ---
+                [
+                    'text' => 'Registrar Equipo',
+                    'route' => 'inventarioIndex',
+                    'icon' => 'fas fa-plus-circle',
+                    'can'   => 'agregar equipo',
+                ],
+                [
+                    'text' => 'Lista de Equipos',
+                    'route' => 'inventarioList',
+                    'icon' => 'fas fa-list',
+                    'can'   => 'ver equipos',
+                ],
+
+                // --- MOVIMIENTOS ---
+                [
+                    'text' => 'Registrar Movimiento',
+                    'route' => 'movimientosIndex',
+                    'icon' => 'fas fa-exchange-alt',
+                ],
+                [
+                    'text' => 'Historial Movimientos',
+                    'route' => 'inventarioHistorial',
+                    'icon' => 'fas fa-history',
+                ],
+
+                // --- CONSULTAS ---
+                [
+                    'text' => 'Consulta Global',
+                    'route' => 'inventarioDashboard',
+                    'icon' => 'fas fa-search',
+                ],
+            ],
+        ],
+
         // Botón para Fotos de Tickets
         [
-                'text'    => 'Tickets', // Texto principal
-                'icon'    => 'fas fa-ticket-alt', // Icono principal
-                'submenu' => [
-                    [
-                        'text' => 'Tickets Abiertos',
-                        'route' => 'ticketsIndex', // Ruta para agregar cliente
-                        'icon' => 'fas fa-bolt', // Icono para agregar
-                        'can'   => 'editar tickets', // 👈 solo si tiene este permiso
-                    ],
-                    [
-                        'text' => 'Historial de tickets',
-                        'route' => 'tickets.historial', // Ruta para agregar cliente
-                        'icon' => 'fas fa-history', // Icono para agregar
-                        'can'   => 'ver historial de tickets', // 👈 solo si tiene este permiso
-
-                    ],
-                    
+            'text'    => 'Tickets', // Texto principal
+            'icon'    => 'fas fa-ticket-alt', // Icono principal
+            'submenu' => [
+                [
+                    'text' => 'Tickets Abiertos',
+                    'route' => 'ticketsIndex', // Ruta para agregar cliente
+                    'icon' => 'fas fa-bolt', // Icono para agregar
+                    'can'   => 'editar tickets', // 👈 solo si tiene este permiso
                 ],
+                [
+                    'text' => 'Historial de tickets',
+                    'route' => 'tickets.historial', // Ruta para agregar cliente
+                    'icon' => 'fas fa-history', // Icono para agregar
+                    'can'   => 'ver historial de tickets', // 👈 solo si tiene este permiso
+
+                ],
+
+            ],
         ],
-         // Botón Programacion
+        // Botón Programacion
         [
             'text'    => 'Calendario', // Texto principal
             'icon'    => 'fas fa-calendar', // Icono principal
@@ -490,18 +550,18 @@ return [
                 ],
                 [
                     'text' => 'Programacion',
-                    'route' => 'visitas.tabla', 
-                    'icon' => 'fas fa-th-list', 
+                    'route' => 'visitas.tabla',
+                    'icon' => 'fas fa-th-list',
                     'can'   => 'ver programacion', // 👈 solo si tiene este permiso
-                   
+
                 ],
-                
+
             ],
         ],
-            // Botón de monitoreo
+        // Botón de monitoreo
 
         [
-            'text'    => 'Nodosss', // Texto principal
+            'text'    => 'Nodos', // Texto principal
             'icon'    => 'fas fa-broadcast-tower', // Icono principal
             'submenu' => [
                 [
@@ -510,18 +570,18 @@ return [
                     'icon' => 'fas fa-server', // Icono para listar,
                     'can'   => 'gestionar nodos', // 👈 solo si tiene este permiso
 
-            ],
+                ],
                 [
-                'text'   => 'Monitoreo',
-                'route'  => 'MonitoreoIndex', // Nombre de la ruta
-                'icon'   => 'fas fa-network-wired', // Icono de FontAwesome
-                 'can'   => 'ver monitoreo de nodos', // 👈 solo si tiene este permiso
+                    'text'   => 'Monitoreo',
+                    'route'  => 'MonitoreoIndex', // Nombre de la ruta
+                    'icon'   => 'fas fa-network-wired', // Icono de FontAwesome
+                    'can'   => 'ver monitoreo de nodos', // 👈 solo si tiene este permiso
 
                 ],
-                
+
             ],
         ],
-            // Admnistracion
+        // Admnistracion
 
         [
             'text'    => 'Administración',
@@ -543,7 +603,7 @@ return [
         ],
 
 
-        
+
         // Este es el menú vacío para el logo:
         [
             'text'    => '',
@@ -552,8 +612,8 @@ return [
             'id'      => 'sidebar-logo-item',
             'classes' => 'd-flex justify-content-center mt-5',
         ],
-        
-],
+
+    ],
 
 
 

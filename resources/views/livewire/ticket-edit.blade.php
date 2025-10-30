@@ -8,7 +8,7 @@
         </div>
         <div class="card-body">
             <!-- Mostrar mensaje de éxito si se actualizó correctamente -->
-            @if($showMessage)
+            @if ($showMessage)
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     Ticket actualizado con éxito !
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -21,10 +21,10 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-           @endif
-        
-            
-         <!-- Formulario para editar el ticket -->
+            @endif
+
+
+            <!-- Formulario para editar el ticket -->
             <form wire:submit.prevent="updateTicket">
                 <div class="mb-3">
                     <label for="tipo_reporte">Tipo de reporte</label>
@@ -38,40 +38,46 @@
                         <option value="Error en factura">Error en factura</option>
                         <option value="Otros">Otros</option>
                     </select>
-                    @error('tipo_reporte') <span class="text-danger">{{ $message }}</span> @enderror
+                    @error('tipo_reporte')
+                        <span class="text-danger">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="mb-3">
                     <label for="situacion" class="form-label">Situación</label>
-                    <input type="text" class="form-control" id="situacion" wire:model="situacion" @if($isUpdated) disabled @endif required>
-                    @error('situacion') <span class="text-danger">{{ $message }}</span> @enderror
+                    <input type="text" class="form-control" id="situacion" wire:model="situacion"
+                        @if ($isUpdated) disabled @endif required>
+                    @error('situacion')
+                        <span class="text-danger">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="mb-3">
                     <label for="solucion" class="form-label">Solución</label>
-                    <textarea class="form-control" id="solucion" wire:model="solucion" @if($isUpdated) disabled @endif ></textarea>
-                    @error('solucion') <span class="text-danger">{{ $message }}</span> @enderror
+                    <textarea class="form-control" id="solucion" wire:model="solucion" @if ($isUpdated) disabled @endif></textarea>
+                    @error('solucion')
+                        <span class="text-danger">{{ $message }}</span>
+                    @enderror
                 </div>
 
-                @if(!$isUpdated)
+                @if (!$isUpdated)
                     <button type="submit" class="btn btn-success">Actualizar</button>
                 @endif
             </form>
 
             <!-- Botón para agendar visita (Solo visible si no está actualizado) -->
-            @if(!$isUpdated)
-                
-                     <!-- Botón para abrir el modal -->
-                     <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#agendarModal">
-                        Agendar Visita
-                    </button>
-               
+            @if (!$isUpdated)
+                <!-- Botón para abrir el modal -->
+                <button type="button" class="btn btn-primary mt-3" data-bs-toggle="modal"
+                    data-bs-target="#agendarModal">
+                    Agendar Visita
+                </button>
             @endif
         </div>
     </div>
     <div>
-       
-    
+
+
         <!-- Modal -->
         <div class="modal fade" id="agendarModal" tabindex="-1" aria-labelledby="agendarModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -84,20 +90,40 @@
                         <form wire:submit.prevent="agendar">
                             <div class="mb-3">
                                 <label for="fecha_inicio" class="form-label">Fecha de Inicio</label>
-                                <input type="datetime-local" wire:model="fecha_inicio" class="form-control" id="fecha_inicio" required>
-                                @error('fecha_inicio') <span class="text-danger">{{ $message }}</span> @enderror
+                                <input type="datetime-local" wire:model="fecha_inicio" class="form-control"
+                                    id="fecha_inicio" required>
+                                @error('fecha_inicio')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
                             </div>
                             <div class="mb-3">
                                 <label for="fecha_cierre" class="form-label">Fecha de Cierre</label>
-                                <input type="datetime-local" wire:model="fecha_cierre" class="form-control" id="fecha_cierre" required>
-                                @error('fecha_cierre') <span class="text-danger">{{ $message }}</span> @enderror
+                                <input type="datetime-local" wire:model="fecha_cierre" class="form-control"
+                                    id="fecha_cierre" required>
+                                @error('fecha_cierre')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
                             </div>
                             <div class="mb-3">
                                 <label for="descripcion" class="form-label">Descripción</label>
                                 <input type="text" wire:model="descripcion" class="form-control" id="descripcion">
-                                @error('descripcion') <span class="text-danger">{{ $message }}</span> @enderror
+                                @error('descripcion')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
                             </div>
-                           
+                            <div class="mb-3">
+                                <label for="usuarios" class="form-label">Asignar Técnicos</label>
+                                <select multiple wire:model="usuarios" id="usuarios" class="form-select">
+                                    @foreach ($listaUsuarios as $usuario)
+                                        <option value="{{ $usuario->id }}">{{ $usuario->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('usuarios')
+                                    <span class="text-danger">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+
                             <div class="mb-3">
                                 <button type="submit" class="btn btn-primary">Registrar Visita</button>
                             </div>
@@ -111,18 +137,18 @@
         // Escuchar el evento 'showError' y mostrar el mensaje de error
         Livewire.on('showError', message => {
             // Mostrar el mensaje de error (aquí puedes usar una alerta o un modal)
-            alert(message);  // Puedes cambiar esto por algo más sofisticado
+            alert(message); // Puedes cambiar esto por algo más sofisticado
             // O manejar el modal, como cerrarlo:
             var modal = new bootstrap.Modal(document.getElementById('agendarModal'));
-            modal.hide();  // Cerrar el modal
+            modal.hide(); // Cerrar el modal
         });
-    
+
         // Escuchar el evento 'showSuccess' y mostrar el mensaje de éxito
         Livewire.on('showSuccess', message => {
             // Mostrar el mensaje de éxito (similar al error, usando una alerta o modal)
-            alert(message);  // Muestra el mensaje de éxito
+            alert(message); // Muestra el mensaje de éxito
         });
     </script>
-    
-    
+
+
 </div>

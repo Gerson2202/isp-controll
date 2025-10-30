@@ -22,20 +22,50 @@ class Visita extends Model
     ];
 
     // En Visita.php
-    public function usuarios()
-    {
-        return $this->belongsToMany(User::class, 'visita_user');
-    }
+    // public function usuarios()
+    // {
+    //     return $this->belongsToMany(User::class, 'visita_user');
+    // }
 
     // Relación con Ticket
     public function ticket()
     {
         return $this->belongsTo(Ticket::class, 'ticket_id');
     }
-    
+
     // app/Models/Visita.php
     public function fotos()
     {
         return $this->hasMany(VisitaFoto::class);
     }
+    public function consumibles()
+    {
+        return $this->belongsToMany(Consumible::class, 'consumible_visita')
+            ->withTimestamps();
+    }
+    // para registrar datos
+    // public function users()
+    // {
+    //     return $this->belongsToMany(User::class, 'visita_user')->withTimestamps();
+    // }
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'visita_user')
+            ->withPivot(['fecha_inicio', 'fecha_cierre'])
+            ->withTimestamps();
+    }
+    public function usuarios()
+    {
+        return $this->belongsToMany(User::class, 'visita_user')
+            ->withPivot(['fecha_inicio', 'fecha_cierre'])
+            ->withTimestamps();
+    }
+
+    //  public function users()
+    //  {
+    //     return $this->belongsToMany(User::class)
+    //          ->withPivot(['fecha_inicio', 'fecha_cierre'])
+    //          ->withTimestamps();
+    //  }
+
 }

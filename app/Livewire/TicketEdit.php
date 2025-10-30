@@ -3,13 +3,14 @@
 namespace App\Livewire;
 
 use App\Models\Ticket;
+use App\Models\User;
 use App\Models\Visita;
 use Carbon\Carbon;
 use Livewire\Component;
 
 class TicketEdit extends Component
 {
-    
+
     public $ticket;
     public $tipo_reporte;
     public $situacion;
@@ -23,8 +24,10 @@ class TicketEdit extends Component
     public $descripcion;
     public $ticket_id;
     public $estadoVisita = 'pendiente'; // Estado por defecto
-    
-    
+    public $usuarios = []; // <-- para guardar los IDs seleccionados
+    public $listaUsuarios; // <-- para mostrar en el select
+
+
     public function mount($ticketId)
     {
         // Cargar el ticket basado en el ID pasado como parámetro
@@ -35,16 +38,17 @@ class TicketEdit extends Component
         $this->situacion = $this->ticket->situacion;
         $this->solucion = $this->ticket->solucion;
         $this->estado = $this->ticket->estado;
+        $this->listaUsuarios = User::orderBy('name')->get();
 
-        if ($this->estado== 'cerrado') {
+
+        if ($this->estado == 'cerrado') {
             $this->isUpdated = true;
         } else {
             $this->isUpdated = false;
-
         }
     }
 
-    
+
     // Método para actualizar el ticket
     public function updateTicket()
     {
@@ -75,7 +79,7 @@ class TicketEdit extends Component
         // Convertir las fechas a un formato que FullCalendar entienda
         $fecha_inicio = Carbon::parse($this->fecha_inicio);
         $fecha_cierre = Carbon::parse($this->fecha_cierre);
-    
+
         // Validar que la fecha de inicio no sea igual a la fecha de cierre
         if ($fecha_inicio->equalTo($fecha_cierre)) {
             $this->dispatch('closeModal');
@@ -85,8 +89,8 @@ class TicketEdit extends Component
             // Recargar la página para evitar congelamiento
             $this->redirect(request()->header('Referer'));  // Redirige a la misma página
             return;  // Detener la ejecución si las fechas son iguales
-            }
-    
+        }
+
         // Validar que la fecha de cierre no sea menor que la fecha de inicio
         if ($fecha_cierre->lt($fecha_inicio)) {
             session()->flash('error', 'La fecha de cierre no puede ser menor a la fecha de inicio.');
@@ -96,16 +100,23 @@ class TicketEdit extends Component
             $this->redirect(request()->header('Referer'));  // Redirige a la misma página
             return;  // Detener la ejecución si las fechas son iguales
         }
-    
+
         // Crear la visita si las validaciones son correctas
-        Visita::create([
-            'fecha_inicio' => $fecha_inicio->format('Y-m-d H:i:s'),
-            'fecha_cierre' => $fecha_cierre->format('Y-m-d H:i:s'),
+        $visita=Visita::create([
             'descripcion' => $this->descripcion,
             'ticket_id' => $this->ticket->id,
             'estado' => $this->estadoVisita,
         ]);
-    
+
+        $datosPivot = array_fill_keys(
+            $this->usuarios,
+            [
+                'fecha_inicio' => $fecha_inicio, // ya es Carbon
+                'fecha_cierre' => $fecha_cierre,
+            ]
+        );
+        $visita->users()->attach($datosPivot);
+
         // Cambiar estados del ticket
         $this->ticket->update([
             'estado' => 'cerrado',
@@ -113,11 +124,11 @@ class TicketEdit extends Component
             'fecha_cierre' => now(), // Asignar la fecha actual al campo fecha_cierre
 
         ]);
-    
+
         // Redirigir a la vista del calendario
         return redirect()->route('calendarioIndex');  // Asegúrate de tener esta ruta definida
     }
-    
+
 
 
 

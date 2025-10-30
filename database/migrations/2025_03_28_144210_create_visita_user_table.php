@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('visita_id')->constrained('visitas')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->dateTime('fecha_inicio')->nullable();
+            $table->dateTime('fecha_cierre')->nullable();
             $table->timestamps();
         });
     }

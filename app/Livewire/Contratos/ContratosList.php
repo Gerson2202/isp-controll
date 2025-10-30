@@ -53,13 +53,13 @@ class ContratosList extends Component
         $cliente = Cliente::find($this->cliente_id);
 
         // Verificar si el cliente tiene IP asignada
-        if (!$cliente || empty($cliente->ip)) {
-            $this->dispatch('notify', 
-                type: 'error',
-                message: 'El cliente no tiene una IP asignada, no se puede actualizar el contrato.'
-            );
-            return; // Detener la ejecución
-        }
+        // if (!$cliente || empty($cliente->ip)) {
+        //     $this->dispatch('notify', 
+        //         type: 'error',
+        //         message: 'El cliente no tiene una IP asignada, no se puede actualizar el contrato.'
+        //     );
+        //     return; // Detener la ejecución
+        // }
         // Formatear el precio: eliminar puntos y comas
         $precioFormateado = str_replace(['.', ','], '', $this->precio);
         

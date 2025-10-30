@@ -6,7 +6,8 @@
                 <div class="row mt-3">
                     <div class="col-md-6">
                         <div class="input-group mb-3">
-                            <input type="text" class="form-control" placeholder="Buscar..." wire:model.live.debounce.300ms="search">
+                            <input type="text" class="form-control" placeholder="Buscar..."
+                                wire:model.live.debounce.300ms="search">
                             <span class="input-group-text">
                                 <i class="fas fa-search"></i>
                             </span>
@@ -40,7 +41,8 @@
                                     <td>{{ $ticket->situacion }}</td>
                                     <td>{{ $ticket->cliente->nombre }}</td>
                                     <td>
-                                        <a href="{{ route('tickets.edit', $ticket->id) }}" class="btn btn-primary btn-sm">
+                                        <a href="{{ route('tickets.edit', $ticket->id) }}"
+                                            class="btn btn-primary btn-sm">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                     </td>
@@ -53,9 +55,11 @@
                         </tbody>
                     </table>
                 </div>
-                
-                <div class="mt-3">
-                    {{ $tickets->links() }}
+
+
+                {{-- Paginación --}}
+                <div class="mt-4 d-flex justify-content-center">
+                    {{ $tickets->onEachSide(1)->links('vendor.livewire.simple-pagination') }}
                 </div>
             </div>
         </div>
@@ -77,7 +81,7 @@
                     info: false, // Desactivamos el info de DataTables
                 });
             });
-            
+
             Livewire.on('closeModal', () => {
                 $('#editTicketModal').modal('hide');
             });

@@ -34,4 +34,7 @@ class Nodo extends Model
    {
        return $this->hasMany(Inventario::class, 'nodo_id');  // Un nodo tiene muchos inventarios
    }
+
+  
 }
+

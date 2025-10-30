@@ -2,7 +2,9 @@
 @section('title', 'Lista de inventario') <!-- Corregí "Dasboard" a "Dashboard" -->
 
 @section('content_header')
-   <h1 class="ml-3">Inventario</h1>
+<h1 class="ml-3">
+    <i class="fas fa-network-wired me-2"></i> Gestión de Equipos
+</h1>
    @livewireStyles
     <!-- Agrega los estilos de Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -12,6 +14,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
     <!-- CSS de DataTables Responsive -->
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
 
 
 @stop
@@ -20,7 +23,7 @@
     <div class="container-fluid ">
         <div class="card">
             <div class="card-header">
-                <h3>Equipos en Inventario</h3>
+                <h3>Equipos registrados en inventario</h3>
             </div>
             <div class="card-body">
                 <!-- Tabla de inventarios -->
@@ -149,13 +152,25 @@
     <script>
         $(document).ready(function() {
             $('#inventarios-table').DataTable({
-                "responsive": true,  // Hace que la tabla sea responsive
-                "language": {
-                    "url": "https://cdn.datatables.net/plug-ins/1.11.5/i18n/Spanish.json" // Configuración en español
+                responsive: true,
+                pagingType: "simple", // Solo muestra Anterior / Siguiente
+                language: {
+                    url: "https://cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json",
+                    paginate: {
+                        previous: "&#171; Anterior",
+                        next: "Siguiente &#187;"
+                    }
+                },
+                drawCallback: function() {
+                    // Aplica un pequeño margen y estilo a los botones
+                    $('.dataTables_paginate a').addClass('btn btn-info btn-sm mx-1');
+                    $('.dataTables_paginate').css('margin-top', '10px');
                 }
             });
         });
     </script>
+
+
     <!-- Logo en sidebar-->
     <script>
         document.addEventListener('DOMContentLoaded', function() {

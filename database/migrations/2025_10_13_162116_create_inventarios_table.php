@@ -14,11 +14,15 @@ return new class extends Migration
         Schema::create('inventarios', function (Blueprint $table) {
             $table->id();
             $table->foreignId('modelo_id')->constrained('modelos')->onDelete('cascade');
-            $table->string('mac');
+            $table->string('mac')->nullable();
+            $table->string('serial')->nullable();
             $table->date('fecha')->nullable(); // Fecha desde que lo tiene 
             $table->text('descripcion');
             $table->foreignId('cliente_id')->nullable()->constrained('clientes')->onDelete('cascade');
             $table->foreignId('nodo_id')->nullable()->constrained('nodos')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->foreignId('bodega_id')->nullable()->constrained('bodegas')->onDelete('cascade');
+            $table->foreignId('visita_id')->nullable()->constrained('visitas')->onDelete('cascade');
             $table->timestamps();
         });
     }

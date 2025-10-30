@@ -13,13 +13,15 @@
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             min-height: 600px;
         }
+
         .fc-event {
             cursor: pointer;
             padding: 3px 5px;
         }
+
         .event-details {
             display: none;
             position: fixed;
@@ -29,7 +31,7 @@
             background: white;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
             z-index: 1000;
             width: 80%;
             max-width: 500px;
@@ -40,9 +42,9 @@
 @section('content')
     <div class="container-fluid min-vh-100 d-flex flex-column">
         <div class="card">
-            
-                <div id="calendar"></div>
-            
+
+            <div id="calendar"></div>
+
         </div>
 
         <!-- Modal para detalles -->
@@ -65,13 +67,20 @@
                 <button id="viewClientBtn" class="btn btn-info" style="display: none;">
                     <i class="fas fa-user"></i> Ver Cliente
                 </button>
-                <button id="editEventBtn" class="btn btn-primary">
+                {{-- <button id="editEventBtn" class="btn btn-primary">
                     <i class="fas fa-edit"></i> Editar Programación
+                </button> --}}
+                <button id="btnAgregarUsuario" class="btn btn-dark">
+                    <i class="fas fa-edit"></i> Agregar Usuario
                 </button>
+                <button id="btnEliminarUsuario" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Eliminar usuario
+                </button>
+
             </div>
         </div>
     </div>
-  
+
 @stop
 
 {{-- Footer section --}}
@@ -84,16 +93,20 @@
                     <div class="d-flex align-items-center">
                         <img src="{{ asset('img/logo.png') }}" alt="Isprotik Logo" style="height: 18px; margin-right: 8px;">
                         <div>
-                            <strong class="text-sm">© {{ date('Y') }} <a href="{{ route('dashboard') }}" class="text-primary" style="text-decoration: none;">Isprotik</a></strong>
-                            <span class="text-muted d-none d-md-inline" style="font-size: 0.75rem;"> | Gestión para ISPs</span>
+                            <strong class="text-sm">© {{ date('Y') }} <a href="{{ route('dashboard') }}"
+                                    class="text-primary" style="text-decoration: none;">Isprotik</a></strong>
+                            <span class="text-muted d-none d-md-inline" style="font-size: 0.75rem;"> | Gestión para
+                                ISPs</span>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Versión y soporte -->
                 <div class="col-4 col-sm-6 text-right">
-                    <span class="d-none d-sm-inline text-muted mr-2" style="font-size: 0.75rem;"><strong>v1.0</strong></span>
-                    <a href="https://wa.me/573215852059" target="_blank" class="text-muted" style="font-size: 0.75rem; text-decoration: none;">
+                    <span class="d-none d-sm-inline text-muted mr-2"
+                        style="font-size: 0.75rem;"><strong>v1.0</strong></span>
+                    <a href="https://wa.me/573215852059" target="_blank" class="text-muted"
+                        style="font-size: 0.75rem; text-decoration: none;">
                         <i class="fas fa-headset"></i>
                     </a>
                 </div>
@@ -107,13 +120,16 @@
             border-top: 1px solid #dee2e6;
             padding: 4px 0 !important;
         }
+
         .main-footer a:hover {
             color: var(--primary) !important;
         }
+
         .main-footer img {
             opacity: 0.8;
             transition: opacity 0.3s;
         }
+
         .main-footer img:hover {
             opacity: 1;
         }
@@ -125,6 +141,7 @@
             padding: 1rem;
             border-top: 1px solid #dee2e6;
         }
+
         .main-footer a:hover {
             color: var(--primary) !important;
             text-decoration: none;
@@ -158,7 +175,7 @@
                     center: 'title',
                     right: 'month,agendaWeek,agendaDay'
                 },
-                defaultView: 'month',
+                defaultView: 'agendaWeek',
                 locale: 'es',
                 editable: true,
                 eventDurationEditable: true,
@@ -193,20 +210,68 @@
                     $('#eventTitle').text(calEvent.title);
                     $('#eventTicketId').text(calEvent.ticket_id);
                     $('#eventStatus').text(calEvent.estado);
-                    $('#eventStatus').removeClass().addClass('badge ' + 
-                        (calEvent.estado === 'Pendiente' ? 'badge-warning' : 
-                        calEvent.estado === 'En progreso' ? 'badge-info' : 
-                        'badge-success'));
+                    $('#eventStatus').removeClass().addClass('badge ' +
+                        (calEvent.estado === 'Pendiente' ? 'badge-warning' :
+                            calEvent.estado === 'En progreso' ? 'badge-info' :
+                            'badge-success'));
                     $('#eventStart').text(moment(calEvent.start).format('LLLL'));
                     $('#eventEnd').text(moment(calEvent.end).format('LLLL'));
                     $('#eventDescription').text(calEvent.descripcion);
                     $('#eventlatitud').text(calEvent.latitud);
                     $('#eventlongitud').text(calEvent.longitud);
-                    
+
                     // Botón editar
                     $('#editEventBtn').off('click').on('click', function() {
                         window.location.href = `/visitas/${calEvent.id}/edit`;
                     });
+                    // Botón Agregar Usuario
+                    $('#btnAgregarUsuario').off('click').on('click', function() {
+                        const visitaId = calEvent.id;
+                        const fechaInicio = calEvent.start.format('YYYY-MM-DD HH:mm:ss');
+                        const fechaCierre = calEvent.end ? calEvent.end.format(
+                            'YYYY-MM-DD HH:mm:ss') : fechaInicio;
+
+                        // Redirigir con parámetros en la URL
+                        window.location.href =
+                            `/visitas/${visitaId}/agregarUsuario?fecha_inicio=${encodeURIComponent(fechaInicio)}&fecha_cierre=${encodeURIComponent(fechaCierre)}`;
+                    });
+
+                    // Boton eliminar usuario
+                    $('#btnEliminarUsuario').off('click').on('click', function() {
+                        if (!calEvent || !calEvent.id || !calEvent.usuario_id) {
+                            toastr.error(
+                                'No se encontró información del evento o del usuario.');
+                            return;
+                        }
+
+                        if (!confirm(
+                                '¿Seguro que deseas eliminar este usuario de la visita?')) {
+                            return;
+                        }
+
+                        $.ajax({
+                            url: `/visitas/${calEvent.id}/usuarios/${calEvent.usuario_id}`,
+                            method: 'DELETE',
+                            data: {
+                                _token: "{{ csrf_token() }}"
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    toastr.success(response.message);
+                                    $('#eventDetails').fadeOut();
+                                    $('#calendar').fullCalendar('refetchEvents');
+
+                                } else {
+                                    toastr.error(response.message ||
+                                        'Error al eliminar usuario.');
+                                }
+                            },
+                            error: function() {
+                                toastr.error('Error de conexión con el servidor.');
+                            }
+                        });
+                    });
+
 
                     // Botón ver cliente
                     if (calEvent.cliente_id) {
@@ -220,7 +285,8 @@
                     // Botón ver en mapa
                     if (calEvent.latitud && calEvent.longitud) {
                         $('#btnVerMapa').show().off('click').on('click', function() {
-                            const url = `https://www.google.com/maps?q=${calEvent.latitud},${calEvent.longitud}`;
+                            const url =
+                                `https://www.google.com/maps?q=${calEvent.latitud},${calEvent.longitud}`;
                             window.open(url, '_blank', 'noopener,noreferrer');
                         });
                     } else {
@@ -241,13 +307,16 @@
 
             function actualizarEvento(event, revertFunc, mensajeExito) {
                 var updateData = {
+                    user_id: event.usuario_id, // 👈 enviamos el id del usuario
                     fecha_inicio: event.start.format('YYYY-MM-DD HH:mm:ss'),
                     fecha_cierre: event.end.format('YYYY-MM-DD HH:mm:ss'),
                     _token: "{{ csrf_token() }}"
                 };
 
                 // Mostrar notificación de carga
-                toastr.info('Actualizando visita...', '', {timeOut: 2000});
+                toastr.info('Actualizando visita...', '', {
+                    timeOut: 2000
+                });
 
                 $.ajax({
                     url: "/visitas/" + event.id + "/actualizar-fechas",
@@ -283,7 +352,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             var logoItem = document.querySelector('li#sidebar-logo-item');
             if (logoItem) {
-                logoItem.innerHTML = '<img src="{{ asset('img/logo.png') }}" style="max-width:120px;max-height:90px; margin-left:70px; margin-top:30px;" alt="Logo" />';
+                logoItem.innerHTML =
+                    '<img src="{{ asset('img/logo.png') }}" style="max-width:120px;max-height:90px; margin-left:70px; margin-top:30px;" alt="Logo" />';
             }
         });
     </script>

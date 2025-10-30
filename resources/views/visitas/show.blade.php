@@ -13,7 +13,9 @@
 
 @stop
 @section('content')
-    <div class="card shadow h-100 d-flex flex-column rounded-0">
+    @livewire('visitas.show', ['visita' => $visita])
+
+    {{-- <div class="card shadow h-100 d-flex flex-column rounded-0">
         <!-- Encabezado fijo -->
         <div class="card-header bg-primary text-white rounded-0 ">
             <div class="d-flex justify-content-between align-items-center">
@@ -171,7 +173,7 @@
                 </a>
             </div>
         </div>
-    </div>
+    </div> --}}
 @endsection
 
 

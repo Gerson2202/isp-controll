@@ -20,7 +20,7 @@ class User extends Authenticatable
     use HasProfilePhoto;
     use Notifiable;
     use TwoFactorAuthenticatable;
-    use HasRoles;//roles y permisos
+    use HasRoles; //roles y permisos
 
 
     /**
@@ -73,10 +73,25 @@ class User extends Authenticatable
         return $this->hasMany(Ticket::class);
     }
 
+
+
+    public function inventarios()
+    {
+        return $this->hasMany(Inventario::class);
+    }
+    public function inventario()
+    {
+        return $this->hasMany(Inventario::class);
+    }
+
+    // public function visitas()
+    // {
+    //     return $this->belongsToMany(Visita::class, 'visita_user')->withTimestamps();
+    // }
     public function visitas()
     {
-        return $this->belongsToMany(Visita::class, 'visita_user');
+        return $this->belongsToMany(Visita::class)
+            ->withPivot(['fecha_inicio', 'fecha_cierre'])
+            ->withTimestamps();
     }
-   
-
 }

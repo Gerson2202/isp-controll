@@ -1,9 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Tabla')
+@section('title', 'Tabla de programacion')
 
 @section('content_header')
-    <h1 class="ml-3">
+    <h1 class="ml-2">
         Tabla de programación
         <i class="fas fa-calendar-alt text-blue-500 ml-2"></i>
     </h1>

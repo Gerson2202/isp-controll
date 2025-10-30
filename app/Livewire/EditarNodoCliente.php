@@ -124,6 +124,8 @@ class EditarNodoCliente extends Component
                  'fecha_cierre' => now(), 
                  'cliente_id' => $this->cliente->id,
                  'solucion' => 'Nodo actualizado correctamente desde el panel',
+                     'user_id' => auth()->id(), // 👈 Agrega esto
+
              ]);
 
             // Confirmamos la transacción

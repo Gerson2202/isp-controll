@@ -12,14 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('visitas', function (Blueprint $table) {
+
             $table->id();
             $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');  // Relación con el ticket
-            $table->dateTime('fecha_inicio')->nullable();  // Fecha y hora de inicio
-            $table->dateTime('fecha_cierre')->nullable();  // Fecha y hora de cierre
             $table->text('descripcion')->nullable();  // Descripción de la visita
             $table->text('solucion')->nullable();  // Descripción de la visita
             $table->enum('estado', ['Pendiente', 'En progreso', 'Completada'])->default('Pendiente');  // Estado de la visita
             $table->timestamps();
+            //$table->dateTime('fecha_inicio')->nullable();  // Fecha y hora de inicio
+            // $table->dateTime('fecha_cierre')->nullable();  // Fecha y hora de cierre
         });
     }
 
