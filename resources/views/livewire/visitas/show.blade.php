@@ -21,7 +21,8 @@
 
                     <dt class="col-sm-4">Estado:</dt>
                     <dd class="col-sm-8">
-                        <span class="badge bg-{{ $visita->estado == 'Completada' ? 'success' : ($visita->estado == 'En progreso' ? 'warning' : 'danger') }}">
+                        <span
+                            class="badge bg-{{ $visita->estado == 'Completada' ? 'success' : ($visita->estado == 'En progreso' ? 'warning' : 'danger') }}">
                             {{ $visita->estado }}
                         </span>
                     </dd>
@@ -42,7 +43,7 @@
         <div class="row mb-4">
             <div class="col-12">
                 <h5 class="border-bottom pb-2">Técnicos Asignados</h5>
-                @if($visita->users->count() > 0)
+                @if ($visita->users->count() > 0)
                     <div class="table-responsive">
                         <table class="table table-striped align-middle">
                             <thead class="table-light">
@@ -53,20 +54,20 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($visita->users as $usuario)
+                                @foreach ($visita->users as $usuario)
                                     <tr>
                                         <td>
                                             <i class="fas fa-user text-primary me-2"></i>
                                             {{ $usuario->name }}
                                         </td>
                                         <td>
-                                            {{ $usuario->pivot->fecha_inicio 
-                                                ? \Carbon\Carbon::parse($usuario->pivot->fecha_inicio)->format('d/m/Y H:i') 
+                                            {{ $usuario->pivot->fecha_inicio
+                                                ? \Carbon\Carbon::parse($usuario->pivot->fecha_inicio)->format('d/m/Y H:i')
                                                 : 'Sin iniciar' }}
                                         </td>
                                         <td>
-                                            {{ $usuario->pivot->fecha_cierre 
-                                                ? \Carbon\Carbon::parse($usuario->pivot->fecha_cierre)->format('d/m/Y H:i') 
+                                            {{ $usuario->pivot->fecha_cierre
+                                                ? \Carbon\Carbon::parse($usuario->pivot->fecha_cierre)->format('d/m/Y H:i')
                                                 : 'Sin cerrar' }}
                                         </td>
                                     </tr>
@@ -102,7 +103,8 @@
                             <td>{{ $visita->ticket->tipo_reporte }}</td>
                             <td>{{ $visita->ticket->situacion }}</td>
                             <td>
-                                <span class="badge bg-{{ $visita->ticket->estado == 'cerrado' ? 'success' : 'warning' }}">
+                                <span
+                                    class="badge bg-{{ $visita->ticket->estado == 'cerrado' ? 'success' : 'warning' }}">
                                     {{ ucfirst($visita->ticket->estado) }}
                                 </span>
                             </td>
@@ -123,7 +125,8 @@
                     </div>
                     <div>
                         <h5 class="mb-1">
-                            <a href="{{ route('clientes.show', $visita->ticket->cliente->id ?? '') }}" class="text-decoration-none">
+                            <a href="{{ route('clientes.show', $visita->ticket->cliente->id ?? '') }}"
+                                class="text-decoration-none">
                                 {{ $visita->ticket->cliente->nombre ?? 'Cliente no especificado' }}
                             </a>
                         </h5>
@@ -134,24 +137,94 @@
                 </div>
             </div>
         </div>
-
+        <hr>
+        <!-- Equipos asignados -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="border-bottom pb-2">Equipos Asignados</h5>
+                @if ($visita->inventarios->count() > 0)
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Modelo</th>
+                                    <th>MAC</th>
+                                    <th>Serial</th>
+                                    <th>Descripción</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($visita->inventarios as $equipo)
+                                    <tr>
+                                        <td>{{ $equipo->modelo->nombre ?? 'Sin modelo' }}</td>
+                                        <td>{{ $equipo->mac ?? '-' }}</td>
+                                        <td>{{ $equipo->serial ?? '-' }}</td>
+                                        <td>{{ $equipo->descripcion }}</td>
+                                        <td>{{ $equipo->fecha ? \Carbon\Carbon::parse($equipo->fecha)->format('d/m/Y') : '-' }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="alert alert-info mb-0">
+                        No hay equipos asignados a esta visita.
+                    </div>
+                @endif
+            </div>
+        </div>
+        <!-- Consumibles asignados -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="border-bottom pb-2">Consumibles Usados</h5>
+                @if ($visita->consumibleStock->count() > 0)
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Unidad</th>
+                                    <th>Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($visita->consumibleStock as $item)
+                                    <tr>
+                                        <td>{{ $item->consumible->nombre }}</td>
+                                        <td>{{ $item->consumible->unidad ?? '-' }}</td>
+                                        <td>{{ $item->cantidad }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="alert alert-info mb-0">
+                        No hay consumibles asociados a esta visita.
+                    </div>
+                @endif
+            </div>
+        </div>
+        <hr>
         <!-- Galería -->
         <div class="row">
             <div class="col-12">
-                <h5 class="border-bottom pb-2">Fotos de la Visita</h5>
-                @if($visita->fotos->count() > 0)
+                <h5 class="border-bottom pb-2">Galeria de fotos</h5>
+                @if ($visita->fotos->count() > 0)
                     <div class="row">
-                        @foreach($visita->fotos as $foto)
+                        @foreach ($visita->fotos as $foto)
                             <div class="col-md-4 mb-3">
                                 <div class="card h-100">
                                     <a href="{{ asset('storage/' . $foto->ruta) }}" target="_blank">
-                                        <img src="{{ asset('storage/' . $foto->ruta) }}" 
-                                             class="card-img-top" 
-                                             style="height:200px;object-fit:cover;">
+                                        <img src="{{ asset('storage/' . $foto->ruta) }}" class="card-img-top"
+                                            style="height:200px;object-fit:cover;">
                                     </a>
                                     <div class="card-body">
                                         <h6 class="card-title">{{ $foto->nombre_original }}</h6>
-                                        <p class="card-text text-muted small">{{ $foto->descripcion ?? 'Sin descripción' }}</p>
+                                        <p class="card-text text-muted small">
+                                            {{ $foto->descripcion ?? 'Sin descripción' }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -162,14 +235,15 @@
                 @endif
             </div>
         </div>
+
     </div>
 
     <!-- Pie -->
-    <div class="card-footer bg-light rounded-0">
-        <div class="d-flex justify-content-between">
-            <a href="{{ route('visitas.edit', $visita->id) }}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Editar
-            </a>
-        </div>
-    </div>
+    {{-- <div class="card-footer bg-light rounded-0">
+            <div class="d-flex justify-content-between">
+                <a href="{{ route('visitas.edit', $visita->id) }}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+            </div>
+        </div> --}}
 </div>

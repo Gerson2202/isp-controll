@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Livewire\Visitas;
 
 use Livewire\Component;
@@ -11,13 +10,15 @@ class Show extends Component
 
     public function mount(Visita $visita)
     {
-        // Cargamos las relaciones necesarias
+        // Cargamos todas las relaciones necesarias
         $this->visita = $visita->load([
             'ticket.cliente',
             'users' => function ($query) {
                 $query->withPivot(['fecha_inicio', 'fecha_cierre']);
             },
-            'fotos'
+            'fotos',
+            'inventarios.modelo', // equipos asignados
+            'consumibleStock.consumible' // consumibles asignados
         ]);
     }
 

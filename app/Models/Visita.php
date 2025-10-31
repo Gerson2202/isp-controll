@@ -61,6 +61,17 @@ class Visita extends Model
             ->withTimestamps();
     }
 
+    // USADO PARA LA VISTA VISITA SHOW
+    public function inventarios()
+    {
+        return $this->hasMany(\App\Models\Inventario::class);
+    }
+
+    public function consumibleStock()
+    {
+        return $this->hasMany(\App\Models\ConsumibleStock::class);
+    }
+    
     //  public function users()
     //  {
     //     return $this->belongsToMany(User::class)

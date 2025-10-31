@@ -143,7 +143,7 @@
                             @php $destino = $mov->destino(); @endphp
                             @if ($destino)
                                 {{ ucfirst($mov->destino_tipo) }}:
-                                {{ $destino->nombre ?? ($destino->name ?? 'N/A') }}
+                                {{ $destino->nombre ?? ($destino->name ?? ($destino->id ?? 'N/A')) }}
                             @else
                                 -
                             @endif

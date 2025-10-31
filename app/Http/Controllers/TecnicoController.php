@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Visita;
 use Illuminate\Http\Request;
 
 class TecnicoController extends Controller
@@ -30,4 +31,11 @@ class TecnicoController extends Controller
     {
         return view('tecnico.asignaciones');
     }
+
+     public function cerrar(Visita $visita)
+    {
+       
+        return view('tecnico.cerrarVisita', compact('visita'));
+    }
+ 
 }

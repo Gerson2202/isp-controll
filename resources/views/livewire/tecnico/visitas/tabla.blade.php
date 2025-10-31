@@ -37,7 +37,7 @@
                                 </button>
 
                                 <button wire:click="cerrarVisita({{ $visita->id }})" class="btn btn-sm btn-success">
-                                    <i class="bi bi-check-circle"></i> Cerrar visita
+                                    <i class="bi bi-check-circle"></i> Cerrar Ticket
                                 </button>
                             </td>
                         </tr>

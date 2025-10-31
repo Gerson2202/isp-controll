@@ -2,7 +2,7 @@
     <div class="card shadow-sm border-0">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">
-                <i class="bi bi-calendar2-check me-2"></i> Cola de Programación
+                <i class="bi bi-calendar2-check me-2"></i> Toda La Programación
             </h5>
         </div>
 
@@ -64,20 +64,35 @@
                                     @if ($usuario && $usuario->pivot->fecha_inicio)
                                         {{ \Carbon\Carbon::parse($usuario->pivot->fecha_inicio)->format('d/m/Y H:i') }}
                                     @else
-                                        <span class="text-muted">—</span>
+                                        <span class="text-muted">Sin agendar</span>
                                     @endif
                                 </td>
                                 <td>
                                     @if ($usuario && $usuario->pivot->fecha_cierre)
                                         {{ \Carbon\Carbon::parse($usuario->pivot->fecha_cierre)->format('d/m/Y H:i') }}
                                     @else
-                                        <span class="text-muted">—</span>
+                                        <span class="text-muted">Sin agendar</span>
                                     @endif
                                 </td>
-                                <td>{{ $visita->estado }}</td>
+                                <td>
+                                    @if ($visita->estado === 'Pendiente')
+                                        <span class="badge bg-warning text-dark">Pendiente</span>
+                                    @elseif ($visita->estado === 'En progreso')
+                                        <span class="badge bg-primary">En progreso</span>
+                                    @elseif ($visita->estado === 'Completada')
+                                        <span class="badge bg-success">Completada</span>
+                                    @else
+                                        <span class="badge bg-secondary">{{ $visita->estado }}</span>
+                                    @endif
+                                </td>
 
                                 <td class="text-center">
-                                    <a href="{{ route('visitas.edit', $visita->id) }}" class="btn btn-sm btn-primary">
+                                    <a href="{{ route('visitas.show', $visita->id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> Ver Detalle
+                                    </a>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ route('visitas.edit', $visita->id) }}" class="btn btn-sm btn-info">
                                         <i class="fas fa-edit"></i> Editar
                                     </a>
                                 </td>
