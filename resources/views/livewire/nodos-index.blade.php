@@ -66,7 +66,7 @@
                     <!-- Card que contiene el formulario, sin bordes -->
                     <div class="card mx-auto border-0" style="max-width: 500px;">
                         <div class="card-header">
-                            <h5 class="card-title">Crear Nuevo Plan</h5>
+                            <h5 class="card-title">Registrar nodo</h5>
                         </div>
                         <div class="card-body">
                             <!-- Mostrar mensaje de éxito si existe -->
@@ -92,7 +92,7 @@
                                         min="-90" max="90" step="0.000001" 
                                         placeholder="Ej: -12.345678"
                                         title="Debe ser entre -90 y 90 con hasta 6 decimales"
-                                        required>
+                                        >
                                 </div>
 
                                 <div class="form-group">
@@ -101,7 +101,7 @@
                                         min="-180" max="180" step="0.000001"
                                         placeholder="Ej: -76.123456"
                                         title="Debe ser entre -180 y 180 con hasta 6 decimales"
-                                        required>
+                                        >
                                 </div>
                                 {{-- <div class="form-group">
                                     <label for="velocidad_subida">puerto_api</label>

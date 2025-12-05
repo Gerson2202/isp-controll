@@ -53,7 +53,7 @@ class HistorialMovimientosEquipos extends Component
                 $query->whereDate('created_at', '<=', $this->fecha_fin);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate(10);
 
         return view('livewire.inventario.historial-movimientos-equipos', [
             'movimientos' => $movimientos

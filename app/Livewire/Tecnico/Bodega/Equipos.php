@@ -12,21 +12,34 @@ class Equipos extends Component
 
     public $buscar = '';
 
+    public function updatingBuscar()
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
         $usuario = auth()->user();
 
-        $equipos = Inventario::with('modelo')
+        // 🔹 Equipos directamente asignados al técnico
+        $equiposPropios = Inventario::with('modelo')
             ->where('user_id', $usuario->id)
             ->where(function ($query) {
                 $query->where('mac', 'like', "%{$this->buscar}%")
-                      ->orWhere('serial', 'like', "%{$this->buscar}%")
-                      ->orWhereHas('modelo', function ($q) {
-                          $q->where('nombre', 'like', "%{$this->buscar}%");
-                      });
+                    ->orWhere('serial', 'like', "%{$this->buscar}%")
+                    ->orWhereHas('modelo', function ($q) {
+                        $q->where('nombre', 'like', "%{$this->buscar}%");
+                    });
             })
-            ->paginate(10);
+            ->paginate(10, ['*'], 'equiposPropios');
 
-        return view('livewire.tecnico.bodega.equipos', compact('equipos'));
+        // 🔹 Equipos en bodegas asignadas al técnico
+        $bodegas = $usuario->bodegas()
+            ->with(['inventarios.modelo' => function ($q) {
+                $q->orderBy('nombre');
+            }])
+            ->get();
+
+        return view('livewire.tecnico.bodega.equipos', compact('equiposPropios', 'bodegas'));
     }
 }

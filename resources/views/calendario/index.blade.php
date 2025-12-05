@@ -48,20 +48,30 @@
         </div>
 
         <!-- Modal para detalles -->
-        <div id="eventDetails" class="event-details" style="display: none;">
+        <div id="eventDetails"
+            style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:20px; border:1px solid #ccc; z-index:1000; width:90%; max-width:600px; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
             <span class="close-btn" style="float:right;cursor:pointer;font-size:20px;">&times;</span>
             <h3 id="eventTitle"></h3>
             <p><strong>Ticket ID:</strong> <span id="eventTicketId"></span></p>
+            <p><strong>Título:</strong> <span id="titleVisita"></span></p>
+            <p class="campo-cliente"><strong>Cliente:</strong>
+                <a id="clienteLink" href="#" target="_blank" style="text-decoration: none;">
+                    <span id="nombreCliente" class="badge"></span>
+                </a>
+            </p>
+            <p class="campo-ip"><strong>IP:</strong> <span id="ipCliente" class="badge"></span></p>
+            <p class="campo-nodo"><strong>Nodo:</strong> <span id="nodoCliente" class="badge"></span></p>
             <p><strong>Estado:</strong> <span id="eventStatus" class="badge"></span></p>
             <p><strong>Inicio:</strong> <span id="eventStart"></span></p>
             <p><strong>Fin:</strong> <span id="eventEnd"></span></p>
             <p><strong>Descripción:</strong> <span id="eventDescription"></span></p>
-            <button id="btnVerMapa" class="btn btn-success mt-2" style="display: none;">
-                📍 Ver en Mapa
-            </button>
-
-
-
+            <p><strong>Coordenadas:</strong>
+                <a id="btnCoordenadas" class="btn btn-outline-primary btn-sm" href="#" target="_blank"
+                    style="display:none;">
+                    Ver Mapa
+                </a>
+                <span id="sinCoordenadas">No especificadas</span>
+            </p>
 
             <div class="modal-footer" style="margin-top: 20px; text-align: right;">
                 <button id="viewClientBtn" class="btn btn-info" style="display: none;">
@@ -104,7 +114,7 @@
                 <!-- Versión y soporte -->
                 <div class="col-4 col-sm-6 text-right">
                     <span class="d-none d-sm-inline text-muted mr-2"
-                        style="font-size: 0.75rem;"><strong>v1.0</strong></span>
+                        style="font-size: 0.75rem;"><strong>v2.0</strong></span>
                     <a href="https://wa.me/573215852059" target="_blank" class="text-muted"
                         style="font-size: 0.75rem; text-decoration: none;">
                         <i class="fas fa-headset"></i>
@@ -187,18 +197,14 @@
                     }
                 },
                 eventRender: function(event, element) {
-                    // Modificar el título para incluir el cliente como enlace
-                    var titleHtml = `Ticket #${event.ticket_id} - `;
-                    if (event.cliente_id) {
-                        titleHtml += `<span class="cliente-link" 
-                                    style="color: #3A7BFF; cursor: pointer;" 
-                                    data-cliente-id="${event.cliente_id}">
-                                    ${event.cliente_nombre}
-                                    </span>`;
+                    // Mostrar solo el nombre del usuario en blanco
+                    if (event.usuario_nombre) {
+                        element.find('.fc-title').html(
+                            `<span style="color: #FFFFFF;">${event.usuario_nombre}</span>`);
                     } else {
-                        titleHtml += event.cliente_nombre;
+                        element.find('.fc-title').html(
+                            '<span style="color: #FFFFFF;">Sin técnico</span>');
                     }
-                    element.find('.fc-title').html(titleHtml);
                 },
                 eventDrop: function(event, delta, revertFunc) {
                     actualizarEvento(event, revertFunc, 'Visita reagendada correctamente');
@@ -207,8 +213,25 @@
                     actualizarEvento(event, revertFunc, 'Duración de visita actualizada');
                 },
                 eventClick: function(calEvent, jsEvent, view) {
+                    // Ocultar campos que digan "No especificado"
+                    if (calEvent.cliente_nombre === 'No especificado') $('.campo-cliente').hide();
+                    if (calEvent.ipCliente === 'No especificado') $('.campo-ip').hide();
+                    if (calEvent.nodoCliente === 'No especificado') $('.campo-nodo').hide();
+                     
+                    // Configurar enlace del cliente
+                    if (calEvent.cliente_id) {
+                        $('#clienteLink').attr('href', `/clientes/${calEvent.cliente_id}`);
+                        $('.campo-cliente').show();
+                    } else {
+                        $('.campo-cliente').hide();
+                    }
                     $('#eventTitle').text(calEvent.title);
-                    $('#eventTicketId').text(calEvent.ticket_id);
+                    $('#nombreCliente').text(calEvent.cliente_nombre)
+                    $('#ipCliente').text(calEvent.ipCliente)
+                    $('#nodoCliente').text(calEvent
+                        .nodoCliente)
+                    $('#eventTitle').text(calEvent.title);
+                    $('#titleVisita').text(calEvent.titleVisita);
                     $('#eventStatus').text(calEvent.estado);
                     $('#eventStatus').removeClass().addClass('badge ' +
                         (calEvent.estado === 'Pendiente' ? 'badge-warning' :
@@ -217,8 +240,16 @@
                     $('#eventStart').text(moment(calEvent.start).format('LLLL'));
                     $('#eventEnd').text(moment(calEvent.end).format('LLLL'));
                     $('#eventDescription').text(calEvent.descripcion);
-                    $('#eventlatitud').text(calEvent.latitud);
-                    $('#eventlongitud').text(calEvent.longitud);
+                    if (calEvent.latitud && calEvent.longitud) {
+                        $('#btnCoordenadas').show().attr('href',
+                            `https://www.google.com/maps?q=${calEvent.latitud},${calEvent.longitud}`
+                        );
+                        $('#sinCoordenadas').hide();
+                    } else {
+                        $('#btnCoordenadas').hide();
+                        $('#sinCoordenadas').show();
+                    }
+
 
                     // Botón editar
                     $('#editEventBtn').off('click').on('click', function() {

@@ -44,7 +44,9 @@ Route::middleware([
 ])->group(function () {
     Route::get('/dashboard', function () {
         return view('dashboard', [
-            'clientesCount' => Cliente::count(),
+            'clientesCount' => Cliente::whereHas('contratos', function ($query) {
+                $query->where('estado', 'activo');
+            })->count(),
             'equiposCount' => Inventario::count(),
             'nodosCount' => Nodo::count(),
             'ticketsAbiertos' => Ticket::where('estado', 'Abierto')->count(),
@@ -134,9 +136,10 @@ Route::middleware([
     Route::get('/calendario', [VisitaController::class, 'index'])->name('calendarioIndex');
     Route::get('/events', [VisitaController::class, 'getEvents'])->name('events.index');
 
-    // Ruta para editar la visita
+    // Ruta para visitas
+    Route::post('/visitas', [VisitaController::class, 'store'])->name('visitas.store');
     Route::get('/visitas/{visita_id}/edit', [VisitaController::class, 'edit'])->name('visitas.edit');
-    
+
     // Mostrar vista formulario para agregar usuarios
     Route::get('/visitas/{visita}/agregarUsuario', [VisitaController::class, 'agregarUsuario'])
         ->name('visitas.agregarUsuario');
@@ -144,9 +147,9 @@ Route::middleware([
     // Guardar los usuarios seleccionados
     Route::post('/visitas/{visita}/guardar-usuarios', [VisitaController::class, 'guardarUsuarios'])
         ->name('visitas.guardarUsuarios');
-    
+
     Route::delete('/visitas/{visita}/usuarios/{usuario}', [VisitaController::class, 'eliminarUsuario'])
-    ->name('visitas.eliminarUsuario');
+        ->name('visitas.eliminarUsuario');
 
     Route::put('/visitas/{visita_id}', [VisitaController::class, 'update'])->name('visitas.update');
     // Ruta para enviar a cola de programación (actualiza los campos a null)
@@ -163,27 +166,57 @@ Route::middleware([
     // RUTAS PARA CALENDARIO
     // Ruta para consultar los eventos en el calendario(visitas)
     Route::get('/visitas/calendario', function () {
-        $visitas = App\Models\Visita::with(['ticket.cliente', 'users'])->get();
+        $visitas = App\Models\Visita::with(['ticket.cliente.contrato.plan.nodo', 'users'])->get();
 
         $eventos = [];
 
         foreach ($visitas as $visita) {
+            // Determinar el texto del ticket
+            $ticketText = $visita->ticket_id ? 'Ticket #' . $visita->ticket_id : 'Visita #' . $visita->id;
+
+            // Datos del cliente (con validaciones)
+            $clienteNombre = 'No especificado';
+            $clienteId = null;
+            $latitud = null;
+            $longitud = null;
+            $clienteIp = 'No especificado';
+            $clienteNodo = 'No especificado'; // Inicializar con valor por defecto
+
+            if ($visita->ticket && $visita->ticket->cliente) {
+                $clienteNombre = $visita->ticket->cliente->nombre ?? 'No especificado';
+                $clienteId = $visita->ticket->cliente->id;
+                $latitud = $visita->ticket->cliente->latitud;
+                $longitud = $visita->ticket->cliente->longitud;
+                $clienteIp = $visita->ticket->cliente->ip;
+
+                // CORREGIR: Validar toda la cadena de relaciones
+                if (
+                    $visita->ticket->cliente->contrato &&
+                    $visita->ticket->cliente->contrato->plan &&
+                    $visita->ticket->cliente->contrato->plan->nodo
+                ) {
+                    $clienteNodo = $visita->ticket->cliente->contrato->plan->nodo->nombre;
+                }
+            }
+
             // Si la visita tiene usuarios asignados
             if ($visita->users->count() > 0) {
                 foreach ($visita->users as $usuario) {
                     $eventos[] = [
                         'id' => $visita->id . '-' . $usuario->id, // id único por usuario
-                        'title' => 'Ticket #' . $visita->ticket_id . ' - ' . $usuario->name,
-                        // 👇 Fechas obtenidas desde la tabla pivote
+                        'title' => $ticketText . ' - ' . $usuario->name,
+                        'titleVisita' => $visita->titulo,
                         'start' => $usuario->pivot->fecha_inicio,
                         'end'   => $usuario->pivot->fecha_cierre,
                         'descripcion' => $visita->descripcion,
                         'estado' => $visita->estado,
                         'ticket_id' => $visita->ticket_id,
-                        'latitud' => optional($visita->ticket->cliente)->latitud,
-                        'longitud' => optional($visita->ticket->cliente)->longitud,
-                        'cliente_nombre' => optional($visita->ticket->cliente)->nombre ?? 'No especificado',
-                        'cliente_id' => optional($visita->ticket->cliente)->id,
+                        'latitud' => $latitud,
+                        'longitud' => $longitud,
+                        'cliente_nombre' => $clienteNombre,
+                        'ipCliente' => $clienteIp,
+                        'nodoCliente' => $clienteNodo, // ← CORREGIDO: misma variable
+                        'cliente_id' => $clienteId,
                         'usuario_id' => $usuario->id,
                         'usuario_nombre' => $usuario->name,
                         'color' => $visita->estado === 'Completada'
@@ -195,16 +228,19 @@ Route::middleware([
                 // Si no tiene usuarios asignados, mostrarla igual
                 $eventos[] = [
                     'id' => $visita->id,
-                    'title' => 'Ticket #' . $visita->ticket_id . ' - Sin técnico',
+                    'title' => $ticketText . ' - Sin técnico',
+                    'titleVisita' => $visita->titulo, // ← AGREGAR ESTO TAMBIÉN
                     'start' => $visita->fecha_inicio,
                     'end' => $visita->fecha_cierre,
                     'descripcion' => $visita->descripcion,
                     'estado' => $visita->estado,
                     'ticket_id' => $visita->ticket_id,
-                    'latitud' => optional($visita->ticket->cliente)->latitud,
-                    'longitud' => optional($visita->ticket->cliente)->longitud,
-                    'cliente_nombre' => optional($visita->ticket->cliente)->nombre ?? 'No especificado',
-                    'cliente_id' => optional($visita->ticket->cliente)->id,
+                    'latitud' => $latitud,
+                    'longitud' => $longitud,
+                    'cliente_nombre' => $clienteNombre,
+                    'ipCliente' => $clienteIp, // ← AGREGAR ESTO
+                    'nodoCliente' => $clienteNodo, // ← AGREGAR ESTO
+                    'cliente_id' => $clienteId,
                     'color' => match ($visita->estado) {
                         'Pendiente' => '#28A745',
                         'En progreso' => '#FFC107',
@@ -340,6 +376,4 @@ Route::middleware([
     Route::get('/tecnico/asignaciones', [TecnicoController::class, 'asignaciones'])->name('tecnico.asignaciones');
 
     Route::get('/tecnico/visitas/{visita}/cerrar', [TecnicoController::class, 'cerrar'])->name('tecnico.visitas.cerrar');
-
-
 });

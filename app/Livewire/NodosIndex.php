@@ -82,7 +82,7 @@ class NodosIndex extends Component
             'ip' => $this->ip,
             'latitud' => $this->latitud,
             'longitud' => $this->longitud,
-            // 'puerto_api' => $this->puerto_api,
+            //'puerto_api' => $this->puerto_api,
         ]);
 
         // Actualizar la lista de planes

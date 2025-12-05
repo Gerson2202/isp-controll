@@ -36,6 +36,20 @@
                 <h5 class="border-bottom pb-2">Descripción y Solución</h5>
                 <p><strong>Descripción:</strong> {{ $visita->descripcion ?? 'No registrada' }}</p>
                 <p><strong>Solución:</strong> {{ $visita->solucion ?? 'No registrada' }}</p>
+                <p><strong>Observación:</strong>
+                    @if ($visita->observacion)
+                        {!! preg_replace(
+                            ['/Equipos instalados:/', '/Equipos retirados:/'],
+                            [
+                                '<span class="badge bg-success">Equipos instalados:</span>',
+                                '<span class="badge bg-danger">Equipos retirados:</span>',
+                            ],
+                            $visita->observacion,
+                        ) !!}
+                    @else
+                        No registrada
+                    @endif
+                </p>
             </div>
         </div>
 
@@ -99,16 +113,20 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>{{ $visita->ticket->id }}</td>
-                            <td>{{ $visita->ticket->tipo_reporte }}</td>
-                            <td>{{ $visita->ticket->situacion }}</td>
+                            <td>{{ $visita->ticket->id ?? 'S/N' }}</td>
+                            <td>{{ $visita->ticket?->tipo_reporte ?? 'S/N' }}</td>
+                            <td>{{ $visita->ticket?->situacion ?? 'S/N' }}</td>
                             <td>
-                                <span
-                                    class="badge bg-{{ $visita->ticket->estado == 'cerrado' ? 'success' : 'warning' }}">
-                                    {{ ucfirst($visita->ticket->estado) }}
-                                </span>
+                                @if ($visita->ticket)
+                                    <span
+                                        class="badge bg-{{ $visita->ticket->estado == 'cerrado' ? 'success' : 'warning' }}">
+                                        {{ ucfirst($visita->ticket->estado) }}
+                                    </span>
+                                @else
+                                    <span class="badge bg-secondary">S/N</span>
+                                @endif
                             </td>
-                            <td>{{ $visita->ticket->solucion ?? 'No registrada' }}</td>
+                            <td>{{ $visita->ticket?->solucion ?? 'No registrada' }}</td>
                         </tr>
                     </tbody>
                 </table>

@@ -235,7 +235,7 @@
                         <label class="form-label fw-semibold">
                             <i class="fas fa-hashtag me-1 text-warning"></i>Cantidad
                         </label>
-                        <input type="number" wire:model="cantidad" class="form-control form-control-lg"
+                        <input type="number" min="1" wire:model="cantidad" class="form-control form-control-lg"
                             min="1" placeholder="Ingrese la cantidad">
                         @error('cantidad')
                             <div class="text-danger small mt-1">

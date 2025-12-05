@@ -8,8 +8,8 @@
             <div class="row mb-4">
                 <div class="col-md-3">
                     <label class="form-label">Buscar Consumible</label>
-                    <input type="text" class="form-control" wire:model.live="search" 
-                           placeholder="Nombre o descripción...">
+                    <input type="text" class="form-control" wire:model.live="search"
+                        placeholder="Nombre o descripción...">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Tipo Movimiento</label>
@@ -59,10 +59,12 @@
                                 </td>
                                 <td>
                                     <strong class="text-primary">{{ $movimiento->consumible->nombre }}</strong><br>
-                                    <small class="text-muted">{{ \Illuminate\Support\Str::limit($movimiento->consumible->descripcion, 30) }}</small>
+                                    <small
+                                        class="text-muted">{{ \Illuminate\Support\Str::limit($movimiento->consumible->descripcion, 30) }}</small>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-{{ $movimiento->tipo_movimiento === 'entrada' ? 'success' : 'primary' }}">
+                                    <span
+                                        class="badge bg-{{ $movimiento->tipo_movimiento === 'entrada' ? 'success' : 'primary' }}">
                                         {{ $movimiento->cantidad }} {{ $movimiento->consumible->unidad ?? 'und' }}
                                     </span>
                                 </td>
@@ -72,11 +74,11 @@
                                     </span>
                                 </td>
                                 <td>
-                                    @if($movimiento->origen_id)
+                                    @if ($movimiento->origen_id)
                                         @php
                                             $origenNombre = $movimiento->origen_nombre;
                                         @endphp
-                                        @if($movimiento->origen_tipo === 'bodega')
+                                        @if ($movimiento->origen_tipo === 'bodega')
                                             <i class="fas fa-warehouse text-primary"></i>
                                         @elseif($movimiento->origen_tipo === 'usuario')
                                             <i class="fas fa-user text-success"></i>
@@ -84,27 +86,39 @@
                                             <i class="fas fa-network-wired text-warning"></i>
                                         @elseif($movimiento->origen_tipo === 'cliente')
                                             <i class="fas fa-building text-info"></i>
+                                        @elseif($movimiento->origen_tipo === 'visita')
+                                            <i class="fas fa-building text-info"></i>
                                         @endif
+
                                         {{ $origenNombre }}
                                     @else
                                         <span class="text-muted"><i class="fas fa-times"></i> Entrada</span>
                                     @endif
                                 </td>
                                 <td>
-                                    @if($movimiento->destino_id)
+                                    @if ($movimiento->destino_id)
                                         @php
                                             $destinoNombre = $movimiento->destino_nombre;
                                         @endphp
-                                        @if($movimiento->destino_tipo === 'bodega')
+                                        @if ($movimiento->destino_tipo === 'bodega')
                                             <i class="fas fa-warehouse text-primary"></i>
+                                            {{ $destinoNombre }}
                                         @elseif($movimiento->destino_tipo === 'usuario')
                                             <i class="fas fa-user text-success"></i>
+                                            {{ $destinoNombre }}
                                         @elseif($movimiento->destino_tipo === 'nodo')
                                             <i class="fas fa-network-wired text-warning"></i>
+                                            {{ $destinoNombre }}
                                         @elseif($movimiento->destino_tipo === 'cliente')
                                             <i class="fas fa-building text-info"></i>
+                                            {{ $destinoNombre }}
+                                        @elseif($movimiento->destino_tipo === 'visita')
+                                            <a href="{{ route('visitas.show', $movimiento->destino_id) }}"
+                                                class="text-decoration-none text-primary">
+                                                <i class="fas fa-calendar-check text-danger"></i>
+                                                Visita #{{ $movimiento->destino_id }}
+                                            </a>
                                         @endif
-                                        {{ $destinoNombre }}
                                     @else
                                         <span class="text-muted"><i class="fas fa-times"></i> N/A</span>
                                     @endif
@@ -132,24 +146,20 @@
             </div>
 
             <!-- Paginación -->
-            @if($movimientos->hasPages())
+            @if ($movimientos->hasPages())
                 <div class="d-flex justify-content-center mt-4">
                     <div class="btn-group">
-                        <button class="btn btn-outline-primary btn-sm" 
-                                wire:click="previousPage" 
-                                wire:loading.attr="disabled"
-                                {{ $movimientos->onFirstPage() ? 'disabled' : '' }}>
+                        <button class="btn btn-outline-primary btn-sm" wire:click="previousPage"
+                            wire:loading.attr="disabled" {{ $movimientos->onFirstPage() ? 'disabled' : '' }}>
                             <i class="fas fa-chevron-left"></i> Anterior
                         </button>
-                        
+
                         <button class="btn btn-outline-primary btn-sm" disabled>
                             Página {{ $movimientos->currentPage() }} de {{ $movimientos->lastPage() }}
                         </button>
-                        
-                        <button class="btn btn-outline-primary btn-sm" 
-                                wire:click="nextPage" 
-                                wire:loading.attr="disabled"
-                                {{ !$movimientos->hasMorePages() ? 'disabled' : '' }}>
+
+                        <button class="btn btn-outline-primary btn-sm" wire:click="nextPage"
+                            wire:loading.attr="disabled" {{ !$movimientos->hasMorePages() ? 'disabled' : '' }}>
                             Siguiente <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>

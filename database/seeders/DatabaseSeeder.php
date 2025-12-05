@@ -28,6 +28,8 @@ class DatabaseSeeder extends Seeder
             // NodoSeeder::class,
               ClienteSeeder::class,
               RolePermissionSeeder::class,
+              ConsumibleSeeder::class,
+              ModeloSeeder::class,
             // PoolSeeder::class,
             //  ContratoSeeder::class
         ]);

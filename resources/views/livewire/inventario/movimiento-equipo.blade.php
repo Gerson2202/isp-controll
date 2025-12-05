@@ -79,15 +79,15 @@
                     </div>
                 @endif
 
-                <div class="mb-3">
+                {{-- <div class="mb-3">
                     <label class="form-label">Tipo de Movimiento</label>
                     <select class="form-select" wire:model.live="tipo_movimiento">
                         <option value="traslado">Traslado</option>
                         {{-- <option value="asignacion">Asignación</option>
                         <option value="entrada">Entrada</option>
-                        <option value="salida">Salida</option> --}}
+                        <option value="salida">Salida</option> 
                     </select>
-                </div>
+                </div> --}}
 
                 <div class="mb-3">
                     <label class="form-label">Nueva Ubicación</label>

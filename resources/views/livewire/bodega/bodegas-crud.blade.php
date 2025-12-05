@@ -31,6 +31,8 @@
                             <th>
                                 <i class="fas fa-align-left me-2 text-muted"></i>Descripción
                             </th>
+                            <th><i class="fas fa-users me-2 text-muted"></i>Usuarios</th>
+
                             <th class="text-center pe-4">
                                 <i class="fas fa-cogs me-2 text-muted"></i>Acciones
                             </th>
@@ -52,20 +54,29 @@
                                     </span>
                                 </td>
                                 <td>
-                                    @if($bodega->descripcion)
-                                        <span class="text-truncate d-inline-block" style="max-width: 200px;" 
-                                              title="{{ $bodega->descripcion }}">
+                                    @if ($bodega->descripcion)
+                                        <span class="text-truncate d-inline-block" style="max-width: 200px;"
+                                            title="{{ $bodega->descripcion }}">
                                             {{ $bodega->descripcion }}
                                         </span>
                                     @else
                                         <span class="text-muted fst-italic">Sin descripción</span>
                                     @endif
                                 </td>
+                                <td>
+                                    @if ($bodega->users->count())
+                                        @foreach ($bodega->users as $user)
+                                            <span class="badge bg-info text-dark">{{ $user->name }}</span>
+                                        @endforeach
+                                    @else
+                                        <span class="text-muted fst-italic">Sin usuarios</span>
+                                    @endif
+                                </td>
+
                                 <td class="text-center pe-4">
                                     <div class="btn-group btn-group-sm" role="group">
-                                        <button wire:click="edit({{ $bodega->id }})" 
-                                                class="btn btn-warning d-flex align-items-center"
-                                                title="Editar bodega">
+                                        <button wire:click="edit({{ $bodega->id }})"
+                                            class="btn btn-warning d-flex align-items-center" title="Editar bodega">
                                             <i class="fas fa-edit me-1"></i>Editar
                                         </button>
                                         {{-- <button wire:click="delete({{ $bodega->id }})" 
@@ -79,13 +90,13 @@
                                         title="Ver Bodega">
                                             <i class="fas fa-eye me-1"></i>Ver
                                         </a> --}}
-                                        <a href="{{ route('inventario.detalle',['bodega', $bodega->id]) }}" 
-                                        class="btn btn-primary d-flex align-items-center" 
-                                        title="Ver Bodega">
+                                        <a href="{{ route('inventario.detalle', ['bodega', $bodega->id]) }}"
+                                            class="btn btn-primary d-flex align-items-center" title="Ver Bodega">
                                             <i class="fas fa-eye me-1"></i>Ver
                                         </a>
                                     </div>
                                 </td>
+
 
                             </tr>
                         @endforeach
@@ -96,8 +107,8 @@
     </div>
 
     <!-- Modal mejorado -->
-    <div class="modal fade @if($modal) show d-block @endif" tabindex="-1" role="dialog"
-         @if($modal) style="background: rgba(0,0,0,0.5);" @endif>
+    <div class="modal fade @if ($modal) show d-block @endif" tabindex="-1" role="dialog"
+        @if ($modal) style="background: rgba(0,0,0,0.5);" @endif>
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content shadow-lg border-0">
                 <div class="modal-header bg-primary text-white">
@@ -113,8 +124,9 @@
                             <label class="form-label fw-semibold">
                                 <i class="fas fa-signature me-1 text-primary"></i>Nombre
                             </label>
-                            <input type="text" wire:model="nombre" class="form-control" placeholder="Ingrese el nombre de la bodega" required>
-                            @error('nombre') 
+                            <input type="text" wire:model="nombre" class="form-control"
+                                placeholder="Ingrese el nombre de la bodega" required>
+                            @error('nombre')
                                 <div class="text-danger small mt-1">
                                     <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
                                 </div>
@@ -137,18 +149,44 @@
                         <label class="form-label fw-semibold">
                             <i class="fas fa-map-marker-alt me-1 text-primary"></i>Ubicación
                         </label>
-                        <input type="text" wire:model="ubicacion" class="form-control" placeholder="Ingrese la ubicación de la bodega">
+                        <input type="text" wire:model="ubicacion" class="form-control"
+                            placeholder="Ingrese la ubicación de la bodega">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">
                             <i class="fas fa-align-left me-1 text-primary"></i>Descripción
                         </label>
-                        <textarea wire:model="descripcion" class="form-control" rows="3" 
-                                  placeholder="Agregue una descripción opcional"></textarea>
+                        <textarea wire:model="descripcion" class="form-control" rows="3" placeholder="Agregue una descripción opcional"></textarea>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            <i class="fas fa-users me-1 text-primary"></i>Usuarios asignados
+                        </label>
+
+                        @if (!empty($usuariosSeleccionados))
+                            <div class="mb-2">
+                                @foreach ($usuariosDisponibles->whereIn('id', $usuariosSeleccionados) as $user)
+                                    <span class="badge bg-info text-dark me-1 mb-1">
+                                        <i class="fas fa-user me-1"></i>{{ $user->name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @endif
+
+                        <select wire:model="usuariosSeleccionados" class="form-select" multiple size="8">
+                            @foreach ($usuariosDisponibles as $user)
+                                <option value="{{ $user->id }}">
+                                    👤 {{ $user->name }} — {{ $user->email }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+
                 </div>
                 <div class="modal-footer border-0">
-                    <button type="button" wire:click="closeModal" class="btn btn-outline-secondary d-flex align-items-center">
+                    <button type="button" wire:click="closeModal"
+                        class="btn btn-outline-secondary d-flex align-items-center">
                         <i class="fas fa-times me-2"></i>Cancelar
                     </button>
                     <button type="button" wire:click="save" class="btn btn-primary d-flex align-items-center">
@@ -159,4 +197,3 @@
         </div>
     </div>
 </div>
-

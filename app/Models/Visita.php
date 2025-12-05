@@ -19,6 +19,8 @@ class Visita extends Model
         'color',
         'estado',
         'solucion',
+        'observacion',
+        'titulo'
     ];
 
     // En Visita.php

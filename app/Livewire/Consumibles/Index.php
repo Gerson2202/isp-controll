@@ -201,6 +201,7 @@ class Index extends Component
         ], [
             'consumible_id.required' => 'Seleccione un consumible',
             'cantidad.required' => 'Ingrese la cantidad',
+            'cantidad.min'           => 'La cantidad debe ser mayor o igual a 1',
             'ubicacion_tipo.required' => 'Seleccione el tipo de ubicación',
             'ubicacion_id.required' => 'Seleccione la ubicación'
         ]);

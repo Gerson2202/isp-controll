@@ -109,6 +109,7 @@ class RegistrarPago extends Component
                                 'fecha_cierre' => now(),
                                 'cliente_id' => $cliente->id,
                                 'solucion' => 'Estado actualizado tras pago de factura',
+                                'user_id' => auth()->id() 
                             ]);
 
                             $nodo = $contrato->plan->nodo;

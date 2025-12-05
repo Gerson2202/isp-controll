@@ -94,4 +94,10 @@ class User extends Authenticatable
             ->withPivot(['fecha_inicio', 'fecha_cierre'])
             ->withTimestamps();
     }
+
+    // relacion con bodegas
+    public function bodegas()
+    {
+        return $this->belongsToMany(Bodega::class);
+    }
 }

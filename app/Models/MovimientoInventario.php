@@ -15,14 +15,21 @@ class MovimientoInventario extends Model
         'inventario_id',
         'tipo_movimiento',
         'descripcion',
+
+        // Ubicación anterior
         'bodega_anterior_id',
         'user_anterior_id',
         'nodo_anterior_id',
         'cliente_anterior_id',
+        'visita_anterior_id',
+
+        // Ubicación nueva
         'bodega_nueva_id',
         'user_nuevo_id',
         'nodo_nuevo_id',
         'cliente_nuevo_id',
+        'visita_nuevo_id',
+
         'user_id'
     ];
 
@@ -92,6 +99,8 @@ class MovimientoInventario extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
     // --- ORIGEN ---
-    public function visitaNueva()      { return $this->belongsTo(Visita::class, 'visita_nuevo_id'); }
-
+    public function visitaNueva()
+    {
+        return $this->belongsTo(Visita::class, 'visita_nuevo_id');
+    }
 }

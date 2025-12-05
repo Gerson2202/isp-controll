@@ -2,22 +2,56 @@
 @section('title', 'Cola de programación') <!-- Corregí "Dasboard" a "Dashboard" -->
 
 @section('content_header')
-   <h1 class="ml-3">Cola de programación</h1>
-   @livewireStyles
-    <!-- Agrega los estilos de Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-  
-
-
+<h1 class="ml-3">
+    <i class="fas fa-clock text-info"></i> Cola de programación
+</h1>
 @stop
 
 @section('content')
     <div class="container-fluid">
         <div class="card">
-            <div class="card-header">
-                <h5>Visitas en Cola de Programación</h5> 
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Visitas en Cola de Programación</h5>
+                <!-- Botón Agregar Visita -->
+                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#agregarVisitaModal">
+                    <i class="fas fa-plus"></i> Agregar Visita
+                </button>
             </div>
             <div class="card-body">
+                <!-- Modal para agregar visita -->
+                <div class="modal fade" id="agregarVisitaModal" tabindex="-1" aria-labelledby="agregarVisitaModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form action="{{ route('visitas.store') }}" method="POST">
+                                @csrf
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="agregarVisitaModalLabel">Agregar Nueva Visita</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label for="titulo" class="form-label">Título *</label>
+                                        <input type="text" class="form-control" id="titulo" name="titulo" required
+                                            placeholder="Ingrese el título de la visita">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="descripcion" class="form-label">Descripción *</label>
+                                        <textarea class="form-control" id="descripcion" name="descripcion" rows="3" required
+                                            placeholder="Describa los detalles de la visita"></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-primary">Guardar Visita</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
                 <!-- Contenedor scrollable y responsivo -->
                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                     <table class="table table-bordered table-hover table-striped">
@@ -37,8 +71,9 @@
                                     <td>{{ $visita->descripcion }}</td>
                                     <td>{{ $visita->ticket ? $visita->ticket->id : 'Sin ticket' }}</td>
                                     <td>
-                                        @if($visita->ticket && $visita->ticket->cliente)
-                                            <a href="{{ route('clientes.show', $visita->ticket->cliente->id) }}" target="_blank" class="btn btn-outline-info btn-sm">
+                                        @if ($visita->ticket && $visita->ticket->cliente)
+                                            <a href="{{ route('clientes.show', $visita->ticket->cliente->id) }}"
+                                                target="_blank" class="btn btn-outline-info btn-sm">
                                                 {{ $visita->ticket->cliente->nombre }}
                                             </a>
                                         @else
@@ -46,7 +81,8 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <a href="{{ route('visitas.edit', $visita->id) }}" class="btn btn-primary btn-sm">Agendar</a> 
+                                        <a href="{{ route('visitas.edit', $visita->id) }}"
+                                            class="btn btn-info btn-sm">Agendar o actualizar</a>
                                     </td>
                                 </tr>
                             @empty
@@ -59,88 +95,13 @@
                 </div>
             </div>
 
-        </div> 
+        </div>
     </div>
 
 @stop
 
-{{-- Footer section --}}
-@section('footer')
-    <footer class="main-footer text-xs py-1" style="line-height: 1.2;">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <!-- Logo y texto -->
-                <div class="col-8 col-sm-6">
-                    <div class="d-flex align-items-center">
-                        <img src="{{ asset('img/logo.png') }}" alt="Isprotik Logo" style="height: 18px; margin-right: 8px;">
-                        <div>
-                            <strong class="text-sm">© {{ date('Y') }} <a href="{{ route('dashboard') }}" class="text-primary" style="text-decoration: none;">Isprotik</a></strong>
-                            <span class="text-muted d-none d-md-inline" style="font-size: 0.75rem;"> | Gestión para ISPs</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Versión y soporte -->
-                <div class="col-4 col-sm-6 text-right">
-                    <span class="d-none d-sm-inline text-muted mr-2" style="font-size: 0.75rem;"><strong>v1.0</strong></span>
-                    <a href="https://wa.me/573215852059" target="_blank" class="text-muted" style="font-size: 0.75rem; text-decoration: none;">
-                        <i class="fas fa-headset"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </footer>
 
-    <style>
-        .main-footer {
-            background: #f4f6f9;
-            border-top: 1px solid #dee2e6;
-            padding: 4px 0 !important;
-        }
-        .main-footer a:hover {
-            color: var(--primary) !important;
-        }
-        .main-footer img {
-            opacity: 0.8;
-            transition: opacity 0.3s;
-        }
-        .main-footer img:hover {
-            opacity: 1;
-        }
-    </style>
+{{-- include footer y logo  --}}
+@include('partials.global-footer')
 
-    <style>
-        .main-footer {
-            background: #f4f6f9;
-            padding: 1rem;
-            border-top: 1px solid #dee2e6;
-        }
-        .main-footer a:hover {
-            color: var(--primary) !important;
-            text-decoration: none;
-        }
-    </style>
-@stop
-@section('css')
-    <!-- Puedes agregar estilos personalizados aquí si es necesario -->
-@stop
-
-@section('js')
-    @livewireScripts  <!-- Livewire debe cargarse antes que cualquier otro script -->
-    <!-- Agregar los scripts de Bootstrap -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Agregar SweetAlert2 desde CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- Logo en sidebar-->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var logoItem = document.querySelector('li#sidebar-logo-item');
-            if (logoItem) {
-                logoItem.innerHTML = '<img src="{{ asset('img/logo.png') }}" style="max-width:120px;max-height:90px; margin-left:70px;" alt="Logo" />';
-            }
-        });
-    </script>
-
-    @stack('scripts')
-@stop
 

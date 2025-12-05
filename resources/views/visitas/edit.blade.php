@@ -16,11 +16,16 @@
         <div class="card">
             <div class="card-header">
                 <h5>
-                    Editar visita a
-                    <a href="{{ route('clientes.show', $visita->ticket->cliente->id) }}"
-                        class="text-blue font-bold hover:underline" target="_blank">
-                        {{ $visita->ticket->cliente->nombre }}
-                    </a>
+                    Editar visita
+                    @if ($visita->ticket && $visita->ticket->cliente)
+                        a
+                        <a href="{{ route('clientes.show', $visita->ticket->cliente->id) }}"
+                            class="text-blue font-bold hover:underline" target="_blank">
+                            {{ $visita->ticket->cliente->nombre }}
+                        </a>
+                    @else
+                        (Sin cliente asociado)
+                    @endif
                 </h5>
                 @if (session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -39,7 +44,7 @@
                     <div class="form-group">
                         <label for="fecha_inicio">Fecha de Inicio</label>
                         <input type="datetime-local" id="fecha_inicio" name="fecha_inicio"
-                            value="{{ old('fecha_inicio', $visita->fecha_inicio) }}" class="form-control" >
+                            value="{{ old('fecha_inicio', $visita->fecha_inicio) }}" class="form-control">
                     </div>
                     @if ($errors->any())
                         <div class="alert alert-danger">
@@ -54,7 +59,7 @@
                     <div class="form-group">
                         <label for="fecha_cierre">Fecha de Cierre</label>
                         <input type="datetime-local" id="fecha_cierre" name="fecha_cierre"
-                            value="{{ old('fecha_cierre', $visita->fecha_cierre) }}" class="form-control" >
+                            value="{{ old('fecha_cierre', $visita->fecha_cierre) }}" class="form-control">
                     </div>
                     @if ($errors->any())
                         <div class="alert alert-danger">
@@ -118,14 +123,14 @@
 
             </div>
         </div>
-        <div class="card">
+        {{-- <div class="card">
             <div class="card-header">
                 <h5>Agregar fotos a la visita</h5>
             </div>
             <div class="card-body">
                 @livewire('visitas.editar-visita', ['visita' => $visita])
             </div>
-        </div>
+        </div> --}}
     </div>
 @stop
 

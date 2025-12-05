@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Livewire\Inventario;
+
 use Livewire\Component;
 use App\Models\User;
 use App\Models\Cliente;
@@ -22,7 +23,7 @@ class MovimientoConsumibles extends Component
     public $destino_id;
     public $consumible_id;
     public $cantidad;
-    
+
     // Propiedades para listas y búsqueda
     public $origenes = [];
     public $destinos = [];
@@ -46,7 +47,7 @@ class MovimientoConsumibles extends Component
         $this->origen_id = null;
         $this->searchClienteOrigen = '';
         $this->mostrarResultadosClienteOrigen = false;
-        
+
         if ($this->origen_tipo !== 'cliente') {
             $this->origenes = $this->getOpciones($this->origen_tipo);
         }
@@ -60,7 +61,7 @@ class MovimientoConsumibles extends Component
         $this->destino_id = null;
         $this->searchClienteDestino = '';
         $this->mostrarResultadosClienteDestino = false;
-        
+
         if ($this->destino_tipo !== 'cliente') {
             $this->destinos = $this->getOpciones($this->destino_tipo);
         }
@@ -73,7 +74,7 @@ class MovimientoConsumibles extends Component
     {
         $this->mostrarResultadosClienteOrigen = !empty($this->searchClienteOrigen);
         $this->origen_id = null;
-        
+
         if ($this->searchClienteOrigen) {
             $this->clientesOrigen = Cliente::where('nombre', 'like', "%{$this->searchClienteOrigen}%")
                 ->orWhere('id', 'like', "%{$this->searchClienteOrigen}%")
@@ -92,7 +93,7 @@ class MovimientoConsumibles extends Component
     {
         $this->mostrarResultadosClienteDestino = !empty($this->searchClienteDestino);
         $this->destino_id = null;
-        
+
         if ($this->searchClienteDestino) {
             $this->clientesDestino = Cliente::where('nombre', 'like', "%{$this->searchClienteDestino}%")
                 ->orWhere('id', 'like', "%{$this->searchClienteDestino}%")
@@ -128,7 +129,7 @@ class MovimientoConsumibles extends Component
     public function realizarMovimiento()
     {
         $this->validate();
-        
+
         // Usar transacción para asegurar la consistencia de datos
         DB::transaction(function () {
             $this->procesarMovimiento();
@@ -144,14 +145,22 @@ class MovimientoConsumibles extends Component
     protected function rules()
     {
         return [
-            'consumible_id' => 'required|exists:consumibles,id',
-            'cantidad' => 'required|integer|min:1',
-            'origen_tipo' => 'required|in:' . implode(',', $this->tiposPermitidos),
+            'consumible_id' => 'required',
+            'cantidad' => 'required|numeric|min:1',
+            'origen_tipo' => 'required',
             'origen_id' => 'required',
-            'destino_tipo' => 'required|in:' . implode(',', $this->tiposPermitidos),
-            'destino_id' => 'required|different:origen_id',
+            'destino_tipo' => 'required',
+            'destino_id' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    if ($this->destino_tipo === $this->origen_tipo && $this->destino_id === $this->origen_id) {
+                        $fail('El destino debe ser diferente al origen.');
+                    }
+                },
+            ],
         ];
     }
+
 
     /**
      * Mensajes de validación personalizados
@@ -165,7 +174,6 @@ class MovimientoConsumibles extends Component
             'origen_id.required' => 'Seleccione el origen',
             'destino_tipo.required' => 'Seleccione el tipo de destino',
             'destino_id.required' => 'Seleccione el destino',
-            'destino_id.different' => 'El destino debe ser diferente al origen',
         ];
     }
 
@@ -175,12 +183,12 @@ class MovimientoConsumibles extends Component
     protected function procesarMovimiento()
     {
         $this->validarStockDisponible();
-        
+
         // Actualizar stock del origen
         $stockOrigen = ConsumibleStock::where('consumible_id', $this->consumible_id)
             ->where($this->origen_tipo . '_id', $this->origen_id)
             ->firstOrFail();
-            
+
         $stockOrigen->decrement('cantidad', $this->cantidad);
 
         // Actualizar o crear stock del destino
@@ -191,7 +199,7 @@ class MovimientoConsumibles extends Component
             ],
             ['cantidad' => 0]
         );
-        
+
         $stockDestino->increment('cantidad', $this->cantidad);
 
         // Registrar el movimiento
@@ -286,11 +294,11 @@ class MovimientoConsumibles extends Component
      */
     protected function mostrarMensajeExito()
     {
-        $this->dispatch('notify', 
+        $this->dispatch(
+            'notify',
             type: 'success',
             message: '¡Moviemiento realizado con exito!'
         );
-        
     }
 
     /**
@@ -299,11 +307,17 @@ class MovimientoConsumibles extends Component
     protected function resetForm()
     {
         $this->reset([
-            'consumible_id', 'cantidad', 'origen_tipo', 'origen_id',
-            'destino_tipo', 'destino_id', 'searchConsumible',
-            'searchClienteOrigen', 'searchClienteDestino'
+            'consumible_id',
+            'cantidad',
+            'origen_tipo',
+            'origen_id',
+            'destino_tipo',
+            'destino_id',
+            'searchConsumible',
+            'searchClienteOrigen',
+            'searchClienteDestino'
         ]);
-        
+
         $this->origenes = [];
         $this->destinos = [];
         $this->clientesOrigen = [];
@@ -336,5 +350,4 @@ class MovimientoConsumibles extends Component
             ->take(10)
             ->get();
     }
-   
 }

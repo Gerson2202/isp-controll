@@ -4,22 +4,23 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Models\Modelo; // Asegúrate de que el modelo Modelo esté creado
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\File; // Importa la clase File de Laravel correctamente
+use App\Models\Modelo;
+use Illuminate\Support\Facades\File;
+use Livewire\WithPagination;
 
 class ModeloCrud extends Component
 {
-    use WithFileUploads; // Permite la carga de archivos
+    use WithFileUploads, WithPagination;
 
-    public $modelos, $nombre, $foto, $modelo_id;
+    public $nombre, $foto, $modelo_id;
     public $isEdit = false;
+    public $search = '';
+    public $uploading = false;
 
-    
     // Validación de campos
     protected $rules = [
         'nombre' => 'required|string|max:255',
-        'foto' => 'nullable|image|max:1024', // Foto es opcional pero si se carga, debe ser imagen
+        'foto' => 'nullable|image|max:1024',
     ];
 
     // Guardar o actualizar el modelo
@@ -32,9 +33,9 @@ class ModeloCrud extends Component
             $modelo = Modelo::find($this->modelo_id);
             $modelo->update([
                 'nombre' => $this->nombre,
-                'foto' => $this->saveFoto(),
+                'foto' => $this->saveFoto($modelo->foto),
             ]);
-             $this->dispatch('notify', 
+            $this->dispatch('notify', 
                 type: 'success',
                 message: 'Modelo actualizado exitosamente'
             );
@@ -44,13 +45,13 @@ class ModeloCrud extends Component
                 'nombre' => $this->nombre,
                 'foto' => $this->saveFoto(),
             ]);
-             $this->dispatch('notify', 
+            $this->dispatch('notify', 
                 type: 'success',
                 message: 'Modelo creado exitosamente'
             );
         }
 
-        $this->resetInputFields(); // Limpiar los campos después de guardar
+        $this->resetInputFields();
     }
 
     // Eliminar un modelo
@@ -62,20 +63,24 @@ class ModeloCrud extends Component
         }
         $modelo->delete();
 
-         $this->dispatch('notify', 
-                type: 'error',
-                message: 'Modelo creado exitosamente'
-            );
+        $this->dispatch('notify', 
+            type: 'error',
+            message: 'Modelo eliminado exitosamente'
+        );
     }
 
     // Para cargar la imagen y obtener el path
-    private function saveFoto()
+    private function saveFoto($currentFoto = null)
     {
         if ($this->foto) {
-            return $this->foto->store('modelos', 'public'); // Guarda en la carpeta 'modelos'
+            // Eliminar foto anterior si existe
+            if ($currentFoto && File::exists(storage_path('app/public/' . $currentFoto))) {
+                File::delete(storage_path('app/public/' . $currentFoto));
+            }
+            return $this->foto->store('modelos', 'public');
         }
 
-        return null;
+        return $currentFoto;
     }
 
     // Rellenar los campos cuando se edita
@@ -84,7 +89,7 @@ class ModeloCrud extends Component
         $modelo = Modelo::find($id);
         $this->modelo_id = $modelo->id;
         $this->nombre = $modelo->nombre;
-        $this->foto = null; // Reseteamos la foto ya que no la necesitamos en la edición
+        $this->foto = null;
         $this->isEdit = true;
     }
 
@@ -95,12 +100,25 @@ class ModeloCrud extends Component
         $this->foto = null;
         $this->modelo_id = null;
         $this->isEdit = false;
+        $this->uploading = false;
+    }
+
+    // Resetear búsqueda
+    public function updatingSearch()
+    {
+        $this->resetPage();
     }
 
     public function render()
     {
-        // Obtenemos todos los modelos
-        $this->modelos = Modelo::all();
-        return view('livewire.modelo-crud');
+        $query = Modelo::query();
+
+        if ($this->search) {
+            $query->where('nombre', 'like', '%' . $this->search . '%');
+        }
+
+        $modelos = $query->orderBy('nombre')->paginate(10);
+
+        return view('livewire.modelo-crud', compact('modelos'));
     }
 }

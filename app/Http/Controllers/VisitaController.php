@@ -175,9 +175,16 @@ class VisitaController extends Controller
 
 
         // Actualizamos los campos de la visita
+        // Determinar el estado basado en si hay solución
+        $estado = $request->estado;
+        if ($request->solucion) {
+            $estado = 'Completada';
+        }
+
+        // Actualizamos los campos de la visita
         $visita->update([
             'descripcion' => $request->descripcion,
-            'estado' => $request->estado,
+            'estado' => $estado,
             'solucion' => $request->solucion,
         ]);
 
@@ -225,9 +232,21 @@ class VisitaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // En VisitaController
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'titulo' => 'required|string|max:255',
+            'descripcion' => 'required|string'
+        ]);
+
+        Visita::create([
+            'titulo' => $request->titulo,
+            'descripcion' => $request->descripcion,
+            'estado' => 'Pendiente'
+        ]);
+
+        return redirect()->back()->with('success', 'Visita creada exitosamente.');
     }
 
     /**

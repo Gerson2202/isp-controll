@@ -77,7 +77,7 @@
                                         <i class="bi bi-ticket-perforated me-2"></i>Información del Ticket
                                     </div>
                                     <div class="card-body">
-                                        <p><strong>ID del Ticket:</strong> {{ $visitaSeleccionada->ticket->id }}</p>
+                                        <p><strong>ID del Ticket:</strong> {{ $visitaSeleccionada->ticket->id ?? 'Sin ticket' }}</p>
                                         <p><strong>Tipo de Reporte:</strong>
                                             {{ $visitaSeleccionada->ticket->tipo_reporte ?? 'N/A' }}</p>
                                         <p><strong>Situación:</strong>
@@ -166,12 +166,16 @@
                                         <i class="bi bi-info-circle me-2"></i>Detalles de la Visita
                                     </div>
                                     <div class="card-body">
+                                        <p><strong>Titulo:</strong></p>
+                                        <div class="p-2 border rounded bg-white mb-3">
+                                            {{ $visitaSeleccionada->titulo ?? 'Sin titulo' }}
+                                        </div>
                                         <p><strong>Descripción del Problema:</strong></p>
                                         <div class="p-2 border rounded bg-white mb-3">
                                             {{ $visitaSeleccionada->descripcion ?? 'Sin descripción' }}
                                         </div>
 
-                                        <p><strong>Solución (si existe):</strong></p>
+                                        <p><strong>Solución:</strong></p>
                                         <div class="p-2 border rounded bg-white">
                                             {{ $visitaSeleccionada->solucion ?? 'Sin solución registrada aún' }}
                                         </div>

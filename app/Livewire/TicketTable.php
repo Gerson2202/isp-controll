@@ -4,16 +4,36 @@ namespace App\Livewire;
 
 use App\Models\Ticket;
 use Livewire\Component;
-use Livewire\Attributes\Rule;
 use Livewire\WithPagination;
 
 class TicketTable extends Component
 {
     use WithPagination;
+    
     public $search = '';
     public $perPage = 10;
+    public $sortField = 'created_at';
+    public $sortDirection = 'desc';
 
-  
+    public function sortBy($field)
+    {
+        if ($this->sortField === $field) {
+            $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            $this->sortField = $field;
+            $this->sortDirection = 'asc';
+        }
+    }
+
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPerPage()
+    {
+        $this->resetPage();
+    }
 
     public function render()
     {
@@ -27,6 +47,7 @@ class TicketTable extends Component
                       });
                 });
             })
+            ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
             
         return view('livewire.ticket-table', compact('tickets'));

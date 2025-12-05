@@ -1,16 +1,12 @@
 <?php
-
 namespace App\Livewire\Bodega;
 
 use App\Models\Bodega;
-use App\Models\Cliente;
-use App\Models\Nodo;
 use App\Models\User;
-use GuzzleHttp\Client;
 use Livewire\Component;
+
 class BodegasCrud extends Component
 {
-     
     public $bodegas;
     public $bodega_id;
     public $nombre;
@@ -19,9 +15,14 @@ class BodegasCrud extends Component
     public $descripcion;
     public $modal = false;
 
+    // 🔹 NUEVO: usuarios disponibles y seleccionados
+    public $usuariosDisponibles = [];
+    public $usuariosSeleccionados = [];
+
     public function render()
     {
-        $this->bodegas = Bodega::all();
+        $this->bodegas = Bodega::with('users')->get(); // incluye usuarios
+        $this->usuariosDisponibles = User::orderBy('name')->get();
         return view('livewire.bodega.bodegas-crud');
     }
 
@@ -43,26 +44,17 @@ class BodegasCrud extends Component
         $this->tipo = 'lugar';
         $this->ubicacion = '';
         $this->descripcion = '';
+        $this->usuariosSeleccionados = [];
     }
 
     public function save()
     {
-            $this->validate(
-                [
-                    'nombre' => 'required|string|max:255',
-                    'tipo'   => 'required',
-                ],
-                [
-                    'nombre.required' => 'El nombre de la bodega es obligatorio.',
-                    'nombre.string'   => 'El nombre debe ser un texto válido.',
-                    'nombre.max'      => 'El nombre no puede tener más de 255 caracteres.',
-                    'tipo.required'   => 'Debe seleccionar un tipo de bodega.',
-                    // Si quieres, puedes agregar más reglas y mensajes aquí
-                ]
-            );
+        $this->validate([
+            'nombre' => 'required|string|max:255',
+            'tipo'   => 'required',
+        ]);
 
-
-        Bodega::updateOrCreate(
+        $bodega = Bodega::updateOrCreate(
             ['id' => $this->bodega_id],
             [
                 'nombre' => $this->nombre,
@@ -72,33 +64,30 @@ class BodegasCrud extends Component
             ]
         );
 
+        // 🔹 Guardar relación usuarios - bodegas
+        $bodega->users()->sync($this->usuariosSeleccionados);
+
         $this->dispatch('hide-modals');
-            $this->dispatch('notify', 
-            type: 'success',
-            message: '¡Guardado con exito!'
-        ); 
+        $this->dispatch('notify', type: 'success', message: '¡Guardado con éxito!');
 
         $this->closeModal();
     }
 
     public function edit($id)
     {
-        $bodega = Bodega::findOrFail($id);
+        $bodega = Bodega::with('users')->findOrFail($id);
         $this->bodega_id = $bodega->id;
         $this->nombre = $bodega->nombre;
         $this->tipo = $bodega->tipo;
         $this->ubicacion = $bodega->ubicacion;
         $this->descripcion = $bodega->descripcion;
+        $this->usuariosSeleccionados = $bodega->users->pluck('id')->toArray();
         $this->modal = true;
     }
 
     public function delete($id)
     {
         Bodega::find($id)?->delete();
-        $this->dispatch('hide-modals');
-            $this->dispatch('notify', 
-            type: 'success',
-            message: 'Eliminado con exito!'
-        );
+        $this->dispatch('notify', type: 'success', message: 'Eliminado con éxito!');
     }
 }

@@ -4,7 +4,6 @@ namespace App\Livewire\Tecnico\Visitas;
 
 use Livewire\Component;
 use App\Models\Visita;
-use App\Models\Consumible;
 use App\Models\ConsumibleStock;
 use App\Models\ConsumibleMovimiento;
 use App\Models\Inventario;
@@ -17,26 +16,34 @@ class CerrarVisita extends Component
 {
     use WithFileUploads;
 
-    public $visita;
-    public $solucion;
-    public $fotos = [];
+    public $visita, $solucion, $fotos = [];
 
-    public $consumibles; // stock disponible
-    public $inventarios; // inventarios disponibles
+    // Recursos disponibles
+    public $consumibles;
+    public $inventarios;
+    public $bodegas = [];
+    public $buscar = '';
 
-    // Campos de selección actual
+
+    // Selecciones actuales
     public $consumibleSeleccionado;
     public $cantidadConsumible;
+    public $origenSeleccionado; // "usuario" o ID de bodega
     public $inventarioSeleccionado;
 
-    // Listas finales
+    // Listas de acción
     public $consumiblesUsados = [];
     public $inventariosUsados = [];
+    public $inventariosCliente = [];
+    public $inventarioClienteSeleccionado;
+    public $inventariosRetirados = [];
+    public $destinoRetiro = [];
+    public $filtroInventario = '';
 
     protected $rules = [
         'solucion' => 'required|string',
-        'fotos' => 'required|array|min:1|max:5', // mínimo 1, máximo 5
-        'fotos.*' => 'image|max:2048', // cada imagen máximo 2MB
+        'fotos' => 'required|array|min:1|max:5',
+        'fotos.*' => 'image|max:2048',
     ];
 
     protected $messages = [
@@ -48,43 +55,98 @@ class CerrarVisita extends Component
         'fotos.*.max' => 'Cada imagen no debe superar los 2 MB.',
     ];
 
-
-
     public function mount($visitaId)
     {
         $this->visita = Visita::with('ticket.cliente')->findOrFail($visitaId);
+        $user = Auth::user();
 
+        // 🔹 Bodegas del usuario
+        $this->bodegas = $user->bodegas()->select('bodegas.id', 'bodegas.nombre')->get();
+        $bodegaIds = $this->bodegas->pluck('id');
+
+        // 🔹 Consumibles disponibles
         $this->consumibles = ConsumibleStock::with('consumible')
-            ->where('usuario_id', Auth::id())
+            ->where(function ($q) use ($user, $bodegaIds) {
+                $q->where('usuario_id', $user->id)
+                    ->orWhereIn('bodega_id', $bodegaIds);
+            })
             ->where('cantidad', '>', 0)
             ->get();
 
-        $this->inventarios = Inventario::with('modelo')
-            ->where('user_id', Auth::id())
+        $this->inventarios = Inventario::with(['modelo', 'bodega'])
+            ->where(function ($q) use ($user, $bodegaIds) {
+                $q->where('user_id', $user->id)
+                    ->orWhereIn('bodega_id', $bodegaIds);
+            })
             ->whereNull('visita_id')
             ->get();
 
-        // 🔹 Evita el error count() sobre null
+
+
+        // 🔹 Inventarios actualmente en el cliente
+        $this->inventariosCliente = $this->visita->ticket && $this->visita->ticket->cliente_id
+            ? Inventario::with('modelo')->where('cliente_id', $this->visita->ticket->cliente_id)->get()
+            : collect();
+
         $this->consumiblesUsados = [];
         $this->inventariosUsados = [];
+        $this->inventariosRetirados = [];
     }
 
-
+    /** =========================
+     * AGREGAR CONSUMIBLE
+     * ========================= */
     public function agregarConsumible()
     {
-        if ($this->consumibleSeleccionado && $this->cantidadConsumible > 0) {
-            $consumible = $this->consumibles->firstWhere('consumible_id', $this->consumibleSeleccionado);
-            if ($consumible) {
-                $this->consumiblesUsados[] = [
-                    'id' => $consumible->consumible_id,
-                    'nombre' => $consumible->consumible->nombre,
-                    'cantidad' => $this->cantidadConsumible,
-                ];
-            }
-
-            $this->consumibleSeleccionado = null;
-            $this->cantidadConsumible = null;
+        if (!$this->consumibleSeleccionado || !$this->cantidadConsumible) {
+            session()->flash('error', 'Debe seleccionar un consumible y cantidad.');
+            return;
         }
+
+        $user = Auth::user();
+
+        // Buscar el stock según origen elegido
+        $stock = null;
+        if ($this->origenSeleccionado === 'usuario') {
+            $stock = ConsumibleStock::where('usuario_id', $user->id)
+                ->where('consumible_id', $this->consumibleSeleccionado)
+                ->first();
+        } elseif (is_numeric($this->origenSeleccionado)) {
+            $stock = ConsumibleStock::where('bodega_id', $this->origenSeleccionado)
+                ->where('consumible_id', $this->consumibleSeleccionado)
+                ->first();
+        } else {
+            // automático: primero busca en usuario, luego en bodegas
+            $stock = ConsumibleStock::where('usuario_id', $user->id)
+                ->where('consumible_id', $this->consumibleSeleccionado)
+                ->first();
+
+            if (!$stock || $stock->cantidad < $this->cantidadConsumible) {
+                $bodegaIds = $this->bodegas->pluck('id');
+                $stock = ConsumibleStock::whereIn('bodega_id', $bodegaIds)
+                    ->where('consumible_id', $this->consumibleSeleccionado)
+                    ->orderByDesc('cantidad')
+                    ->first();
+            }
+        }
+
+        if (!$stock || $stock->cantidad < $this->cantidadConsumible) {
+            session()->flash('error', 'No hay suficiente stock disponible en el origen seleccionado.');
+            return;
+        }
+
+        $this->consumiblesUsados[] = [
+            'id' => $stock->consumible_id,
+            'nombre' => $stock->consumible->nombre,
+            'cantidad' => $this->cantidadConsumible,
+            'origen' => $stock->usuario_id ? 'usuario' : 'bodega',
+            'bodega_id' => $stock->bodega_id,
+            'bodega_nombre' => $stock->bodega_id
+                ? $this->bodegas->firstWhere('id', $stock->bodega_id)?->nombre
+                : null,
+        ];
+
+        $this->reset(['consumibleSeleccionado', 'cantidadConsumible', 'origenSeleccionado']);
     }
 
     public function eliminarConsumible($index)
@@ -93,6 +155,9 @@ class CerrarVisita extends Component
         $this->consumiblesUsados = array_values($this->consumiblesUsados);
     }
 
+    /** =========================
+     * AGREGAR INVENTARIO
+     * ========================= */
     public function agregarInventario()
     {
         if ($this->inventarioSeleccionado) {
@@ -104,9 +169,28 @@ class CerrarVisita extends Component
                     'serial' => $inv->serial,
                 ];
             }
-
             $this->inventarioSeleccionado = null;
         }
+    }
+    //  buscador de inventario
+    // Método helper para obtener el texto del inventario (opcional, pero útil)
+    public function getInventarioText($inventario)
+    {
+        return ($inventario->modelo->nombre ?? 'Sin modelo') . ' ' .
+            ($inventario->mac ?? 'N/A') . ' ' .
+            ($inventario->serial ?? 'N/A') . ' ' .
+            ($inventario->bodega ? $inventario->bodega->nombre : 'Bodega personal');
+    }
+
+    // Método para verificar si hay resultados
+    public function tieneResultados($filtro)
+    {
+        foreach ($this->inventarios as $inv) {
+            if (stripos($this->getInventarioText($inv), $filtro) !== false) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function eliminarInventario($index)
@@ -115,19 +199,46 @@ class CerrarVisita extends Component
         $this->inventariosUsados = array_values($this->inventariosUsados);
     }
 
+    /** =========================
+     * RETIRO DE EQUIPOS CLIENTE
+     * ========================= */
+    public function agregarRetiro()
+    {
+        if ($this->inventarioClienteSeleccionado) {
+            $inv = $this->inventariosCliente->firstWhere('id', $this->inventarioClienteSeleccionado);
+            if ($inv) {
+                $this->inventariosRetirados[] = [
+                    'id' => $inv->id,
+                    'nombre' => $inv->modelo->nombre ?? 'Sin modelo',
+                    'serial' => $inv->serial,
+                    'mac' => $inv->mac,
+                ];
+                $this->destinoRetiro[$inv->id] = ['tipo' => null, 'id' => null];
+            }
+            $this->inventarioClienteSeleccionado = null;
+        }
+    }
+
+    public function eliminarRetiro($index)
+    {
+        $item = $this->inventariosRetirados[$index] ?? null;
+        if ($item && isset($item['id'])) {
+            unset($this->destinoRetiro[$item['id']]);
+        }
+        unset($this->inventariosRetirados[$index]);
+        $this->inventariosRetirados = array_values($this->inventariosRetirados);
+    }
+
+    /** =========================
+     * CERRAR VISITA
+     * ========================= */
     public function cerrarVisita()
     {
         $this->validate();
 
         try {
             DB::transaction(function () {
-                // 1️⃣ Actualizar visita
-                $this->visita->update([
-                    'solucion' => $this->solucion,
-                    'estado' => 'Completada',
-                ]);
-
-                // 2️⃣ Guardar fotos
+                // Guardar fotos
                 foreach ($this->fotos as $foto) {
                     $path = $foto->store('visitas/' . $this->visita->id, 'public');
                     $this->visita->fotos()->create([
@@ -136,120 +247,182 @@ class CerrarVisita extends Component
                     ]);
                 }
 
-                // 3️⃣ Consumibles usados (agrupados por ID)
-                $consumiblesAgrupados = [];
-
+                // 🔹 Procesar consumibles usados (origen -> cliente/visita)
                 foreach ($this->consumiblesUsados as $item) {
-                    if (!isset($consumiblesAgrupados[$item['id']])) {
-                        $consumiblesAgrupados[$item['id']] = $item;
-                    } else {
-                        // Si ya existe, sumamos la cantidad
-                        $consumiblesAgrupados[$item['id']]['cantidad'] += $item['cantidad'];
-                    }
-                }
-
-                // 🔹 Ahora procesamos solo uno por consumible
-                foreach ($consumiblesAgrupados as $item) {
-                    $stock = ConsumibleStock::where('usuario_id', Auth::id())
+                    // Obtener stock origen (usuario o bodega)
+                    $stock = $item['origen'] === 'usuario'
+                        ? ConsumibleStock::where('usuario_id', Auth::id())
+                        ->where('consumible_id', $item['id'])
+                        ->first()
+                        : ConsumibleStock::where('bodega_id', $item['bodega_id'])
                         ->where('consumible_id', $item['id'])
                         ->first();
 
-                    // Validar existencia de stock
                     if (!$stock) {
-                        throw new \Exception("No tienes stock del consumible seleccionado ({$item['nombre']}).");
+                        throw new \Exception("No se encontró el stock origen para {$item['nombre']}.");
                     }
 
-                    // Validar cantidad disponible
-                    if ($item['cantidad'] > $stock->cantidad) {
-                        throw new \Exception("La cantidad solicitada ({$item['cantidad']}) supera el stock disponible ({$stock->cantidad}) del consumible {$item['nombre']}.");
+                    if ($stock->cantidad < $item['cantidad']) {
+                        throw new \Exception("Stock insuficiente para {$item['nombre']} (disponible: {$stock->cantidad}).");
                     }
 
-                    // Descontar cantidad al técnico
-                    $stock->cantidad -= $item['cantidad'];
-                    $stock->save();
+                    // Descontar cantidad del origen
+                    $stock->decrement('cantidad', $item['cantidad']);
 
-                    // Registrar movimiento (una sola vez por consumible)
+                    // (Opcional) eliminar si queda en 0
+                    // if ($stock->cantidad <= 0) $stock->delete();
+
+                    // Definir destino (cliente o visita)
+                    $clienteId = $this->visita->ticket->cliente_id ?? null;
+                    $descripcion = 'Uso en visita #' . $this->visita->id;
+                    if ($clienteId) $descripcion .= ' (Cliente asociado al ticket)';
+
+                    // Registrar movimiento (trazabilidad)
                     ConsumibleMovimiento::create([
                         'consumible_id'   => $item['id'],
                         'cantidad'        => $item['cantidad'],
                         'tipo_movimiento' => 'salida',
-                        'origen_tipo'     => 'usuario',
-                        'origen_id'       => Auth::id(),
-                        'destino_tipo'    => 'visita',
-                        'destino_id'      => $this->visita->id,
-                        'descripcion'     => 'Uso en visita #' . $this->visita->id,
+                        'origen_tipo'     => $item['origen'],
+                        'origen_id'       => $item['origen'] === 'usuario' ? Auth::id() : $item['bodega_id'],
+                        'destino_tipo'    => $clienteId ? 'cliente' : 'visita',
+                        'destino_id'      => $clienteId ?? $this->visita->id,
+                        'descripcion'     => $descripcion,
                         'user_id'         => Auth::id(),
                     ]);
 
-                    // Registrar o actualizar el stock en la visita
-                    $stockVisita = ConsumibleStock::firstOrNew([
-                        'visita_id'      => $this->visita->id,
-                        'consumible_id'  => $item['id'],
+                    // Crear nuevo registro de stock en destino (cliente o visita)
+                    $nuevoStock = new ConsumibleStock();
+                    $nuevoStock->consumible_id = $item['id'];
+                    $nuevoStock->cantidad      = $item['cantidad'];
+                    $nuevoStock->bodega_id     = null;              // ❌ No se asigna a ninguna bodega
+                    $nuevoStock->usuario_id    = null;              // ❌ No pertenece a un usuario
+                    $nuevoStock->cliente_id    = $clienteId;        // ✅ Cliente si hay ticket
+                    $nuevoStock->visita_id     = $clienteId ? null : $this->visita->id; // ✅ Si no hay cliente, asignar a visita
+                    $nuevoStock->nodo_id       = $this->visita->ticket->nodo_id ?? null;
+                    $nuevoStock->save();
+                }
+
+                // 🔹 Inventarios instalados (traslado hacia cliente)
+                foreach ($this->inventariosUsados as $item) {
+                    $inventario = Inventario::find($item['id']);
+                    if (!$inventario) continue;
+
+                    // 🔹 Determinar si la visita tiene ticket
+                    $tieneTicket = !empty($this->visita->ticket_id) && !empty($this->visita->ticket);
+                    $clienteId = $tieneTicket ? ($this->visita->ticket->cliente_id ?? null) : null;
+
+                    // 🔹 Definir destino según si tiene ticket o no
+                    if ($tieneTicket) {
+                        // CON TICKET: Equipo va al CLIENTE
+                        $clienteNuevoId = $clienteId;
+                        $visitaNuevoId = null;
+                        $bodegaNuevaId = null;
+                        $userNuevoId = null;
+                        $descripcion = 'Traslado al cliente #' . $clienteId . ' desde visita #' . $this->visita->id;
+                    } else {
+                        // SIN TICKET: Equipo queda en la VISITA
+                        $clienteNuevoId = null;
+                        $visitaNuevoId = $this->visita->id;
+                        $bodegaNuevaId = null;
+                        $userNuevoId = null;
+                        $descripcion = 'Traslado a visita #' . $this->visita->id . ' (sin ticket asignado)';
+                    }
+
+                    // 🔹 Registrar movimiento completo
+                    MovimientoInventario::create([
+                        'inventario_id'       => $inventario->id,
+                        'tipo_movimiento'     => 'salida',
+                        'descripcion'         => $descripcion,
+
+                        // 🔹 Campos de ubicación ANTERIOR (donde estaba)
+                        'bodega_anterior_id'  => $inventario->bodega_id,
+                        'user_anterior_id'    => $inventario->user_id,
+                        'cliente_anterior_id' => $inventario->cliente_id,
+                        'nodo_anterior_id'    => $inventario->nodo_id,
+                        'visita_anterior_id'  => $inventario->visita_id,
+
+                        // 🔹 Campos de ubicación NUEVA (a dónde va)
+                        'bodega_nueva_id'     => $bodegaNuevaId,
+                        'user_nuevo_id'       => $userNuevoId,
+                        'cliente_nuevo_id'    => $clienteNuevoId,  // ✅ Cliente si tiene ticket
+                        'nodo_nuevo_id'       => $inventario->nodo_id, // Mantiene el mismo nodo
+                        'visita_nuevo_id'     => $visitaNuevoId,   // ✅ Visita si NO tiene ticket
+                        'user_id'             => Auth::id(),
                     ]);
 
-                    // Si ya existía, sumamos
-                    $stockVisita->cantidad = ($stockVisita->cantidad ?? 0) + $item['cantidad'];
+                    // 🔹 Actualizar el inventario principal
+                    $inventario->update([
+                        'cliente_id' => $clienteNuevoId,
+                        'user_id'    => $userNuevoId,
+                        'bodega_id'  => $bodegaNuevaId,
+                        'visita_id'  => $visitaNuevoId,
+                    ]);
 
-                    // Copiar contexto del stock original
-                    $stockVisita->bodega_id  = $stock->bodega_id;
-                    $stockVisita->cliente_id = $this->visita->ticket->cliente_id ?? null;
-                    $stockVisita->nodo_id    = $this->visita->ticket->nodo_id ?? null;
-                    $stockVisita->usuario_id = null;
-
-                    $stockVisita->save();
+                    
                 }
 
-
-                // 4️⃣ Inventarios usados
-                foreach ($this->inventariosUsados as $item) {
-                    // Asegurar que existe el ID
-                    if (!isset($item['id'])) continue;
-
+                // 🔹 Retiro de equipos
+                foreach ($this->inventariosRetirados as $item) {
                     $inventario = Inventario::find($item['id']);
-                    if ($inventario) {
+                    if (!$inventario) continue;
 
-                        // 🔹 Si la visita tiene ticket → el inventario va al cliente
-                        if ($this->visita->ticket) {
-                            $clienteId = $this->visita->ticket->cliente_id;
+                    $dest = $this->destinoRetiro[$inventario->id] ?? null;
+                    if ($dest && $dest['tipo'] === 'usuario' && empty($dest['id'])) {
+                        $dest['id'] = Auth::id();
+                    }
 
-                            // Registrar movimiento → destino: cliente
-                            MovimientoInventario::create([
-                                'inventario_id'     => $inventario->id,
-                                'tipo_movimiento'   => 'salida',
-                                'descripcion'       => 'Traslado al cliente #' . $clienteId . ' desde visita #' . $this->visita->id,
-                                'user_anterior_id'  => $inventario->user_id,
-                                'cliente_nuevo_id'  => $clienteId,
-                                'user_id'           => Auth::id(),
-                            ]);
+                    if (!$dest || empty($dest['tipo']) || empty($dest['id'])) {
+                        throw new \Exception("Debes seleccionar el destino (usuario o bodega) para el equipo {$inventario->modelo->nombre}.");
+                    }
 
-                            // Actualizar inventario → asignarlo al cliente
-                            $inventario->update([
-                                'cliente_id' => $clienteId,
-                                'user_id'    => null,          // liberar del técnico
-                                'visita_id'  => null,          // ya no pertenece a la visita
-                            ]);
-                        }
-                        // 🔹 Si la visita NO tiene ticket → el inventario se queda en la visita
-                        else {
-                            // Registrar movimiento → destino: visita
-                            MovimientoInventario::create([
-                                'inventario_id'     => $inventario->id,
-                                'tipo_movimiento'   => 'salida',
-                                'descripcion'       => 'Traslado a visita #' . $this->visita->id,
-                                'user_anterior_id'  => $inventario->user_id,
-                                'visita_nuevo_id'   => $this->visita->id,
-                                'user_id'           => Auth::id(),
-                            ]);
+                    MovimientoInventario::create([
+                        'inventario_id' => $inventario->id,
+                        'tipo_movimiento' => 'retiro',
+                        'descripcion' => 'Equipo retirado en visita #' . $this->visita->id,
+                        'cliente_anterior_id' => $inventario->cliente_id,
+                        'user_nuevo_id' => $dest['tipo'] === 'usuario' ? $dest['id'] : null,
+                        'bodega_nueva_id' => $dest['tipo'] === 'bodega' ? $dest['id'] : null,
+                        'user_id' => Auth::id(),
+                    ]);
 
-                            // Actualizar inventario → asignarlo a la visita
-                            $inventario->update([
-                                'visita_id'  => $this->visita->id,
-                                'user_id'    => null,          // liberar del técnico
-                                'cliente_id' => null,          // sin cliente asignado
-                            ]);
-                        }
+                    $inventario->update([
+                        'cliente_id' => null,
+                        'visita_id' => null,
+                        'user_id' => $dest['tipo'] === 'usuario' ? $dest['id'] : null,
+                        'bodega_id' => $dest['tipo'] === 'bodega' ? $dest['id'] : null,
+                    ]);
+                }
+
+                // 🔹 Preparar detalles automáticos de instalación y retiro
+                $detalleInstalados = '';
+                $detalleRetirados = '';
+
+                if (count($this->inventariosUsados) > 0) {
+                    $detalleInstalados = "\n\nEquipos instalados:";
+                    foreach ($this->inventariosUsados as $item) {
+                        $linea = "\n - {$item['nombre']}";
+                        if (!empty($item['serial'])) $linea .= " | Serial: {$item['serial']}";
+                        if (!empty($item['mac'])) $linea .= " | MAC: {$item['mac']}";
+                        $detalleInstalados .= $linea;
                     }
                 }
+
+                if (count($this->inventariosRetirados) > 0) {
+                    $detalleRetirados = "\n\nEquipos retirados:";
+                    foreach ($this->inventariosRetirados as $item) {
+                        $linea = "\n - {$item['nombre']}";
+                        if (!empty($item['serial'])) $linea .= " | Serial: {$item['serial']}";
+                        if (!empty($item['mac'])) $linea .= " | MAC: {$item['mac']}";
+                        $detalleRetirados .= $linea;
+                    }
+                }
+
+                // 🔹 Cerrar visita y guardar solución + observaciones
+                $this->visita->update([
+                    'estado'        => 'Completada',
+                    'solucion'      => trim($this->solucion), // solo la solución técnica
+                    'observacion' => trim($detalleInstalados . $detalleRetirados), // los detalles
+                ]);
             });
 
             session()->flash('message', 'La visita se cerró correctamente.');
@@ -257,7 +430,6 @@ class CerrarVisita extends Component
         } catch (\Exception $e) {
             session()->flash('error', $e->getMessage());
         }
-        $this->validate();
     }
 
     public function render()

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('clientes', function (Blueprint $table) {
             $table->id();  // Esto crea la columna 'id' con AUTO_INCREMENT y como clave primaria
             $table->string('nombre');
-            $table->string('telefono'); // El campo 'telefono' no debe tener AUTO_INCREMENT
+            $table->string('telefono')->nullable(); // El campo 'telefono' no debe tener AUTO_INCREMENT
             $table->string('cedula')->nullable();
             $table->decimal('latitud', 10, 8)->nullable();
             $table->decimal('longitud', 11, 8)->nullable();

@@ -17,8 +17,8 @@ return new class extends Migration
             $table->string('ip');
             $table->string('user')->default('ger_api_xyz');
             $table->string('pass')->default('Yt7!r9k@Dq#W1z');
-            $table->decimal('latitud', 10, 8);
-            $table->decimal('longitud', 11, 8);
+            $table->decimal('latitud', 10, 8)->nullable();
+            $table->decimal('longitud', 11, 8)->nullable();
             $table->integer('puerto_api')->default(8233); // Valor por defecto           
             $table->timestamps();
         });

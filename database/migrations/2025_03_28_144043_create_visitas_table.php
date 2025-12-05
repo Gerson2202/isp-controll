@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('visitas', function (Blueprint $table) {
 
             $table->id();
-            $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');  // Relación con el ticket
-            $table->text('descripcion')->nullable();  // Descripción de la visita
-            $table->text('solucion')->nullable();  // Descripción de la visita
+            $table->foreignId('ticket_id')->nullable()->constrained('tickets')->onDelete('cascade');
+            $table->text('titulo')->nullable();
+            $table->text('descripcion')->nullable();
+            $table->text('solucion')->nullable();
+            $table->text('observacion')->nullable();
             $table->enum('estado', ['Pendiente', 'En progreso', 'Completada'])->default('Pendiente');  // Estado de la visita
             $table->timestamps();
-            //$table->dateTime('fecha_inicio')->nullable();  // Fecha y hora de inicio
-            // $table->dateTime('fecha_cierre')->nullable();  // Fecha y hora de cierre
         });
     }
 

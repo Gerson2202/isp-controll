@@ -103,6 +103,7 @@ class TicketEdit extends Component
 
         // Crear la visita si las validaciones son correctas
         $visita=Visita::create([
+            'titulo' => $this->ticket->situacion,
             'descripcion' => $this->descripcion,
             'ticket_id' => $this->ticket->id,
             'estado' => $this->estadoVisita,

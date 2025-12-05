@@ -1,5 +1,5 @@
 <div>
-    <div class="container-fluid py-3">
+    <div class="container-fluid py-1">
         <div class="row">
             <div class="col-lg-8">
                 <div class="card shadow-sm border-0">

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Inventario extends Model
 {
     protected $fillable = [
-        'modelo_id', 'mac', 'descripcion', 'foto', 'cliente_id','nodo_id','user_id','bodega_id', 'fecha','visita_id'
+        'modelo_id', 'mac', 'descripcion', 'foto', 'cliente_id','nodo_id','user_id','bodega_id', 'fecha','visita_id','serial'
     ];
 
     public function modelo()
@@ -27,7 +27,7 @@ class Inventario extends Model
     
     public function user()
     {
-        return $this->belongsTo(User::class, 'modelo_id'); // 'modelo_id' es la clave foránea
+        return $this->belongsTo(User::class, 'user_id'); // 'modelo_id' es la clave foránea
     }
     
 

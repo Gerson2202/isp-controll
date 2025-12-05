@@ -404,8 +404,8 @@ return [
                 [
                     'text' => 'Crear Pool',
                     'route' => 'poolIndex', // Ruta para ver clientes
-                    'icon' => 'fa-exchange-alt', // Icono para listar
-                    'can'   => 'crear pool', // 👈 solo si tiene este permiso
+                    'icon' => 'fas fa-exchange-alt',     // Versión sólida (recomendada)
+                    'can'   => 'crear pool',
                 ],
                 [
                     'text' => 'Cortes y activaciones',
@@ -427,7 +427,7 @@ return [
                     'icon' => 'fas fa-boxes', // inventario
                 ],
                 [
-                    'text' => 'Visitas',
+                    'text' => 'Actualizar Tickets',
                     'route' => 'tecnico.visitas',
                     'icon' => 'fas fa-user-clock', // gestión de visitas
                 ],
@@ -436,11 +436,7 @@ return [
                     'route' => 'tecnico.actividades',
                     'icon' => 'fas fa-calendar-day', // agenda diaria
                 ],
-                [
-                    'text' => 'Asignaciones',
-                    'route' => 'tecnico.asignaciones',
-                    'icon' => 'fas fa-people-carry', // tareas asignadas
-                ],
+
             ],
         ],
         // Botón para Planes con submenú
@@ -538,14 +534,14 @@ return [
             'submenu' => [
                 [
                     'text' => 'Ver calendario',
-                    'route' => 'calendarioIndex', // Ruta para agregar cliente
-                    'icon' => 'fas fa-calendar-check', // Icono para agregar
+                    'route' => 'calendarioIndex',
+                    'icon' => 'fas fa-calendar-check',
                     'can'   => 'ver calendario', // 👈 solo si tiene este permiso
                 ],
                 [
-                    'text' => 'Visitas sin programar',
-                    'route' => 'visitas.cola', // Ruta para agregar cliente
-                    'icon' => 'fas fa-list-alt', // Icono para agregar
+                    'text' => 'Agendar Visita',
+                    'route' => 'visitas.cola',
+                    'icon' => 'fas fa-list-alt',
                     'can'   => 'editar programacion', // 👈 solo si tiene este permiso
                 ],
                 [

@@ -12,17 +12,31 @@ class Consumibles extends Component
 
     public $buscar = '';
 
+    // 🔹 Para resetear la paginación al cambiar el buscador
+    public function updatingBuscar()
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
         $usuario = auth()->user();
 
-        $consumibles = ConsumibleStock::with('consumible')
+        // IDs de las bodegas relacionadas al usuario
+        $bodegas = $usuario->bodegas()->with(['consumiblesStock.consumible'])->get();
+
+        // Consumibles personales del técnico
+        $consumiblesUsuario = ConsumibleStock::with('consumible')
             ->where('usuario_id', $usuario->id)
             ->whereHas('consumible', function ($q) {
                 $q->where('nombre', 'like', "%{$this->buscar}%");
             })
-            ->paginate(10);
+            ->orderByDesc('updated_at')
+            ->paginate(10, ['*'], 'usuario_page');
 
-        return view('livewire.tecnico.bodega.consumibles', compact('consumibles'));
+        return view('livewire.tecnico.bodega.consumibles', [
+            'consumiblesUsuario' => $consumiblesUsuario,
+            'bodegas' => $bodegas,
+        ]);
     }
 }
