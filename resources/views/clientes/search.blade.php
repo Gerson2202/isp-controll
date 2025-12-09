@@ -2,7 +2,9 @@
 @section('title', 'Buscador') 
 
 @section('content_header')
-   <h1>Clientes</h1>
+<h1>
+    <i class="fas fa-search me-2"></i>Buscar <i class="fas fa-users ms-1 me-2"></i>Clientes
+</h1>
 @stop
 
 @section('content')

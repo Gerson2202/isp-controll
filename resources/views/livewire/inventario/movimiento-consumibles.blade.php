@@ -1,7 +1,7 @@
 <div class="container py-2">
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Movimiento de consumibles  </h5>
+            <h5 class="mb-0">Movimiento de consumibles </h5>
         </div>
 
         <div class="card-body">
@@ -29,16 +29,50 @@
                     @if ($mostrarResultadosConsumible && $searchConsumible && $consumibles->count() > 0)
                         <div class="border mt-1 rounded shadow-sm position-absolute w-100 bg-white"
                             style="z-index: 1050; max-height: 240px; overflow-y: auto;">
-                            @foreach ($consumibles as $item)
-                                <button type="button"
-                                    class="list-group-item list-group-item-action border-0 text-start w-100"
-                                    wire:click="selectConsumible({{ $item->id }}, '{{ addslashes($item->nombre) }}')">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <span>{{ $item->nombre }}</span>
-                                        <small class="text-muted">ID: {{ $item->id }}</small>
+                            <div class="row g-2">
+                                @foreach ($consumibles as $item)
+                                    <div class="col-12 col-sm-6">
+                                        <div class="card h-100 border"
+                                            wire:click="selectConsumible({{ $item->id }}, '{{ addslashes($item->nombre) }}')"
+                                            style="cursor: pointer;">
+
+                                            <div class="card-body p-2">
+                                                <div class="d-flex">
+                                                    <!-- Icono -->
+                                                    <div class="flex-shrink-0 me-2">
+                                                        <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center"
+                                                            style="width: 40px; height: 40px;">
+                                                            <i class="fas fa-box"></i>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Contenido -->
+                                                    <div class="flex-grow-1">
+                                                        <h6 class="fw-bold mb-1 text-truncate">{{ $item->nombre }}</h6>
+
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <small class="text-muted d-block">ID:
+                                                                    {{ $item->id }}</small>
+                                                                @if ($item->stock_actual)
+                                                                    <small class="text-success fw-bold">
+                                                                        <i class="fas fa-boxes"></i>
+                                                                        {{ $item->stock_actual }}
+                                                                    </small>
+                                                                @endif
+                                                            </div>
+
+                                                            <span class="badge bg-light text-dark">
+                                                                <i class="fas fa-touch me-1"></i>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </button>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
                     @endif
 
@@ -200,12 +234,12 @@
 
                 {{-- Botón de envío --}}
                 <div class="col-12 text-end mt-4">
-                    <button type="submit" class="btn btn-primary px-4" wire:loading.attr="disabled"
-                        wire:target="realizarMovimiento">
-                        <span wire:loading.remove wire:target="realizarMovimiento">
+                    <button type="button" class="btn btn-primary px-4" wire:loading.attr="disabled"
+                        onclick="confirmarMovimiento()">
+                        <span wire:loading.remove>
                             <i class="bi bi-box-arrow-right me-2"></i>Registrar Movimiento
                         </span>
-                        <span wire:loading wire:target="realizarMovimiento">
+                        <span wire:loading>
                             <i class="bi bi-arrow-repeat spinner me-2"></i>Procesando...
                         </span>
                     </button>
@@ -215,13 +249,27 @@
     </div>
 </div>
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <script>
-        document.addEventListener('livewire:init', () => {
-            Livewire.on('notify', (data) => {
-                toastr[data.type](data.message);
-            });
-        });
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function confirmarMovimiento() {
+    Swal.fire({
+        title: '¿Confirmar movimiento?',
+        text: "¿Estás seguro de que deseas registrar este movimiento?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, registrar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true,
+        backdrop: true,
+        allowOutsideClick: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Disparar el evento Livewire
+            @this.realizarMovimiento();
+        }
+    });
+}
+</script>
 @endpush

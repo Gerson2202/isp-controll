@@ -416,7 +416,7 @@ return [
             ],
         ],
 
-        // Sección Centro de Gestión
+        // Sección Area tecnica
         [
             'text'    => 'Área Técnica',
             'icon'    => 'fas fa-tools',
@@ -425,16 +425,22 @@ return [
                     'text' => 'Bodega',
                     'route' => 'tecnico.bodega',
                     'icon' => 'fas fa-boxes', // inventario
+                    'can'   => 'ver bodega personal', // 👈 solo si tiene este permiso
+
                 ],
                 [
                     'text' => 'Actualizar Tickets',
                     'route' => 'tecnico.visitas',
-                    'icon' => 'fas fa-user-clock', // gestión de visitas
+                    'icon' => 'fas fa-user-clock',
+                    'can'   => 'cerrar tickets-tecnico', // 👈 solo si tiene este permiso
+
                 ],
                 [
                     'text' => 'Actividades de Hoy',
                     'route' => 'tecnico.actividades',
-                    'icon' => 'fas fa-calendar-day', // agenda diaria
+                    'icon' => 'fas fa-calendar-day',
+                    'can'   => 'ver actividades del dia', // 👈 solo si tiene este permiso
+
                 ],
 
             ],
@@ -458,6 +464,8 @@ return [
                     'text' => 'Bodegas',
                     'route' => 'bodegasIndex',
                     'icon' => 'fas fa-warehouse',
+                    'can'   => 'crear bodegas', // 👈 solo si tiene este permiso
+
                 ],
                 [
                     'text' => 'Modelos de equipo',
@@ -469,6 +477,8 @@ return [
                     'text' => 'Consumibles',
                     'route' => 'consumiblesIndex',
                     'icon' => 'fas fa-boxes',
+                    'can'   => 'agregar consumibles', // 👈 solo si tiene este permiso
+
                 ],
 
                 // --- GESTIÓN DE EQUIPOS ---
@@ -490,11 +500,15 @@ return [
                     'text' => 'Registrar Movimiento',
                     'route' => 'movimientosIndex',
                     'icon' => 'fas fa-exchange-alt',
+                    'can'   => 'registrar movientos', // 👈 solo si tiene este permiso
+
                 ],
                 [
                     'text' => 'Historial Movimientos',
                     'route' => 'inventarioHistorial',
                     'icon' => 'fas fa-history',
+                    'can'   => 'ver historial de movimientos', // 👈 solo si tiene este permiso
+
                 ],
 
                 // --- CONSULTAS ---
@@ -502,6 +516,8 @@ return [
                     'text' => 'Consulta Global',
                     'route' => 'inventarioDashboard',
                     'icon' => 'fas fa-search',
+                    'can'   => 'consulta global de inventario', // 👈 solo si tiene este permiso
+
                 ],
             ],
         ],

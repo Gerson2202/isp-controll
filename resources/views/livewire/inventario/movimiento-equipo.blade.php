@@ -275,22 +275,35 @@
                     @enderror
                 </div>
 
-                <button type="submit" class="btn btn-primary" {{ !$inventario_id ? 'disabled' : '' }}>
+                <button type="button" class="btn btn-primary" onclick="confirmarMovimientoInventario()"
+                    {{ !$inventario_id ? 'disabled' : '' }}>
                     <i class="fas fa-exchange-alt"></i> Registrar Movimiento
                 </button>
             </form>
         </div>
     </div>
 </div>
-<!-- Script Para manejo de Notificaciones Tosatar -->
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
-        document.addEventListener('livewire:init', () => {
-            Livewire.on('notify', (data) => {
-                toastr[data.type](data.message);
+        function confirmarMovimientoInventario() {
+            Swal.fire({
+                title: '¿Confirmar movimiento?',
+                text: "¿Estás seguro de que deseas registrar este movimiento de inventario?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, registrar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true,
+                backdrop: true,
+                allowOutsideClick: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Disparar el evento Livewire (ajusta según tu método)
+                    @this.save();
+                }
             });
-        });
+        }
     </script>
 @endpush

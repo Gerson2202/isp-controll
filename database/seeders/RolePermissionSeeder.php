@@ -47,6 +47,16 @@ class RolePermissionSeeder extends Seeder
             'ver programacion',
             'gestionar nodos',
             'ver monitoreo de nodos',
+            //
+            'ver bodega personal',
+            'cerrar tickets-tecnico',
+            'ver actividades del dia',
+            'crear bodegas',
+            'agregar consumibles',
+            'registrar movientos',
+            'ver historial de movimientos',
+            'consulta global de inventario',
+
         ];
 
         // 🔹 Crear permisos si no existen
@@ -81,6 +91,9 @@ class RolePermissionSeeder extends Seeder
             'editar programacion',
             'ver programacion',
             'ver monitoreo de nodos',
+            'ver bodega personal',
+            'cerrar tickets-tecnico',
+            'ver actividades del dia',
         ]);
 
         $financiero->givePermissionTo([

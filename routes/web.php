@@ -84,33 +84,26 @@ Route::middleware([
     // Rutas para Fotos de Tickets
     Route::get('/fotos-tickets', [FotoTicketController::class, 'index'])->name('fotosTicketsIndex');
 
-    // Rutas para Inventario
-    Route::get('/inventario', [InventarioController::class, 'index'])->name('inventarioIndex');
-    // Ruta para  pagina de bodega
-    Route::get('/bodega', function () {
-        return view('bodega.index');
-    })->name('bodegasIndex');
-    //  Ruta para consumibles
-    Route::get('/Consumibles', function () {
-        return view('consumibles.index');
-    })->name('consumiblesIndex');
-    //  Ruta para ver shoy bodegas
-    Route::get('/bodegas/{bodega}', function (\App\Models\Bodega $bodega) {
-        return view('bodega.show', compact('bodega'));
-    })->name('bodega.show');
-    Route::get('/Movimientos', function () {
-        return view('movimientos.index');
-    })->name('movimientosIndex');
-    Route::get('/inventario/dashboard', function () {
-        return view('inventario.dashboard');
-    })->name('inventarioDashboard');
-    Route::get('/inventario/{tipo}/{id}', function ($tipo, $id) {
-        return view('inventario.detalle', compact('tipo', 'id'));
-    })->name('inventario.detalle');
-    Route::get('/inventario/Historial', function () {
-        return view('inventario.historial');
-    })->name('inventarioHistorial');
+    // Ruta para página de bodega
+    Route::get('/bodega', [InventarioController::class, 'bodegaIndex'])->name('bodegasIndex');
 
+    // Ruta para consumibles
+    Route::get('/Consumibles', [InventarioController::class, 'consumiblesIndex'])->name('consumiblesIndex');
+
+    // Ruta para ver show bodegas
+    Route::get('/bodegas/{bodega}', [InventarioController::class, 'showBodega'])->name('bodega.show');
+
+    // Ruta para movimientos
+    Route::get('/Movimientos', [InventarioController::class, 'movimientosIndex'])->name('movimientosIndex');
+
+    // Ruta para dashboard de inventario
+    Route::get('/inventario/dashboard', [InventarioController::class, 'dashboard'])->name('inventarioDashboard');
+
+    // Ruta para detalle de inventario
+    Route::get('/inventario/{tipo}/{id}', [InventarioController::class, 'detalle'])->name('inventario.detalle');
+
+    // Ruta para historial de inventario
+    Route::get('/inventario/Historial', [InventarioController::class, 'historial'])->name('inventarioHistorial');
 
     Route::get('/nodos', [NodoController::class, 'index'])->name('nodosIndex');
     Route::get('/nodos/detalle/{nodo}', [NodoController::class, 'show'])->name('nodos.show');
