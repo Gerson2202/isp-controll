@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class pool extends Model
+class Pool extends Model
 {
     // Protege los campos para evitar asignaciones masivas no deseadas
     protected $fillable = ['nombre', 'start_ip', 'end_ip','nodo_id','descripcion'];

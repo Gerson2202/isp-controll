@@ -26,7 +26,7 @@ class Nodo extends Model
      // Relación con Pools
      public function pools()
      {
-         return $this->hasMany(pool::class);
+         return $this->hasMany(Pool::class);
      }
 
    // Relación de uno a muchos (Un nodo tiene muchos inventarios)

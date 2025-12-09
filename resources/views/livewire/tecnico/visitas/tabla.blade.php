@@ -77,7 +77,8 @@
                                         <i class="bi bi-ticket-perforated me-2"></i>Información del Ticket
                                     </div>
                                     <div class="card-body">
-                                        <p><strong>ID del Ticket:</strong> {{ $visitaSeleccionada->ticket->id ?? 'Sin ticket' }}</p>
+                                        <p><strong>ID del Ticket:</strong>
+                                            {{ $visitaSeleccionada->ticket->id ?? 'Sin ticket' }}</p>
                                         <p><strong>Tipo de Reporte:</strong>
                                             {{ $visitaSeleccionada->ticket->tipo_reporte ?? 'N/A' }}</p>
                                         <p><strong>Situación:</strong>
@@ -108,7 +109,7 @@
                                         <p><strong>IP:</strong> {{ $visitaSeleccionada->ticket->cliente->ip ?? 'N/A' }}
                                         </p>
                                         <p><strong>Nodo:</strong>
-                                            {{ $visitaSeleccionada->ticket->cliente->pool->nodo->nombre ?? 'N/A' }}
+                                            {{ optional($visitaSeleccionada->ticket?->cliente?->plan?->nodo)->nombre ?? 'N/A' }}
                                         </p>
                                     </div>
                                 </div>

@@ -12,3 +12,5 @@
   @livewire('tecnico.visitas.tabla')
 @stop
 
+{{-- include footer y logo  --}}
+@include('partials.global-footer')

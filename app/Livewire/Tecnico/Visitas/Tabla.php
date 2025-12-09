@@ -23,9 +23,13 @@ class Tabla extends Component
 
     public function verInformacion($id)
     {
-        $this->visitaSeleccionada = \App\Models\Visita::with([
-            'ticket.cliente.pool.nodo',
-            'usuarios' // 👈 importante
+        
+        $this->visitaSeleccionada = Visita::with([
+            'ticket',
+            'ticket.cliente',
+            'ticket.cliente.plan',
+            'ticket.cliente.plan.nodo',
+            'usuarios'
         ])->find($id);
 
         $this->dispatch('abrir-modal');

@@ -8,8 +8,14 @@
         </div>
 
         <div class="card-body">
-            <div class="d-flex justify-content-between mb-3">
-                <input type="text" wire:model.live="search" class="form-control w-25" placeholder="Buscar usuario...">
+            <div class="d-flex justify-content-between mb-3" style="position: relative;">
+                <!-- Campo falso que Chrome verá primero -->
+                <input type="email" style="opacity: 0; position: absolute; width: 0; height: 0;" autocomplete="email"
+                    tabindex="-1">
+
+                <!-- Campo real de búsqueda -->
+                <input type="search" wire:model.live="search" autocomplete="off" class="form-control w-25"
+                    placeholder="Buscar usuario..." style="background-color: white !important;">
             </div>
 
             @if (session('message'))
@@ -38,7 +44,8 @@
                                 <td>{{ $u->roles->pluck('name')->join(', ') }}</td>
                                 <td>{{ $u->permissions->pluck('name')->join(', ') }}</td>
                                 <td class="text-center">
-                                    <button class="btn btn-warning btn-sm" wire:click="edit({{ $u->id }})" title="Editar">
+                                    <button class="btn btn-warning btn-sm" wire:click="edit({{ $u->id }})"
+                                        title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     {{-- <button class="btn btn-danger btn-sm" wire:click="delete({{ $u->id }})"
@@ -48,7 +55,9 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="text-center text-muted py-3">No hay usuarios registrados</td></tr>
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">No hay usuarios registrados</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -61,7 +70,8 @@
     </div>
 
     <!-- MODAL CREAR/EDITAR -->
-    <div wire:ignore.self class="modal fade" id="modalUsuario" tabindex="-1" aria-labelledby="modalUsuarioLabel" aria-hidden="true">
+    <div wire:ignore.self class="modal fade" id="modalUsuario" tabindex="-1" aria-labelledby="modalUsuarioLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
@@ -75,40 +85,39 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre</label>
                         <input type="text" wire:model="name" class="form-control">
-                        @error('name') <small class="text-danger">{{ $message }}</small> @enderror
+                        @error('name')
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
                     </div>
 
                     <div class="mb-3">
-                    <label class="form-label fw-bold">Email</label>
-                    <input type="email"
-                        wire:model.defer="email"
-                        class="form-control @error('email') is-invalid @enderror"
-                        placeholder="Ingrese un correo válido">
-                    @error('email')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="email" wire:model.defer="email"
+                            class="form-control @error('email') is-invalid @enderror"
+                            placeholder="Ingrese un correo válido">
+                        @error('email')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
 
 
                     <div class="mb-3" x-data="{ show: false }">
-                    <label class="form-label fw-bold">Contraseña</label>
+                        <label class="form-label fw-bold">Contraseña</label>
 
-                    <div class="input-group">
-                        <input :type="show ? 'text' : 'password'" 
-                            wire:model="password"
-                            class="form-control"
-                            placeholder="{{ $user_id ? 'Dejar en blanco para mantener la actual' : 'Escribe una contraseña' }}">
-                        <button type="button" class="btn btn-outline-secondary" @click="show = !show">
-                            <i :class="show ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-                        </button>
-                    </div>
+                        <div class="input-group">
+                            <input :type="show ? 'text' : 'password'" wire:model="password" class="form-control"
+                                placeholder="{{ $user_id ? 'Dejar en blanco para mantener la actual' : 'Escribe una contraseña' }}">
+                            <button type="button" class="btn btn-outline-secondary" @click="show = !show">
+                                <i :class="show ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                            </button>
+                        </div>
 
-                        @if($user_id)
+                        @if ($user_id)
                             <small class="text-muted">Dejar en blanco para mantener la contraseña actual.</small>
                         @endif
 
-                        @error('password') 
-                            <small class="text-danger">{{ $message }}</small> 
+                        @error('password')
+                            <small class="text-danger">{{ $message }}</small>
                         @enderror
                     </div>
 
@@ -117,7 +126,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Roles</label>
                             <select multiple wire:model="selectedRoles" class="form-select">
-                                @foreach($roles as $id => $name)
+                                @foreach ($roles as $id => $name)
                                     <option value="{{ $name }}">{{ $name }}</option>
                                 @endforeach
                             </select>
@@ -126,7 +135,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold">Permisos</label>
                             <select multiple wire:model="selectedPermissions" class="form-select">
-                                @foreach($permissions as $id => $name)
+                                @foreach ($permissions as $id => $name)
                                     <option value="{{ $name }}">{{ $name }}</option>
                                 @endforeach
                             </select>
@@ -159,16 +168,5 @@
             modal.hide();
         });
     </script>
-    <!-- Script Para manejo de Notificaciones Tosatar -->
-      @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-         <script>
-            document.addEventListener('livewire:init', () => {
-                Livewire.on('notify', (data) => {
-                    toastr[data.type](data.message);
-                });
-            });
-        </script>      
-      @endpush
 </div>
