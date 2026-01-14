@@ -2,10 +2,10 @@
 @section('title', 'Dashboard')
 
 @section('content_header')
-<h1 class="m-0 text-dark d-flex align-items-center">
-    <i class="bi bi-speedometer2 me-3 fs-2 text-info"></i>
-    Panel de Control
-</h1>
+    <h1 class="m-0 text-dark d-flex align-items-center">
+        <i class="bi bi-speedometer2 me-3 fs-2 text-info"></i>
+        Panel de Control
+    </h1>
 @stop
 
 @section('content')
@@ -93,28 +93,33 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($ticketsRecientes as $ticket)
-                        <tr>
-                            <td>
-                                <a href="{{ route('tickets.edit', $ticket->id) }}">
-                                    #{{ $ticket->id }}
-                                </a>
-                            </td>
+                        @foreach ($ticketsRecientes as $ticket)
+                            <tr>
+                                <td>
+                                    <a href="{{ route('tickets.edit', $ticket->id) }}">
+                                        #{{ $ticket->id }}
+                                    </a>
+                                </td>
 
-                            <td>
-                                <a href="{{ route('clientes.show', $ticket->cliente->id) }}">
-                                    {{ $ticket->cliente->nombre }}
-                                </a>
-                            </td>
+                                <td>
+                                    <a href="{{ route('clientes.show', $ticket->cliente->id) }}"
+                                        style="text-decoration: none; color: #1D4ED8;"
+                                        onmouseover="this.style.textDecoration='underline';"
+                                        onmouseout="this.style.textDecoration='none';">
+                                        {{ $ticket->cliente->nombre }}
+                                    </a>
+                                </td>
 
-                            <td>{{ Str::limit($ticket->tipo_reporte, 30) }}</td>
-                            <td>
-                                <span class="badge badge-{{ $ticket->estado == 'Abierto' ? 'danger' : 'success' }}">
-                                    {{ $ticket->estado }}
-                                </span>
-                            </td>
-                            <td>{{ $ticket->created_at->format('d/m/Y H:i') }}</td>
-                        </tr>
+
+
+                                <td>{{ Str::limit($ticket->tipo_reporte, 30) }}</td>
+                                <td>
+                                    <span class="badge badge-{{ $ticket->estado == 'Abierto' ? 'danger' : 'success' }}">
+                                        {{ $ticket->estado }}
+                                    </span>
+                                </td>
+                                <td>{{ $ticket->created_at->format('d/m/Y H:i') }}</td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>

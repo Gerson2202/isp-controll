@@ -10,7 +10,7 @@ class NodosIndex extends Component
 
     public $showModal = false;
     public $nodos;
-    public $nombre, $ip, $latitud, $longitud, $puerto_api,$nodo_id,$pass,$user;
+    public $nombre, $ip, $latitud, $longitud, $puerto_api, $nodo_id, $pass, $user;
     public $successMessage = ''; // Propiedad para el mensaje de éxito
 
     public function mount()
@@ -24,42 +24,42 @@ class NodosIndex extends Component
         $this->resetForm();
     }
 
-      // Mostrar el modal para actualizar
+    // Mostrar el modal para actualizar
     public function editNodo($id)
     {
-           $nodo = Nodo::find($id);
-           $this->nodo_id = $nodo->id;
-           $this->nombre = $nodo->nombre;
-           $this->ip = $nodo->ip;
-           $this->latitud = $nodo->latitud;
-           $this->longitud = $nodo->longitud;
-           $this->puerto_api = $nodo->puerto_api;
+        $nodo = Nodo::find($id);
+        $this->nodo_id = $nodo->id;
+        $this->nombre = $nodo->nombre;
+        $this->ip = $nodo->ip;
+        $this->latitud = $nodo->latitud;
+        $this->longitud = $nodo->longitud;
+        $this->puerto_api = $nodo->puerto_api;
         //    $this->pass = $nodo->pass;
         //    $this->user = $nodo->user;
-           $this->showModal = true;  
-           $this->clearSuccessMessage();  // Limpiar cualquier mensaje anterior
+        $this->showModal = true;
+        $this->clearSuccessMessage();  // Limpiar cualquier mensaje anterior
     }
 
-        // Actualizar Nodo
-      public function updateNodo()
-    {      
-         $nodo = Nodo::find($this->nodo_id);
+    // Actualizar Nodo
+    public function updateNodo()
+    {
+        $nodo = Nodo::find($this->nodo_id);
         // // Actualizar Nodo
-         $nodo->update([
+        $nodo->update([
             'nombre' => $this->nombre,
             'ip' => $this->ip,
             'latitud' => $this->latitud,
             'longitud' => $this->longitud,
             // 'pass' => $this->pass,
             // 'user' => $this->user,
-             'puerto_api' => $this->puerto_api,           
-         ]);
+            'puerto_api' => $this->puerto_api,
+        ]);
 
         //  // Actualizar la lista de nodos
-         $this->nodos = Nodo::all();
+        $this->nodos = Nodo::all();
         // // Mostrar el mensaje de éxito
-         $this->successMessage = 'Nodo actualizado exitosamente!';
-         $this->resetForm();
+        $this->successMessage = 'Nodo actualizado exitosamente!';
+        $this->resetForm();
         // // Cerrar el modal
         $this->showModal = false;
 
@@ -67,7 +67,7 @@ class NodosIndex extends Component
         //  $this->dispatch('show-success-message');
     }
 
-       // Limpiar el mensaje de éxito
+    // Limpiar el mensaje de éxito
     public function clearSuccessMessage()
     {
         $this->successMessage = '';
@@ -75,15 +75,15 @@ class NodosIndex extends Component
 
     // Función para Crear un nuevo NODO
     public function AgregarNodo()
-    {       
-       // Crear un nuevo nodo
+    {
+        // Crear un nuevo nodo
         Nodo::create([
-            'nombre' => $this->nombre,
-            'ip' => $this->ip,
-            'latitud' => $this->latitud,
-            'longitud' => $this->longitud,
-            //'puerto_api' => $this->puerto_api,
+            'nombre'    => $this->nombre,
+            'ip'        => $this->ip,
+            'latitud'   => $this->latitud ?? 0.0,  // coordenada por defecto
+            'longitud'  => $this->longitud ?? 0.0, // coordenada por defecto
         ]);
+
 
         // Actualizar la lista de planes
         $this->nodos = Nodo::all();
