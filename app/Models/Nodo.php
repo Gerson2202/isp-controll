@@ -11,6 +11,9 @@ class Nodo extends Model
     protected $fillable = [
         'nombre', 'ip', 'latitud', 'longitud', 'puerto_api','user','pass',
     ];
+    protected $casts = [
+        'puerto_api' => 'integer',
+    ];
 
     public function clientes()
     {

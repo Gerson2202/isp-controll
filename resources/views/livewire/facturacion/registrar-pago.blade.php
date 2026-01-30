@@ -252,9 +252,9 @@
                                             <i class="fas fa-info-circle text-primary mt-1 me-2"></i>
                                             <div>
                                                 <p class="small mb-0 text-muted">
-                                                    <strong>FerNet Sas </strong><br>
+                                                    <strong>ISP Sas </strong><br>
                                                     Este documento es un comprobante de pago válido. Para consultas
-                                                    contactar al: +57 3123404965
+                                                    contactar al: +57 ######
                                                 </p>
                                             </div>
                                         </div>
