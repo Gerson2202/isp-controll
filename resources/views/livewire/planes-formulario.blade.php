@@ -1,32 +1,30 @@
 <div class="container-fluid min-vh-100 d-flex flex-column">
 
-        @if ($errors->has('activation'))
-            <div class="alert alert-danger alert-dismissible fade show">
-                {{ $errors->first('activation') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
+    @if ($errors->has('activation'))
+    <div class="alert alert-danger alert-dismissible fade show">
+        {{ $errors->first('activation') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
     <div class="card text-center">
         <div class="card-header">
             <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
                 <!-- Pestaña 1 -->
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link active" id="planes-tab" data-bs-toggle="tab" href="#planes" role="tab" aria-controls="planes" aria-selected="true">Planes</a>
+                    <a class="nav-link active" id="link-tab" data-bs-toggle="tab" href="#link" role="tab" aria-controls="link"
+                        aria-selected="false">Agregar Plan</a>
                 </li>
-                <!-- Pestaña 2 -->
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="link-tab" data-bs-toggle="tab" href="#link" role="tab" aria-controls="link" aria-selected="false">Agregar Plan</a>
+                    <a class="nav-link " id="planes-tab" data-bs-toggle="tab" href="#planes" role="tab"
+                        aria-controls="planes" aria-selected="true">Planes</a>
                 </li>
-                <!-- Pestaña 3 -->
-                {{-- <li class="nav-item" role="presentation">
-                    <a class="nav-link" id="disabled-tab" data-bs-toggle="tab" href="#disabled" role="tab" aria-controls="disabled" aria-selected="false">Disabled</a>
-                </li> --}}
+              
             </ul>
         </div>
         <div class="card-body">
             <div class="tab-content" id="myTabContent">
                 <!-- Contenido Planes (Pestaña activa por defecto) -->
-                <div class="tab-pane fade show active" id="planes" role="tabpanel" aria-labelledby="planes-tab">
+                <div class="tab-pane fade " id="planes" role="tabpanel" aria-labelledby="planes-tab">
                     @if($successMessage)
                     <div class="alert alert-success alert-dismissible fade show mb-3" id="successMessage" role="alert">
                         {{ $successMessage }}
@@ -40,7 +38,7 @@
                         <select class="form-select" id="nodoFilter" wire:model.live="nodo_id_Filtro">
                             <option value="">Todos los nodos</option>
                             @foreach($nodos as $nodo)
-                                <option value="{{ $nodo->id }}">{{ $nodo->nombre }}</option>
+                            <option value="{{ $nodo->id }}">{{ $nodo->nombre }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -74,39 +72,39 @@
                                     </td>
                                     <td><span class="badge bg-info">{{ $plan->rehuso }}</span></td>
                                     <td>
-                                        <span class="badge bg-secondary">{{ $plan->nodo ? $plan->nodo->nombre : 'Sin nodo' }}</span>
+                                        <span
+                                            class="badge bg-secondary">{{ $plan->nodo ? $plan->nodo->nombre : 'Sin nodo' }}</span>
                                     </td>
                                     <td>
                                         <small class="text-muted">{{ Str::limit($plan->descripcion, 40) }}</small>
                                     </td>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
-                                            <button wire:click="editPlan({{ $plan->id }})" 
-                                                    class="btn btn-outline-primary" 
-                                                    title="Editar">
+                                            <button wire:click="editPlan({{ $plan->id }})"
+                                                class="btn btn-outline-primary" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button x-data
-                                                    @click.prevent="if (confirm('¿Estás seguro de eliminar este plan?')) { $wire.deletePlan({{ $plan->id }}) }" 
-                                                    class="btn btn-outline-danger"
-                                                    title="Eliminar">
+                                                @click.prevent="if (confirm('¿Estás seguro de eliminar este plan?')) { $wire.deletePlan({{ $plan->id }}) }"
+                                                class="btn btn-outline-danger" title="Eliminar">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                             @if($plan->nodo)
-                                                <button wire:click="activatePlan({{ $plan->id }})" 
-                                                        wire:loading.attr="disabled"
-                                                        class="btn btn-sm btn-{{ $currentPlanActivating == $plan->id ? 'warning' : 'success' }}"
-                                                        title="Activar">
-                                                    @if($currentPlanActivating == $plan->id)
-                                                        <span class="spinner-border spinner-border-sm" role="status"></span>
-                                                    @else
-                                                        <i class="fas fa-power-off"></i>
-                                                    @endif
-                                                </button>
+                                            <button wire:click="activatePlan({{ $plan->id }})"
+                                                wire:loading.attr="disabled"
+                                                class="btn btn-sm btn-{{ $currentPlanActivating == $plan->id ? 'warning' : 'success' }}"
+                                                title="Activar">
+                                                @if($currentPlanActivating == $plan->id)
+                                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                                @else
+                                                <i class="fas fa-power-off"></i>
+                                                @endif
+                                            </button>
                                             @else
-                                                <button class="btn btn-sm btn-outline-secondary" disabled title="Sin nodo asignado">
-                                                    <i class="fas fa-exclamation-circle"></i>
-                                                </button>
+                                            <button class="btn btn-sm btn-outline-secondary" disabled
+                                                title="Sin nodo asignado">
+                                                <i class="fas fa-exclamation-circle"></i>
+                                            </button>
                                             @endif
                                         </div>
                                     </td>
@@ -117,100 +115,179 @@
                     </div>
                 </div>
                 <!-- Contenido Link (Pestaña 2) -->
-                <div class="tab-pane fade" id="link" role="tabpanel" aria-labelledby="link-tab">
-                    <!-- Card con diseño mejorado pero misma estructura -->
-                    <div class="card mx-auto border-0 shadow-sm" style="max-width: 500px;">
+                <div class="tab-pane fade show active" id="link" role="tabpanel" aria-labelledby="link-tab">
+                    <div class="card mx-auto border-0 shadow-sm" style="max-width: 900px;">
                         <div class="card-header bg-light">
                             <h5 class="card-title mb-0 text-primary">
                                 <i class="fas fa-plus-circle me-2"></i>Crear Nuevo Plan
                             </h5>
                         </div>
+
                         <div class="card-body">
-                            <!-- Mensaje de éxito (igual que antes) -->
+
                             @if (session()->has('message'))
-                                <div class="alert alert-success">
-                                    {{ session('message') }}
-                                </div>
+                            <div class="alert alert-success">
+                                {{ session('message') }}
+                            </div>
                             @endif
-                
-                            <!-- Formulario con MISMOS bindings y validaciones originales -->
+
                             <form wire:submit.prevent="submitPlan">
-                                <!-- Campo Nombre (mismo wire:model y validación) -->
-                                <div class="form-group mb-3">
-                                    <label for="nombre" class="form-label">Nombre</label>
-                                    <input type="text" class="form-control shadow-sm" id="nombre" wire:model="nombre" required>
-                                </div>
-                
-                                <!-- Campo Descripción (idéntico al original) -->
-                                <div class="form-group mb-3">
-                                    <label for="descripcion" class="form-label">Descripción</label>
-                                    <textarea class="form-control shadow-sm" id="descripcion" wire:model="descripcion" required></textarea>
-                                </div>
-                
-                                <!-- Campos de Velocidad (misma estructura) -->
                                 <div class="row">
+
+                                    <!-- ================= COLUMNA IZQUIERDA ================= -->
                                     <div class="col-md-6">
+
                                         <div class="form-group mb-3">
-                                            <label for="velocidad_bajada" class="form-label">Velocidad de bajada</label>
-                                            <div class="input-group">
-                                                <input type="number" class="form-control shadow-sm" id="velocidad_bajada" wire:model="velocidad_bajada" min="1" required>
-                                                <span class="input-group-text">Mbps</span>
+                                            <label>Nombre</label>
+                                            <input type="text" class="form-control shadow-sm"
+                                                wire:model="nombre" required>
+                                        </div>
+
+                                        <div class="form-group mb-3">
+                                            <label>Descripción</label>
+                                            <textarea class="form-control shadow-sm"
+                                                wire:model="descripcion" required></textarea>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label>Velocidad bajada</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control"
+                                                        wire:model="velocidad_bajada" min="1" required>
+                                                    <span class="input-group-text">Mbps</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-6">
+                                                <label>Velocidad subida</label>
+                                                <div class="input-group">
+                                                    <input type="number" class="form-control"
+                                                        wire:model="velocidad_subida" min="1" required>
+                                                    <span class="input-group-text">Mbps</span>
+                                                </div>
                                             </div>
                                         </div>
+
+                                        <div class="form-group mt-3">
+                                            <label>Rehuso</label>
+                                            <select class="form-control shadow-sm"
+                                                wire:model="rehuso" required>
+                                                <option value="">Selecciona un rehuso</option>
+                                                <option value="1:1">1:1</option>
+                                                <option value="1:2">1:2</option>
+                                                <option value="1:4">1:4</option>
+                                                <option value="1:6">1:6</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group mt-3">
+                                            <label>Nodo</label>
+                                            <select class="form-control shadow-sm"
+                                                wire:model="nodo_id" required>
+                                                <option value="">Seleccione un nodo</option>
+                                                @foreach($nodos as $nodo)
+                                                <option value="{{ $nodo->id }}">{{ $nodo->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="velocidad_subida" class="form-label">Velocidad de subida</label>
-                                            <div class="input-group">
-                                                <input type="number" class="form-control shadow-sm" id="velocidad_subida" wire:model="velocidad_subida" min="1" required>
-                                                <span class="input-group-text">Mbps</span>
+
+                                    <!-- ================= COLUMNA DERECHA ================= -->
+                                    <div class="col-md-6 border-start">
+
+                                        <h6 class="text-muted">Parámetros de ráfaga</h6>
+
+                                        <div class="form-check mb-3">
+                                            <input class="form-check-input"
+                                                type="checkbox"
+                                                id="usarRafaga"
+                                                wire:model.live="usar_rafaga">
+
+                                            <label class="form-check-label" for="usarRafaga">
+                                                Activar ráfaga
+                                            </label>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label>Ráfaga bajada</label>
+                                                <input type="number" class="form-control"
+                                                    wire:model="rafaga_max_bajada"
+                                                    @disabled(!$usar_rafaga)>
+                                            </div>
+                                            <div class="col-6">
+                                                <label>Ráfaga subida</label>
+                                                <input type="number" class="form-control"
+                                                    wire:model="rafaga_max_subida"
+                                                    @disabled(!$usar_rafaga)>
                                             </div>
                                         </div>
+
+                                        <div class="row mt-2">
+                                            <div class="col-6">
+                                                <label>Vel. media bajada</label>
+                                                <input type="number" class="form-control"
+                                                    wire:model="velocidad_media_bajada"
+                                                    @disabled(!$usar_rafaga)>
+                                            </div>
+                                            <div class="col-6">
+                                                <label>Vel. media subida</label>
+                                                <input type="number" class="form-control"
+                                                    wire:model="velocidad_media_subida"
+                                                    @disabled(!$usar_rafaga)>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mt-2">
+                                            <div class="col-6">
+                                                <label>Tiempo bajada (s)</label>
+                                                <input type="number" class="form-control"
+                                                    wire:model="tiempo_rafaga_bajada"
+                                                    @disabled(!$usar_rafaga)>
+                                            </div>
+                                            <div class="col-6">
+                                                <label>Tiempo subida (s)</label>
+                                                <input type="number" class="form-control"
+                                                    wire:model="tiempo_rafaga_subida"
+                                                    @disabled(!$usar_rafaga)>
+                                            </div>
+                                        </div>
+
+                                        <!-- <div class="mt-2">
+                            <label>Prioridad (1–8)</label>
+                            <input type="number" class="form-control"
+                                   wire:model="prioridad"
+                                   min="1" max="8"
+                                   @disabled(!$usar_rafaga)>
+                        </div> -->
+
                                     </div>
                                 </div>
-                
-                                <!-- Campo Rehuso (exactamente igual que el original) -->
-                                <div class="form-group mb-3">
-                                    <label for="rehuso" class="form-label">Rehuso</label>
-                                    <select class="form-control shadow-sm" id="rehuso" wire:model="rehuso" required>
-                                        <option value="">Selecciona un rehuso</option>
-                                        <option value="1:1">1:1</option>
-                                        <option value="1:2">1:2</option>
-                                        <option value="1:4">1:4</option>
-                                        <option value="1:6">1:6</option>
-                                    </select>
-                                    @error('rehuso') <span class="text-danger">{{ $message }}</span> @enderror
-                                </div>
-                
-                                <!-- Campo Nodo (misma estructura) -->
-                                <div class="form-group mb-4">
-                                    <label for="nodo_id" class="form-label">Nodo</label>
-                                    <select class="form-control shadow-sm" id="nodo_id" wire:model="nodo_id" required>
-                                        <option value="" disabled selected>Seleccione un nodo</option>
-                                        @foreach($nodos as $nodo)
-                                            <option value="{{ $nodo->id }}">{{ $nodo->nombre }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                
-                                <!-- Botón (mismo wire:submit) -->
+
+                                <hr>
+
                                 <div class="d-grid">
                                     <button type="submit" class="btn btn-primary">
                                         <i class="fas fa-save me-2"></i>Agregar
                                     </button>
                                 </div>
+
                             </form>
                         </div>
                     </div>
                 </div>
-                
+
+
             </div>
         </div>
     </div>
-    
-     
+
+
     <!-- Modal Editar Planes -->
-    <div class="modal fade @if($showModal) show @endif" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style="display: @if($showModal) block @else none @endif;">
+    <div class="modal fade @if($showModal) show @endif" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true" style="display: @if($showModal) block @else none @endif;">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <!-- Encabezado del Modal -->
@@ -218,11 +295,12 @@
                     <h5 class="modal-title" id="exampleModalLabel">
                         <i class="fas fa-edit me-2"></i>Editar Plan
                     </h5>
-                    <button wire:click="hide" type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
+                    <button wire:click="hide" type="button" class="close text-white" data-bs-dismiss="modal"
+                        aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                
+
                 <!-- Cuerpo del Modal -->
                 <div class="modal-body">
                     <form wire:submit.prevent="updatePlan">
@@ -237,15 +315,16 @@
                                     </label>
                                     <input type="text" class="form-control shadow-sm" id="nombre" wire:model="nombre">
                                 </div>
-                                
+
                                 <!-- Descripción -->
                                 <div class="form-group mb-3">
                                     <label for="descripcion" class="form-label">
                                         <i class="fas fa-align-left me-1"></i>Descripción
                                     </label>
-                                    <textarea class="form-control shadow-sm" id="descripcion" wire:model="descripcion" rows="3"></textarea>
+                                    <textarea class="form-control shadow-sm" id="descripcion" wire:model="descripcion"
+                                        rows="3"></textarea>
                                 </div>
-                                
+
                                 <!-- Rehuso -->
                                 <div class="form-group mb-3">
                                     <label for="rehuso" class="form-label">
@@ -260,7 +339,7 @@
                                     </select>
                                 </div>
                             </div>
-                            
+
                             <!-- Columna Derecha -->
                             <div class="col-md-6">
                                 <!-- Velocidad de Bajada -->
@@ -269,57 +348,56 @@
                                         <i class="fas fa-download me-1"></i>Velocidad de bajada
                                     </label>
                                     <div class="input-group">
-                                        <input type="number" class="form-control shadow-sm" id="velocidad_bajada" 
+                                        <input type="number" class="form-control shadow-sm" id="velocidad_bajada"
                                             wire:model="velocidad_bajada" min="0">
                                         <span class="input-group-text">Mbps</span>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Velocidad de Subida -->
                                 <div class="form-group mb-3">
                                     <label for="velocidad_subida" class="form-label">
                                         <i class="fas fa-upload me-1"></i>Velocidad de subida
                                     </label>
                                     <div class="input-group">
-                                        <input type="number" class="form-control shadow-sm" id="velocidad_subida" 
+                                        <input type="number" class="form-control shadow-sm" id="velocidad_subida"
                                             wire:model="velocidad_subida" min="0">
                                         <span class="input-group-text">Mbps</span>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Nodo -->
                                 <div class="form-group mb-3">
                                     <label for="nodo_id" class="form-label">
                                         <i class="fas fa-server me-1"></i>Nodo
                                     </label>
                                     <select class="form-control shadow-sm" id="nodo_id" wire:model="nodo_id" required
-                                            @if($planHasContracts) disabled @endif>
+                                        @if($planHasContracts) disabled @endif>
                                         <option value="">Seleccione un nodo</option>
                                         @foreach($nodos as $nodo)
-                                            <option value="{{ $nodo->id }}">{{ $nodo->nombre }}</option>
+                                        <option value="{{ $nodo->id }}">{{ $nodo->nombre }}</option>
                                         @endforeach
                                     </select>
 
                                     @if($planHasContracts)
                                     <div class="alert alert-warning alert-sm mt-2">
-                                        <i class="fas fa-lock me-1"></i> No se puede modificar el nodo porque el plan tiene contratos asociados
+                                        <i class="fas fa-lock me-1"></i> No se puede modificar el nodo porque el plan
+                                        tiene contratos asociados
                                     </div>
                                     @endif
 
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Pie del Modal -->
                         <div class="modal-footer">
                             <button wire:click="hide" type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                 <i class="fas fa-times me-1"></i>Cancelar
                             </button>
                             <button type="submit"
-                                    onclick="return confirm('¿Estás seguro de que deseas actualizar el plan?')"
-                                    wire:loading.attr="disabled"
-                                    wire:target="updatePlan"
-                                    class="btn btn-primary">
+                                onclick="return confirm('¿Estás seguro de que deseas actualizar el plan?')"
+                                wire:loading.attr="disabled" wire:target="updatePlan" class="btn btn-primary">
                                 <span wire:loading.remove wire:target="updatePlan">
                                     <i class="fas fa-save me-1"></i>Actualizar
                                 </span>
@@ -337,19 +415,19 @@
             </div>
         </div>
     </div>
-    
-    
 
-      <!-- Script Para manejo de Notificaciones Tosatar -->
-      @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-         <script>
-            document.addEventListener('livewire:init', () => {
-                Livewire.on('notify', (data) => {
-                    toastr[data.type](data.message);
-                });
+
+    <!-- Script Para manejo de Notificaciones Tosatar -->
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('notify', (data) => {
+                toastr[data.type](data.message);
             });
-        </script>      
-      @endpush
+        });
+    </script>
+    @endpush
 </div>

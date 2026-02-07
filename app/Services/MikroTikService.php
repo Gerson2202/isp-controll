@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Cliente;
+use App\Models\Plan;
 use RouterOS\Client;
 use RouterOS\Query;
 use RouterOS\Exceptions\BadCredentialsException;
@@ -86,29 +88,29 @@ class MikroTikService
             // Obtener la lista de interfaces
             $query = new Query('/interface/print');
             $interfaces = $this->client->query($query)->read();
-    
+
             // Depurar la lista de interfaces
             // dd('Interfaces disponibles:', $interfaces); // Detener la ejecución y mostrar la lista de interfaces
-    
+
             // Si no hay interfaces, devolver un array vacío
             if (empty($interfaces)) {
                 return [];
             }
-    
+
             // Obtener las estadísticas de tráfico para cada interfaz
             $stats = [];
             foreach ($interfaces as $interface) {
                 $interfaceName = $interface['name'];
-    
+
                 $query = new Query('/interface/monitor-traffic');
                 $query->equal('interface', $interfaceName); // Monitorear la interfaz específica
                 $query->equal('once'); // Obtener datos una sola vez
-    
+
                 $interfaceStats = $this->client->query($query)->read();
-    
+
                 // Depurar las estadísticas de la interfaz
                 // dd("Estadísticas de {$interfaceName}:", $interfaceStats); // Detener la ejecución y mostrar las estadísticas
-    
+
                 // Procesar las estadísticas
                 if (!empty($interfaceStats)) {
                     $stats[] = [
@@ -125,7 +127,7 @@ class MikroTikService
                     ];
                 }
             }
-    
+
             return $stats;
         } catch (ConnectException $e) {
             dd('Error de conexión:', $e->getMessage()); // Depurar el error
@@ -144,7 +146,7 @@ class MikroTikService
     private function bitsToKbps($bits)
     {
         return (float)$bits / 1000000; // 1 Mbps = 1000000 bps
-       
+
     }
 
     // Consultar infromacion de systeam 
@@ -152,10 +154,10 @@ class MikroTikService
     {
         $query = new Query('/system/resource/print');
         $response = $this->client->query($query)->read();
-    
+
         return $response[0] ?? [];
     }
-    
+
     //consultar voltaje y tempertura
     public function getSystemHealth()
     {
@@ -182,14 +184,14 @@ class MikroTikService
         return $healthData;
     }
 
-// -----------------------------------------------------------------
+    // -----------------------------------------------------------------
     // FUNCIONES PARA CREAR COLAS PADRES
-       
+
 
     public function crearColaPadre($nombrePlan, $subidaMbps, $bajadaMbps)
     {
         try {
-            $nombreCola =$nombrePlan;
+            $nombreCola = $nombrePlan;
             // Verificar si la cola ya existe
             $query = (new Query('/queue/simple/print'))
                 ->where('name', $nombreCola);
@@ -219,7 +221,6 @@ class MikroTikService
                 'message' => "Cola padre '{$nombreCola}' creada exitosamente",
                 'data' => $resultado
             ];
-
         } catch (ConnectException $e) {
             Log::error("Error de conexión al crear cola: " . $e->getMessage());
             throw new \Exception("No se pudo conectar al MikroTik: " . $e->getMessage());
@@ -254,146 +255,283 @@ class MikroTikService
     }
     // FIN -FUNCIONES PARA CREAR COLAS PADRES
 
-    
+
     // Crear cola hija
-    public function crearColaHija($cliente_id,$ipCliente, $nombrePlanPadre, $subidaMbps, $bajadaMbps, $rehuso = '1:1')
-    {
+    public function crearColaHija(
+        Cliente $cliente,
+        array|Plan $plan,
+        string $ipCliente
+    ) {
         try {
-            $nombreColaHija = "CLIENTE-" . str_replace('.', '-', $cliente_id);
-            
-            // 1. Calcular limit-at según rehúso (ahora con 1:2)
-            $factorDivision = 1;
-            if ($rehuso === '1:2') {
-                $factorDivision = 2;
-            } elseif ($rehuso === '1:4') {
-                $factorDivision = 4;
-            } elseif ($rehuso === '1:6') {
-                $factorDivision = 6;
-            }
-            
+
+            // =============================
+            // 0️⃣ NORMALIZAR DATOS DEL PLAN
+            // =============================
+            $planData = $plan instanceof Plan ? [
+                'nombre' => $plan->nombre,
+                'velocidad_subida' => $plan->velocidad_subida,
+                'velocidad_bajada' => $plan->velocidad_bajada,
+                'rehuso' => $plan->rehuso ?? '1:1',
+                'rafaga_max_bajada' => $plan->rafaga_max_bajada,
+                'rafaga_max_subida' => $plan->rafaga_max_subida,
+                'velocidad_media_bajada' => $plan->velocidad_media_bajada,
+                'velocidad_media_subida' => $plan->velocidad_media_subida,
+                'tiempo_rafaga_bajada' => $plan->tiempo_rafaga_bajada,
+                'tiempo_rafaga_subida' => $plan->tiempo_rafaga_subida,
+                'prioridad' => $plan->prioridad,
+            ] : $plan;
+
+            $clienteId = $cliente->id;
+            $nombreCliente = $cliente->nombre;
+            $nombrePlanPadre = $planData['nombre'];
+            $subidaMbps = $planData['velocidad_subida'];
+            $bajadaMbps = $planData['velocidad_bajada'];
+            $rehuso = $planData['rehuso'] ?? '1:1';
+            $nombreColaHija = 'CLIENTE-' . $clienteId;
+
+            /* =============================
+         * 1️⃣ REHUSO → LIMIT-AT
+         ============================== */
+            $factorDivision = match ($rehuso) {
+                '1:2' => 2,
+                '1:4' => 4,
+                '1:6' => 6,
+                default => 1,
+            };
+
             $subidaLimitAt = ceil($subidaMbps / $factorDivision);
             $bajadaLimitAt = ceil($bajadaMbps / $factorDivision);
-    
-            // 2. Actualizar target y max-limit en cola padre
-            $this->actualizarTargetColaPadre($nombrePlanPadre, $ipCliente, $subidaLimitAt, $bajadaLimitAt);
-            
-            // 3. Crear cola hija
+
+            /* =============================
+         * 2️⃣ ACTUALIZAR COLA PADRE
+         ============================== */
+            $this->actualizarTargetColaPadre(
+                $nombrePlanPadre,
+                $ipCliente,
+                $subidaLimitAt,
+                $bajadaLimitAt
+            );
+
+            /* =============================
+         * 3️⃣ CREAR COLA HIJA
+         ============================== */
             $query = (new Query('/queue/simple/add'))
                 ->equal('name', $nombreColaHija)
-                ->equal('target', $ipCliente.'/32')
+                ->equal('target', $ipCliente . '/32')
                 ->equal('parent', $nombrePlanPadre)
-                ->equal('max-limit', $subidaMbps.'M/'.$bajadaMbps.'M')
-                ->equal('limit-at', $subidaLimitAt.'M/'.$bajadaLimitAt.'M')
-                ->equal('disabled', 'no');
-    
+                ->equal(
+                    'max-limit',
+                    $subidaMbps . 'M/' . $bajadaMbps . 'M'
+                )
+                ->equal(
+                    'limit-at',
+                    $subidaLimitAt . 'M/' . $bajadaLimitAt . 'M'
+                )
+                ->equal('disabled', 'no')
+                ->equal('comment', $nombreCliente);
+
+            /* =============================
+         * 4️⃣ RÁFAGA
+         ============================== */
+            if (
+                !empty($planData['rafaga_max_bajada']) &&
+                !empty($planData['rafaga_max_subida']) &&
+                !empty($planData['velocidad_media_bajada']) &&
+                !empty($planData['velocidad_media_subida']) &&
+                !empty($planData['tiempo_rafaga_bajada']) &&
+                !empty($planData['tiempo_rafaga_subida'])
+            ) {
+                $query
+                    ->equal(
+                        'burst-limit',
+                        $planData['rafaga_max_subida'] . 'M/' . $planData['rafaga_max_bajada'] . 'M'
+                    )
+                    ->equal(
+                        'burst-threshold',
+                        $planData['velocidad_media_subida'] . 'M/' . $planData['velocidad_media_bajada'] . 'M'
+                    )
+                    ->equal(
+                        'burst-time',
+                        $planData['tiempo_rafaga_subida'] . '/' . $planData['tiempo_rafaga_bajada']
+                    );
+            }
+
+            /* =============================
+         * 5️⃣ PRIORIDAD
+         ============================== */
+            if (!empty($planData['prioridad'])) {
+                $query->equal('priority', $planData['prioridad']);
+            }
+
             return $this->client->query($query)->read();
-    
         } catch (\Exception $e) {
-            throw new \Exception("Error al crear cola: " . $e->getMessage());
+            throw new \Exception("Error al crear cola hija: " . $e->getMessage());
         }
     }
-    
+
+
+
     private function actualizarTargetColaPadre($nombrePadre, $ipHija, $subidaLimitAt, $bajadaLimitAt)
     {
         // 1. Obtener información actual de la cola padre
         $queryPadre = (new Query('/queue/simple/print'))
             ->where('name', $nombrePadre);
         $colaPadre = $this->client->query($queryPadre)->read()[0];
-    
+
         // 2. Convertir de bits a Mbps
         $maxLimitActual = explode('/', $colaPadre['max-limit']);
         $maxSubidaActual = (float)$maxLimitActual[0] / 1000000;
         $maxBajadaActual = (float)$maxLimitActual[1] / 1000000;
-    
+
         // 3. Actualizar target
-        $ipConMascara = $ipHija.'/32';
+        $ipConMascara = $ipHija . '/32';
         $targetActual = $colaPadre['target'] ?? '';
-        
+
         if (strpos($targetActual, $ipConMascara) === false) {
-            $nuevoTarget = $targetActual ? $targetActual.','.$ipConMascara : $ipConMascara;
-            
+            $nuevoTarget = $targetActual ? $targetActual . ',' . $ipConMascara : $ipConMascara;
+
             // 4. Calcular suma total de limit-ats
             $totalHijos = $nuevoTarget ? count(explode(',', $nuevoTarget)) : 0;
             $totalSubidaNecesaria = $subidaLimitAt * $totalHijos;
             $totalBajadaNecesaria = $bajadaLimitAt * $totalHijos;
-    
+
             // 5. Actualizar max-limit solo si es necesario
             $nuevoMaxSubida = $maxSubidaActual;
             $nuevoMaxBajada = $maxBajadaActual;
-    
+
             if ($totalSubidaNecesaria > $maxSubidaActual) {
                 $nuevoMaxSubida = $totalSubidaNecesaria;
             }
-    
+
             if ($totalBajadaNecesaria > $maxBajadaActual) {
                 $nuevoMaxBajada = $totalBajadaNecesaria;
             }
-    
+
             // 6. Aplicar cambios
             $this->client->query(
                 (new Query('/queue/simple/set'))
-                ->equal('.id', $colaPadre['.id'])
-                ->equal('max-limit', ($nuevoMaxSubida * 1000000).'/'.($nuevoMaxBajada * 1000000))
-                ->equal('target', $nuevoTarget)
+                    ->equal('.id', $colaPadre['.id'])
+                    ->equal('max-limit', ($nuevoMaxSubida * 1000000) . '/' . ($nuevoMaxBajada * 1000000))
+                    ->equal('target', $nuevoTarget)
             )->read();
         }
     }
-   // FIN --Crear cola hija
-    
+    // FIN --Crear cola hija
 
-//    --------------
+
+    //    --------------
     // FUNCIONES PARA ACTUALIZAR PLAN DE CLIENTE
-    public function actualizarPlanMikroTik($clienteId, $ipCliente, $planAnterior, $planNuevo, $subidaMbps, $bajadaMbps, $rehuso = '1:1')
-    {
-        try {
-            // 1. Verificar existencia de la cola padre NUEVA
-            $queryVerificarColaPadre = (new Query('/queue/simple/print'))
-                ->where('name', $planNuevo);
+    public function actualizarPlanMikroTik( Cliente $cliente, Plan $planAnterior, Plan $planNuevo,string $ipCliente) {
+    try {
 
-            $colaPadreExistente = $this->client->query($queryVerificarColaPadre)->read();
+        /* =============================
+         * 1️⃣ VALIDAR COLA PADRE NUEVA
+         ============================== */
+        $queryVerificarColaPadre = (new Query('/queue/simple/print'))
+            ->where('name', $planNuevo->nombre);
 
-            if (empty($colaPadreExistente)) {
-                throw new \Exception("La cola padre '$planNuevo' no existe en el MikroTik");
-            }
-            // 1. Calcular limit-at para el NUEVO plan
-            $factorDivision = 1;
-            if ($rehuso === '1:2') $factorDivision = 2;
-            elseif ($rehuso === '1:4') $factorDivision = 4;
-            elseif ($rehuso === '1:6') $factorDivision = 6;
-            
-            $subidaLimitAt = ceil($subidaMbps / $factorDivision);
-            $bajadaLimitAt = ceil($bajadaMbps / $factorDivision);
+        $colaPadreExistente = $this->client->query($queryVerificarColaPadre)->read();
 
-            // 2. Actualizar cola anterior (SOLO remover IP, SIN cambiar max-limit)
-            $this->removerTargetDeColaPadre($planAnterior, $ipCliente);
-            $this->eliminarColaHija($clienteId, $planAnterior);
-            
-            // 3. Actualizar NUEVA cola (agregar IP Y actualizar límites)
-            $this->agregarTargetAColaPadre($planNuevo, $ipCliente);
-            $this->actualizarMaxLimitColaPadre($planNuevo, $subidaLimitAt, $bajadaLimitAt);
-            
-            // 4. Crear nueva cola hija
-            $nombreColaHija = "CLIENTE-" . str_replace('.', '-', $clienteId);
-            $query = (new Query('/queue/simple/add'))
-                ->equal('name', $nombreColaHija)
-                ->equal('target', $ipCliente.'/32')
-                ->equal('parent', $planNuevo)
-                ->equal('max-limit', $subidaMbps.'M/'.$bajadaMbps.'M')
-                ->equal('limit-at', $subidaLimitAt.'M/'.$bajadaLimitAt.'M')
-                ->equal('disabled', 'no');
-            
-            $this->client->query($query)->read();
-
-        } catch (\Exception $e) {
-            Log::error("Error al actualizar plan en MikroTik", [
-                'cliente_id' => $clienteId,
-                'ip' => $ipCliente,
-                'error' => $e->getMessage()
-            ]);
-            throw new \Exception("Error al actualizar plan en MikroTik: " . $e->getMessage());
+        if (empty($colaPadreExistente)) {
+            throw new \Exception("La cola padre '{$planNuevo->nombre}' no existe en MikroTik");
         }
-    }
 
+        /* =============================
+         * 2️⃣ REHUSO → LIMIT-AT
+         ============================== */
+        $factorDivision = match ($planNuevo->rehuso ?? '1:1') {
+            '1:2' => 2,
+            '1:4' => 4,
+            '1:6' => 6,
+            default => 1,
+        };
+
+        $subidaLimitAt = ceil($planNuevo->velocidad_subida / $factorDivision);
+        $bajadaLimitAt = ceil($planNuevo->velocidad_bajada / $factorDivision);
+
+        /* =============================
+         * 3️⃣ LIMPIAR PLAN ANTERIOR
+         ============================== */
+        $this->removerTargetDeColaPadre($planAnterior->nombre, $ipCliente);
+        $this->eliminarColaHija($cliente->id, $planAnterior->nombre);
+
+        /* =============================
+         * 4️⃣ ACTUALIZAR PLAN NUEVO
+         ============================== */
+        $this->agregarTargetAColaPadre($planNuevo->nombre, $ipCliente);
+        $this->actualizarMaxLimitColaPadre(
+            $planNuevo->nombre,
+            $subidaLimitAt,
+            $bajadaLimitAt
+        );
+
+        /* =============================
+         * 5️⃣ CREAR COLA HIJA NUEVA
+         ============================== */
+        $nombreColaHija = 'CLIENTE-' . $cliente->id;
+
+        $query = (new Query('/queue/simple/add'))
+            ->equal('name', $nombreColaHija)
+            ->equal('target', $ipCliente . '/32')
+            ->equal('parent', $planNuevo->nombre)
+            ->equal(
+                'max-limit',
+                $planNuevo->velocidad_subida . 'M/' . $planNuevo->velocidad_bajada . 'M'
+            )
+            ->equal(
+                'limit-at',
+                $subidaLimitAt . 'M/' . $bajadaLimitAt . 'M'
+            )
+            ->equal('disabled', 'no')
+            ->equal('comment', $cliente->nombre);
+
+        /* =============================
+         * 6️⃣ RÁFAGA (SI EXISTE)
+         ============================== */
+        if (
+            $planNuevo->rafaga_max_bajada &&
+            $planNuevo->rafaga_max_subida &&
+            $planNuevo->velocidad_media_bajada &&
+            $planNuevo->velocidad_media_subida &&
+            $planNuevo->tiempo_rafaga_bajada &&
+            $planNuevo->tiempo_rafaga_subida
+        ) {
+            $query
+                ->equal(
+                    'burst-limit',
+                    $planNuevo->rafaga_max_subida . 'M/' . $planNuevo->rafaga_max_bajada . 'M'
+                )
+                ->equal(
+                    'burst-threshold',
+                    $planNuevo->velocidad_media_subida . 'M/' . $planNuevo->velocidad_media_bajada . 'M'
+                )
+                ->equal(
+                    'burst-time',
+                    $planNuevo->tiempo_rafaga_subida . '/' . $planNuevo->tiempo_rafaga_bajada
+                );
+        }
+
+        /* =============================
+         * 7️⃣ PRIORIDAD (OPCIONAL)
+         ============================== */
+        if ($planNuevo->prioridad) {
+            $query->equal('priority', $planNuevo->prioridad);
+        }
+
+        $this->client->query($query)->read();
+
+    } catch (\Exception $e) {
+        Log::error('Error al actualizar plan en MikroTik', [
+            'cliente_id' => $cliente->id,
+            'ip' => $ipCliente,
+            'error' => $e->getMessage()
+        ]);
+
+        throw new \Exception(
+            "Error al actualizar plan en MikroTik: " . $e->getMessage()
+        );
+    }
+    }
     /**
      * Actualiza los límites máximos de la cola padre (SOLO para nueva cola)
      */
@@ -434,7 +572,7 @@ class MikroTikService
             $this->client->query(
                 (new Query('/queue/simple/set'))
                     ->equal('.id', $colaPadre['.id'])
-                    ->equal('max-limit', ($nuevoMaxSubida * 1000000).'/'.($nuevoMaxBajada * 1000000))
+                    ->equal('max-limit', ($nuevoMaxSubida * 1000000) . '/' . ($nuevoMaxBajada * 1000000))
             )->read();
 
             Log::info("Límites actualizados", [
@@ -451,15 +589,15 @@ class MikroTikService
 
     private function removerTargetDeColaPadre($nombrePlan, $ipCliente)
     {
-        $ipConMascara = $ipCliente.'/32';
+        $ipConMascara = $ipCliente . '/32';
         $colaPadre = $this->obtenerColaPadre($nombrePlan);
-        
+
         if ($colaPadre && isset($colaPadre['target'])) {
             $targets = explode(',', $colaPadre['target']);
-            $nuevosTargets = array_filter($targets, function($target) use ($ipConMascara) {
+            $nuevosTargets = array_filter($targets, function ($target) use ($ipConMascara) {
                 return trim($target) !== $ipConMascara;
             });
-            
+
             $this->client->query(
                 (new Query('/queue/simple/set'))
                     ->equal('.id', $colaPadre['.id'])
@@ -470,12 +608,12 @@ class MikroTikService
 
     private function agregarTargetAColaPadre($nombrePlan, $ipCliente)
     {
-        $ipConMascara = $ipCliente.'/32';
+        $ipConMascara = $ipCliente . '/32';
         $colaPadre = $this->obtenerColaPadre($nombrePlan);
-        
+
         if ($colaPadre) {
             $targets = isset($colaPadre['target']) ? explode(',', $colaPadre['target']) : [];
-            
+
             if (!in_array($ipConMascara, $targets)) {
                 $targets[] = $ipConMascara;
                 $this->client->query(
@@ -494,17 +632,17 @@ class MikroTikService
         $result = $this->client->query($query)->read();
         return $result[0] ?? null;
     }
-    
+
     private function eliminarColaHija($clienteId, $planPadre)
     {
-        $nombreCola = "CLIENTE-".str_replace('.', '-', $clienteId);
-        
+        $nombreCola = "CLIENTE-" . str_replace('.', '-', $clienteId);
+
         $query = (new Query('/queue/simple/print'))
             ->where('name', $nombreCola)
             ->where('parent', $planPadre);
-        
+
         $colas = $this->client->query($query)->read();
-        
+
         if (!empty($colas)) {
             $this->client->query(
                 (new Query('/queue/simple/remove'))
@@ -513,22 +651,23 @@ class MikroTikService
         }
     }
 
+
     // FUNCIONES PARA CAMBIO DE NODO 
     /**
- * Elimina todas las colas asociadas a un cliente (hijas y referencia en padre)
- * 
- * @param string $ipCliente La IP del cliente
- * @param string $nombrePlan El nombre del plan padre
- * @param int $clienteId El ID del cliente para identificar la cola hija
- * @return bool
- * @throws \Exception
- */
+     * Elimina todas las colas asociadas a un cliente (hijas y referencia en padre)
+     * 
+     * @param string $ipCliente La IP del cliente
+     * @param string $nombrePlan El nombre del plan padre
+     * @param int $clienteId El ID del cliente para identificar la cola hija
+     * @return bool
+     * @throws \Exception
+     */
     public function eliminarCola($ipCliente, $nombrePlan, $clienteId)
     {
         try {
             // 1. Eliminar la cola hija del cliente
             $this->eliminarColaHija($clienteId, $nombrePlan);
-            
+
             // 2. Remover la IP del target de la cola padre
             $this->removerTargetDeColaPadre($nombrePlan, $ipCliente);
             $this->cortarCliente($ipCliente);
@@ -552,9 +691,9 @@ class MikroTikService
                 case 'cortado':
                     $this->cortarCliente($ipCliente);
                     break;
-                // case 'suspendido':
-                //     $this->suspenderCliente($ipCliente);
-                //     break;
+                    // case 'suspendido':
+                    //     $this->suspenderCliente($ipCliente);
+                    //     break;
             }
             return true;
         } catch (\Exception $e) {
@@ -568,14 +707,12 @@ class MikroTikService
      */
     private function activarCliente($ipCliente)
     {
-        
+
         // Agregar a la lista "activado"
         $this->agregarAAddressList($ipCliente, 'activado');
-        
+
         // Primero eliminar de la lista "cortado" si existe
         $this->eliminarDeAddressList($ipCliente, 'cortado');
-        
-        
     }
 
 
@@ -586,7 +723,7 @@ class MikroTikService
     {
         // Primero eliminar de la lista "activado" si existe
         $this->eliminarDeAddressList($ipCliente, 'activado');
-        
+
         // Agregar a la lista "cortado"
         $this->agregarAAddressList($ipCliente, 'cortado');
     }
@@ -651,7 +788,7 @@ class MikroTikService
                 ->where('list', $listName);
 
             $ips = $this->client->query($query)->read();
-            return array_map(function($item) {
+            return array_map(function ($item) {
                 return $item['address'];
             }, $ips);
         } catch (\Exception $e) {
@@ -666,23 +803,22 @@ class MikroTikService
     {
         try {
             $query = (new Query('/queue/simple/print'))
-            ->where('target', $ipCliente.'/32');
-            
+                ->where('target', $ipCliente . '/32');
+
             $colas = $this->client->query($query)->read();
-            
+
             if (empty($colas)) {
                 throw new \Exception("No se encontró la cola del cliente");
             }
 
             $cola = $colas[0];
             $rates = explode('/', $cola['rate'] ?? '0/0');
-            
+
             return [
                 'bajada' => round($rates[1] / 1000000, 2), // Upload en Mbps
                 'subida' => round($rates[0] / 1000000, 2),  // Download en Mbps
                 'raw_rate' => $cola['rate']
             ];
-
         } catch (\Exception $e) {
             Log::error("Error obteniendo estadísticas", [
                 'ip' => $ipCliente,
@@ -693,14 +829,14 @@ class MikroTikService
     }
 
     // funcionaes para actualizar plan ;  elimnar cola padre con sus hijas
-    
-   /**
- * Elimina una cola padre y todas sus colas hijas en MikroTik
- * 
- * @param string $nombreColaPadre Nombre exacto de la cola padre
- * @return bool
- * @throws \Exception Si ocurre algún error
- */
+
+    /**
+     * Elimina una cola padre y todas sus colas hijas en MikroTik
+     * 
+     * @param string $nombreColaPadre Nombre exacto de la cola padre
+     * @return bool
+     * @throws \Exception Si ocurre algún error
+     */
     public function eliminarColaPadreYHijas(string $nombreColaPadre): bool
     {
         try {
@@ -727,13 +863,10 @@ class MikroTikService
             }
 
             return true;
-
         } catch (\RouterOS\Exceptions\ConnectException $e) {
             throw new \Exception("Error de conexión al MikroTik: " . $e->getMessage());
-            
         } catch (\RouterOS\Exceptions\BadCredentialsException $e) {
             throw new \Exception("Credenciales incorrectas para el MikroTik: " . $e->getMessage());
-            
         } catch (\Exception $e) {
             throw new \Exception("Error al eliminar colas: " . $e->getMessage());
         }

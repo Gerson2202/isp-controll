@@ -1,18 +1,22 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Planes;
 
 use App\Models\Cliente;
+use Livewire\Component;
 use App\Models\Nodo;
 use App\Models\Plan;
 use App\Services\MikroTikService;
-use Livewire\Component;
+
+
 use Illuminate\Support\Facades\Log; // Importar la clase Log
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-class PlanesFormulario extends Component
+class ListarPlanes extends Component
 {
+
+
     public $loadingActivation = false;
     public $currentPlanActivating = null;
     public $showModal = false;
@@ -38,6 +42,16 @@ class PlanesFormulario extends Component
     public $tiempo_rafaga_subida;
     public $prioridad;
     public $usar_rafaga = false;
+
+
+
+    public $tiempo_input_bajada;
+    public $tiempo_input_subida;
+
+    // Calculados (solo display)
+    public $burst_time_bajada;
+    public $burst_time_subida;
+
 
     public function mount()
     {
@@ -65,9 +79,10 @@ class PlanesFormulario extends Component
     // Mostrar el modal para actualizar
     public function editPlan($id)
     {
+        $plan = Plan::findOrFail($id);
 
-        $plan = Plan::find($id);
-        $this->planHasContracts = $plan->contratos()->exists(); // Asigna el resultado aquí
+        $this->planHasContracts = $plan->contratos()->exists();
+
         $this->plan_id = $plan->id;
         $this->nombre = $plan->nombre;
         $this->descripcion = $plan->descripcion;
@@ -75,12 +90,78 @@ class PlanesFormulario extends Component
         $this->velocidad_subida = $plan->velocidad_subida;
         $this->rehuso = $plan->rehuso;
         $this->nodo_id = $plan->nodo_id;
+
+        // 🔥 RÁFAGAS
+        $this->usar_rafaga = !is_null($plan->rafaga_max_bajada);
+
+        $this->rafaga_max_bajada = $plan->rafaga_max_bajada;
+        $this->rafaga_max_subida = $plan->rafaga_max_subida;
+
+        $this->velocidad_media_bajada = $plan->velocidad_media_bajada;
+        $this->velocidad_media_subida = $plan->velocidad_media_subida;
+
+        // input editable
+        $this->tiempo_input_bajada = (
+            $plan->rafaga_max_bajada && $plan->tiempo_rafaga_bajada
+        )
+            ? (int) ($plan->tiempo_rafaga_bajada / $plan->rafaga_max_bajada)
+            : null;
+
+        $this->tiempo_input_subida = (
+            $plan->rafaga_max_subida && $plan->tiempo_rafaga_subida
+        )
+            ? (int) ($plan->tiempo_rafaga_subida / $plan->rafaga_max_subida)
+            : null;
+
+
+        // valores finales display
+        $this->burst_time_bajada = $plan->tiempo_rafaga_bajada;
+        $this->burst_time_subida = $plan->tiempo_rafaga_subida;
+
         $this->showModal = true;
     }
+
+    // Funcion reactiva para cambiar el valor dinamicamente
+    public function updated($property)
+    {
+        if (!$this->usar_rafaga) {
+            $this->burst_time_bajada = null;
+            $this->burst_time_subida = null;
+            return;
+        }
+
+        if ($this->rafaga_max_bajada && $this->tiempo_input_bajada) {
+            $this->burst_time_bajada =
+                $this->rafaga_max_bajada * $this->tiempo_input_bajada;
+        }
+
+        if ($this->rafaga_max_subida && $this->tiempo_input_subida) {
+            $this->burst_time_subida =
+                $this->rafaga_max_subida * $this->tiempo_input_subida;
+        }
+    }
+
 
     // Actualizar el plan-- ultimo cambio solo se agrego la condicion de if para dejar actualizar sino tiene contrato
     public function updatePlan()
     {
+        try {
+            // 🔥 VALIDACIONES
+            $this->validate();
+            $this->validateRafagas();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            foreach ($e->validator->errors()->all() as $message) {
+                $this->dispatch(
+                    'notify',
+                    type: 'error',
+                    message: $message
+                );
+            }
+
+            return; // ⛔ NO SIGUE
+        }
+
         $plan = Plan::findOrFail($this->plan_id);
         // 1. Verificar si SOLO cambió la descripción (y ningún otro campo relevante para MikroTik)
         $soloDescripcionCambio =
@@ -109,7 +190,14 @@ class PlanesFormulario extends Component
             $plan->velocidad_subida == $this->velocidad_subida &&
             $plan->rehuso === $this->rehuso &&
             $plan->nodo_id == $this->nodo_id &&
-            $plan->descripcion === $this->descripcion; // Nada cambió
+            $plan->descripcion === $this->descripcion &&
+            // ===== RÁFAGAS =====
+            (bool) $plan->rafaga_max_bajada === (bool) $this->rafaga_max_bajada &&
+            (bool) $plan->rafaga_max_subida === (bool) $this->rafaga_max_subida &&
+            (bool) $plan->velocidad_media_bajada === (bool) $this->velocidad_media_bajada &&
+            (bool) $plan->velocidad_media_subida === (bool) $this->velocidad_media_subida &&
+            (int) $plan->tiempo_rafaga_bajada === (int) $this->burst_time_bajada &&
+            (int) $plan->tiempo_rafaga_subida === (int) $this->burst_time_subida;
         // Si no hay cambios, salir sin hacer nada
         if ($ningunCambio) {
             return;
@@ -157,13 +245,23 @@ class PlanesFormulario extends Component
                 // 7. Crear colas hijas
                 foreach ($this->clientesAsociados as $cliente) {
                     $mikroTikService->crearColaHija(
-                        $cliente->id,
-                        $cliente->ip,
-                        $this->nombre,
-                        $this->velocidad_subida,
-                        $this->velocidad_bajada,
-                        $this->rehuso ?? '1:1'
+                        $cliente,
+                        [
+                            'nombre' => $this->nombre,
+                            'velocidad_subida' => $this->velocidad_subida,
+                            'velocidad_bajada' => $this->velocidad_bajada,
+                            'rehuso' => $this->rehuso,
+                            'rafaga_max_bajada' => $this->usar_rafaga ? $this->rafaga_max_bajada : null,
+                            'rafaga_max_subida' => $this->usar_rafaga ? $this->rafaga_max_subida : null,
+                            'velocidad_media_bajada' => $this->usar_rafaga ? $this->velocidad_media_bajada : null,
+                            'velocidad_media_subida' => $this->usar_rafaga ? $this->velocidad_media_subida : null,
+                            'tiempo_rafaga_bajada' => $this->usar_rafaga ? (int) $this->burst_time_bajada : null,
+                            'tiempo_rafaga_subida' => $this->usar_rafaga ? (int) $this->burst_time_subida : null,
+                            'prioridad' => $this->prioridad,
+                        ],
+                        $cliente->ip
                     );
+
                     $processedClients++;
                     $this->progress = intval(($processedClients / $this->totalClients) * 100);
                 }
@@ -176,7 +274,19 @@ class PlanesFormulario extends Component
                     'velocidad_subida' => $this->velocidad_subida,
                     'rehuso' => $this->rehuso,
                     'nodo_id' => $this->nodo_id,
+
+                    'rafaga_max_bajada' => $this->usar_rafaga ? $this->rafaga_max_bajada : null,
+                    'rafaga_max_subida' => $this->usar_rafaga ? $this->rafaga_max_subida : null,
+
+                    'velocidad_media_bajada' => $this->usar_rafaga ? $this->velocidad_media_bajada : null,
+                    'velocidad_media_subida' => $this->usar_rafaga ? $this->velocidad_media_subida : null,
+
+                    // 🔥 BURST TIME → SEGUNDOS (INT)
+                    'tiempo_rafaga_bajada' => $this->usar_rafaga ? (int) $this->burst_time_bajada : null,
+                    'tiempo_rafaga_subida' => $this->usar_rafaga ? (int) $this->burst_time_subida : null,
+
                 ]);
+
 
                 // 9. Confirmar la transacción si todo fue exitoso
                 DB::commit();
@@ -201,13 +311,6 @@ class PlanesFormulario extends Component
                     type: 'error',
                     message: 'Error: El plan no fue encontrado'
                 );
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                DB::rollBack();
-                $this->dispatch(
-                    'notify',
-                    type: 'error',
-                    message: 'Error de validación: ' . implode(' ', $e->validator->errors()->all())
-                );
             } catch (\Exception $e) {
                 DB::rollBack();
                 $this->dispatch(
@@ -227,6 +330,17 @@ class PlanesFormulario extends Component
                 'velocidad_subida' => $this->velocidad_subida,
                 'rehuso' => $this->rehuso,
                 'nodo_id' => $this->nodo_id,
+
+                'rafaga_max_bajada' => $this->usar_rafaga ? $this->rafaga_max_bajada : null,
+                'rafaga_max_subida' => $this->usar_rafaga ? $this->rafaga_max_subida : null,
+
+                'velocidad_media_bajada' => $this->usar_rafaga ? $this->velocidad_media_bajada : null,
+                'velocidad_media_subida' => $this->usar_rafaga ? $this->velocidad_media_subida : null,
+
+                // 🔥 BURST TIME → SEGUNDOS (INT)
+                'tiempo_rafaga_bajada' => $this->usar_rafaga ? (int) $this->burst_time_bajada : null,
+                'tiempo_rafaga_subida' => $this->usar_rafaga ? (int) $this->burst_time_subida : null,
+
             ]);
 
 
@@ -286,77 +400,6 @@ class PlanesFormulario extends Component
         'nodo_id' => 'exists:nodos,id', // Validar que el nodo_id existe en la tabla nodos
     ];
 
-    // limpiar campos al desactivar
-    public function updatedUsarRafaga($value)
-    {
-        if (!$value) {
-            $this->rafaga_max_bajada = null;
-            $this->rafaga_max_subida = null;
-            $this->velocidad_media_bajada = null;
-            $this->velocidad_media_subida = null;
-            $this->tiempo_rafaga_bajada = null;
-            $this->tiempo_rafaga_subida = null;
-            $this->prioridad = null;
-        }
-    }
-
-    // Función para Crear un nuevo plan
-    public function submitPlan()
-    {
-        try {
-            $nombreNormalizado = strtoupper(Str::slug($this->nombre, '_'));
-
-            // Validar unicidad manual (opcional pero recomendado)
-            if (Plan::where('nombre', $nombreNormalizado)->exists()) {
-                $this->dispatch(
-                    'notify',
-                    type: 'error',
-                    message: 'Ya existe un plan con ese nombre'
-                );
-                return;
-            }
-            Plan::create([
-                'nombre' => $nombreNormalizado,
-                'descripcion' => $this->descripcion,
-                'velocidad_bajada' => $this->velocidad_bajada,
-                'velocidad_subida' => $this->velocidad_subida,
-
-                'rafaga_max_bajada' => $this->rafaga_max_bajada ?: null,
-                'rafaga_max_subida' => $this->rafaga_max_subida ?: null,
-
-                'velocidad_media_bajada' => $this->velocidad_media_bajada ?: null,
-                'velocidad_media_subida' => $this->velocidad_media_subida ?: null,
-
-                'tiempo_rafaga_bajada' => $this->tiempo_rafaga_bajada ?: null,
-                'tiempo_rafaga_subida' => $this->tiempo_rafaga_subida ?: null,
-
-                'prioridad' => $this->prioridad ?: null,
-
-                'rehuso' => $this->rehuso,
-                'nodo_id' => $this->nodo_id,
-            ]);
-
-            // Actualizar la lista de planes (sin cambios)
-            $this->plans = Plan::all();
-
-            // Vaciar los campos del formulario (sin cambios)
-            $this->resetForm();
-
-            // Notificaciones existentes (sin cambios)
-            $this->dispatch(
-                'notify',
-                type: 'success',
-                message: 'Plan Creado exitosamente'
-            );
-        } catch (\Exception $e) {
-            // Solo agregamos esta parte para capturar errores
-            $this->dispatch(
-                'notify',
-                type: 'error',
-                message: 'Error al crear el plan: ' . $e->getMessage()
-            );
-        }
-    }
 
     public function resetForm()
     {
@@ -376,11 +419,63 @@ class PlanesFormulario extends Component
         $this->prioridad = null;
     }
 
+    // Validacion de campos
+    protected function validateRafagas()
+    {
+        if (!$this->usar_rafaga) {
+            return;
+        }
+
+        $errors = [];
+
+        // ===== REQUIRED =====
+        if (!$this->rafaga_max_bajada) {
+            $errors[] = 'La ráfaga máxima de bajada es obligatoria.';
+        }
+
+        if (!$this->rafaga_max_subida) {
+            $errors[] = 'La ráfaga máxima de subida es obligatoria.';
+        }
+
+        if (!$this->velocidad_media_bajada) {
+            $errors[] = 'La velocidad media de bajada es obligatoria.';
+        }
+
+        if (!$this->velocidad_media_subida) {
+            $errors[] = 'La velocidad media de subida es obligatoria.';
+        }
+
+        if (!$this->tiempo_input_bajada) {
+            $errors[] = 'El tiempo de ráfaga de bajada es obligatorio.';
+        }
+
+        if (!$this->tiempo_input_subida) {
+            $errors[] = 'El tiempo de ráfaga de subida es obligatorio.';
+        }
+
+        // ===== LÓGICA =====
+        if ($this->rafaga_max_bajada <= $this->velocidad_bajada) {
+            $errors[] = 'La ráfaga de bajada debe ser mayor que la velocidad base.';
+        }
+
+        if ($this->rafaga_max_subida <= $this->velocidad_subida) {
+            $errors[] = 'La ráfaga de subida debe ser mayor que la velocidad base.';
+        }
+
+
+
+        if (!empty($errors)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'rafaga' => $errors
+            ]);
+        }
+    }
+
 
     public function render()
     {
         $this->applyFilter();
-        return view('livewire.planes-formulario', [
+        return view('livewire.planes.listar-planes', [
             'nodos' => Nodo::all(),
             // Resto de tus datos...
         ]);

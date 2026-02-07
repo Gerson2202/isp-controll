@@ -35,11 +35,11 @@ class AsignarIpCliente extends Component
     public function loadClienteData()
     {
         $this->cliente = Cliente::with(['contratos.plan.nodo.pools'])->find($this->cliente_id);
-        
+
         if ($this->cliente) {
             $this->contrato = $this->cliente->contratos->first();
             $this->plan = $this->contrato->plan ?? null;
-            
+
             if ($this->plan && $this->plan->nodo) {
                 $this->pools = $this->plan->nodo->pools()
                     ->orderBy('nombre')
@@ -52,9 +52,9 @@ class AsignarIpCliente extends Component
     public function loadUsedIps()
     {
         if ($this->plan && $this->plan->nodo) {
-            $this->ipsUsadas = Cliente::whereHas('contratos.plan', function($query) {
-                    $query->where('nodo_id', $this->plan->nodo->id);
-                })
+            $this->ipsUsadas = Cliente::whereHas('contratos.plan', function ($query) {
+                $query->where('nodo_id', $this->plan->nodo->id);
+            })
                 ->whereNotNull('ip')
                 ->where('id', '!=', $this->cliente_id) // Excluir al cliente actual
                 ->pluck('ip')
@@ -65,7 +65,7 @@ class AsignarIpCliente extends Component
     public function updatedPoolId($value)
     {
         $this->reset('ip');
-        
+
         if ($value) {
             $pool = Pool::find($value);
             $this->availableIps = $this->generateIpRange($pool->start_ip, $pool->end_ip);
@@ -100,10 +100,10 @@ class AsignarIpCliente extends Component
         try {
             // Obtener datos necesarios para MikroTik
             $clienteConRelaciones = $this->cliente->load('contrato.plan.nodo');
-            
+
             // Llamar al método para crear cola hija
             $this->crearColaHija($clienteConRelaciones, $this->ip);
-            
+
             // Actualizaciones atómicas
             $this->cliente->update([
                 'ip' => $this->ip,
@@ -122,10 +122,9 @@ class AsignarIpCliente extends Component
 
             session()->flash('success', 'La IP fue asignada correctamente y la restricción se creó con éxito en MikroTik.');
             return redirect()->route('asignarIPindex');
-            
         } catch (\Throwable $e) {
             DB::rollBack();
-            
+
             // Registro detallado del error
             logger()->error('Error en asignarIp: ' . $e->getMessage(), [
                 'cliente_id' => $this->cliente->id ?? null,
@@ -134,7 +133,7 @@ class AsignarIpCliente extends Component
             ]);
 
             $mensajeError = 'Error al crear la restricción: el plan no fue encontrado en MikroTik. Verifica si el plan está correctamente creado en tu router.' . $e->getMessage();
-            
+
             // Mensaje más específico para errores de MikroTik
             if (str_contains($e->getMessage(), 'MikroTik')) {
                 $mensajeError = 'Error de conexión con MikroTik: ' . $e->getMessage();
@@ -147,7 +146,7 @@ class AsignarIpCliente extends Component
 
     protected function crearColaHija($cliente, $ipAsignada)
     {
-    
+
         try {
             // Verificar que existan todas las relaciones necesarias
             if (!$cliente->contrato || !$cliente->contrato->plan || !$cliente->contrato->plan->nodo) {
@@ -167,13 +166,12 @@ class AsignarIpCliente extends Component
 
             // Llamar al método del servicio para crear cola hija
             $resultado = $mikroTikService->crearColaHija(
-                $this->cliente->id,
-                $ipAsignada,
-                $plan->nombre,          // Nombre de la cola padre
-                $plan->velocidad_subida,
-                $plan->velocidad_bajada,
-                $plan->rehuso ?? '1:1'  // Valor por defecto si no está especificado
+                $this->cliente, //enviamos todo el cliente
+                $plan, //enviamos todo el plan  
+                $ipAsignada //enviamos la ip seleccionada 
             );
+
+
 
             // Opcional: Log del resultado
             Log::info("Cola hija creada en MikroTik", [
@@ -181,7 +179,6 @@ class AsignarIpCliente extends Component
                 'ip' => $ipAsignada,
                 'resultado' => $resultado
             ]);
-
         } catch (\Exception $e) {
             Log::error("Error al crear cola hija en MikroTik: " . $e->getMessage());
             throw $e; // Re-lanzamos la excepción para manejarla en el método principal

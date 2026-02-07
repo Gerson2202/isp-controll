@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -15,27 +14,26 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->text('descripcion');
+            $table->decimal('precio', 10, 2)->nullable();
 
             // Velocidades básicas (ya existentes)
-            $table->integer('velocidad_bajada'); // en Mbps
+            $table->integer('velocidad_bajada'); // en Mbps     
             $table->integer('velocidad_subida'); // en Mbps
 
             // Campos para rafagas (burst)
-            $table->integer('rafaga_max_bajada')->nullable()->comment('Velocidad máxima de ráfaga bajada en kbps');
-            $table->integer('rafaga_max_subida')->nullable()->comment('Velocidad máxima de ráfaga subida en kbps');
+            $table->integer('rafaga_max_bajada')->nullable();
+            $table->integer('rafaga_max_subida')->nullable();
 
             // Campos para velocidades medias (average rate)
-            $table->integer('velocidad_media_bajada')->nullable()->comment('Velocidad media bajada en kbps');
-            $table->integer('velocidad_media_subida')->nullable()->comment('Velocidad media subida en kbps');
+            $table->integer('velocidad_media_bajada')->nullable();
+            $table->integer('velocidad_media_subida')->nullable();
 
             // Tiempos de ráfaga (burst time)
-            $table->integer('tiempo_rafaga_bajada')->nullable()->comment('Tiempo de ráfaga bajada en segundos');
-            $table->integer('tiempo_rafaga_subida')->nullable()->comment('Tiempo de ráfaga subida en segundos');
+            $table->integer('tiempo_rafaga_bajada')->nullable();
+            $table->integer('tiempo_rafaga_subida')->nullable();
 
             // Otros campos útiles para queues de MikroTik
-            $table->integer('prioridad')->nullable()->comment('Prioridad de la cola (1-8)');
-            $table->integer('limit_at')->nullable()->comment('Limit at (velocidad garantizada) en kbps');
-            $table->integer('max_limit')->nullable()->comment('Max limit (límite máximo) en kbps');
+            $table->integer('prioridad')->nullable();
 
             $table->string('rehuso', 10);
             $table->foreignId('nodo_id')
