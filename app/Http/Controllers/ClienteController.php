@@ -11,7 +11,7 @@ use Spatie\Permission\Exceptions\UnauthorizedException;
 
 class ClienteController extends Controller
 {
-   
+
 
     public function index()
     {
@@ -34,8 +34,8 @@ class ClienteController extends Controller
     {
         // Permiso para ver imagenes del cliente
         if (!auth()->user()->can('ver imagenes del cliente')) {
-        abort(403, 'No tienes permiso para ver imagenes clientes');
-        } 
+            abort(403, 'No tienes permiso para ver imagenes clientes');
+        }
 
         $cliente = Cliente::findOrFail($id);
         // Retorna la vista con las imágenes
@@ -47,8 +47,8 @@ class ClienteController extends Controller
     {
         // Permiso para ver cliente
         if (!auth()->user()->can('ver clientes')) {
-        abort(403, 'No tienes permiso para ver clientes');
-        }   
+            abort(403, 'No tienes permiso para ver clientes');
+        }
 
         return view('clientes.search');
     }
@@ -56,30 +56,30 @@ class ClienteController extends Controller
     public function historialFacturas(Cliente $cliente)
     {
         // Ver historial de facturas
-         if (!auth()->user()->can('ver historico de facturas',)) {
+        if (!auth()->user()->can('ver historico de facturas',)) {
             abort(403, 'No tienes permiso para acceder a esta pagina');
         }
         return view('clientes.historial-facturas', compact('cliente'));
     }
 
     public function graficas($id)
-    {   
+    {
         // Permiso para ver grafica del cliente
         if (!auth()->user()->can('ver clientes')) {
-        abort(403, 'No tienes permiso para ver grafica clientes');
-        }   
+            abort(403, 'No tienes permiso para ver grafica clientes');
+        }
         $cliente = Cliente::findOrFail($id);
         return view('clientes.graficas', compact('cliente'));
     }
-    
+
     // Funcion para mostrar clientes sin ip asignadas 
     public function asignarIPindex()
     {
-        
-         // Obtener todos los clientes donde el campo 'ip' sea nulo y que tengan un contrato asignado y el contrato este activo o suspendido
-         //    contratos en cancelado no apareceran
-            $clientes = Cliente::whereNull('ip')
-            ->whereHas('contratos', function($query) {
+
+        // Obtener todos los clientes donde el campo 'ip' sea nulo y que tengan un contrato asignado y el contrato este activo o suspendido
+        //    contratos en cancelado no apareceran
+        $clientes = Cliente::whereNull('ip')
+            ->whereHas('contratos', function ($query) {
                 $query->where('estado', '!=', 'cancelado');
             })
             ->get();
@@ -88,18 +88,18 @@ class ClienteController extends Controller
         return view('clientes.asignar_ip', compact('clientes'));
     }
 
-     // Vista para asignar IP a un cliente en particular 
+    // Vista para asignar IP a un cliente en particular 
 
     public function asignarIpCliente($id_cliente)
     {
         // Permiso para asignar ip al cliente 
         if (!auth()->user()->can('asignar ip')) {
             abort(403, 'No tienes permiso asignar ip a clientes');
-        }     
-       $cliente= Cliente::findOrFail($id_cliente);
-       return view('clientes.asignaripshow', compact('cliente'));
+        }
+        $cliente = Cliente::findOrFail($id_cliente);
+        return view('clientes.asignaripshow', compact('cliente'));
     }
-    
+
     /**
      * Store a newly created resource in storage.
      */
@@ -113,22 +113,22 @@ class ClienteController extends Controller
      */
     public function show($id)
     {
-       // Permiso para ver cliente
-         if (!auth()->user()->can('ver clientes')) {
-         abort(403, 'No tienes permiso para ver clientes');
-         } 
+        // Permiso para ver cliente
+        if (!auth()->user()->can('ver clientes')) {
+            abort(403, 'No tienes permiso para ver clientes');
+        }
 
         $inventarios = Inventario::where('cliente_id', $id)
-        ->get();
-        
+            ->get();
+
         // Cargar tickets con sus visitas relacionadas
         $cliente = Cliente::with(['contrato.plan', 'tickets.visita'])->find($id);
-       
+
         // Obtener los tickets del cliente
         $tickets = $cliente->tickets;
         // Contar el total de tickets abiertos
         $totalTicketsAbiertos = $cliente->tickets()->where('estado', 'abierto')->count();
-        return view('clientes.show', compact('cliente','tickets','totalTicketsAbiertos','inventarios'));
+        return view('clientes.show', compact('cliente', 'tickets', 'totalTicketsAbiertos', 'inventarios'));
     }
 
     /**
@@ -143,13 +143,12 @@ class ClienteController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, $id)
-    {   
-        // Permiso para editar cliente
+    {
         if (!auth()->user()->can('editar informacion de cliente')) {
-        abort(403, 'No tienes permiso para editar clientes');
-        } 
-        // return $request;
-        $request->validate([
+            abort(403, 'No tienes permiso para editar clientes');
+        }
+
+        $validated = $request->validate([
             'cedula' => 'nullable|string|max:20',
             'telefono' => 'nullable|string|max:20',
             'correo' => 'nullable|email',
@@ -159,12 +158,46 @@ class ClienteController extends Controller
             'nombre' => 'string',
             'descripcion' => 'nullable|string',
         ]);
-    
+
         $cliente = Cliente::findOrFail($id);
-        $cliente->update($request->all());
-    
-        return redirect()->back()->with('success', 'Información del cliente actualizada correctamente');
+
+        $original = $cliente->getOriginal();
+
+        // SOLO llenar con datos validados
+        $cliente->fill($validated);
+
+        $cambios = $cliente->getDirty();
+
+        if (!empty($cambios)) {
+
+            $detalleCambios = '';
+
+            foreach ($cambios as $campo => $nuevoValor) {
+                $valorAnterior = $original[$campo] ?? 'N/A';
+
+                $detalleCambios .= "Campo: {$campo}\n";
+                $detalleCambios .= "Antes: {$valorAnterior}\n";
+                $detalleCambios .= "Después: {$nuevoValor}\n\n";
+            }
+
+            $cliente->save();
+
+           Ticket::create([
+                'tipo_reporte' => 'Actualización de datos',
+                'situacion' => "Se modificaron los siguientes campos:\n\n" . $detalleCambios,
+                'estado' => 'cerrado',
+                'fecha_cierre' => now(),
+                'cliente_id' => $cliente->id,
+                'solucion' => "Estado actualizado correctamente desde el panel",
+                'user_id' => auth()->id(),
+            ]);
+        }
+
+        return redirect()->back()
+            ->with('success', 'Información del cliente actualizada correctamente');
     }
+
+
 
     /**
      * Remove the specified resource from storage.

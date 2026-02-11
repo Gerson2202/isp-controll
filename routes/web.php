@@ -114,6 +114,7 @@ Route::middleware([
     Route::get('/contratos/list', [ContratoController::class, 'list'])->name('contratos.list');
     Route::get('/asignar-contrato/{cliente}', [ContratoController::class, 'asignarContrato'])->name('asignarContrato');
     Route::post('/guardar-contrato', [ContratoController::class, 'guardarContrato'])->name('guardarContrato');
+    Route::get('/contratos/morosos', [ContratoController::class, 'morosos'])->name('contratos.morosos');
 
     // Rutas para Pooles
     // ---Vista Gestionar Pooles--

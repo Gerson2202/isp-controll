@@ -83,4 +83,12 @@ class ContratoController extends Controller
         // Redirigir con un mensaje de éxito
         return redirect()->route('contratoIndex')->with('success', 'Contrato asignado correctamente.');
     }
+
+    public function morosos()
+    { 
+      //  if (!auth()->user()->can('crear facturas')) {
+      //   abort(403, 'No tienes permiso para acceder a esta pagina');
+      // }
+       return view('facturacion.morosos');
+    }
 }

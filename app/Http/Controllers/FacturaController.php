@@ -32,4 +32,6 @@ class FacturaController extends Controller
        }
        return view('clientes.tablaCortes');
     }
+
+     
 }

@@ -93,9 +93,16 @@
                                     <!-- Contenedor para alinear botones horizontalmente -->
                                     <div class="d-flex flex-wrap gap-2 mb-3 mt-3">
                                         <!-- Botón para abrir el modal -->
-                                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal"
-                                            data-bs-target="#editClienteModal">
-                                            <i class="fas fa-edit me-1"></i> Editar Inf
+                                        @php
+                                            $esCancelado = optional($cliente->contrato)->estado === 'cancelado';
+                                        @endphp
+
+                                        <button class="btn btn-warning btn-sm {{ $esCancelado ? 'btn-secondary' : '' }}"
+                                            data-bs-toggle="{{ $esCancelado ? '' : 'modal' }}"
+                                            data-bs-target="{{ $esCancelado ? '' : '#editClienteModal' }}"
+                                            {{ $esCancelado ? 'disabled' : '' }}>
+                                            <i class="fas fa-edit me-1"></i>
+                                            Editar Inf
                                         </button>
 
                                         <!-- Botón para ir a la vista de imágenes del cliente -->
@@ -455,7 +462,13 @@
                                 </div>
                                 <hr>
                                 <h4><strong>Crear Ticket</strong></h4>
-                                @livewire('crear-ticket', ['cliente_id' => $cliente->id])
+                                @if (!$esCancelado)
+                                    @livewire('crear-ticket', ['cliente_id' => $cliente->id])
+                                @else
+                                    <div class="alert alert-danger py-2">
+                                        No se pueden crear tickets. Contrato cancelado.
+                                    </div>
+                                @endif
                             </div>
 
                         </div>
