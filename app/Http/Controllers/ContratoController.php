@@ -86,9 +86,9 @@ class ContratoController extends Controller
 
     public function morosos()
     { 
-      //  if (!auth()->user()->can('crear facturas')) {
-      //   abort(403, 'No tienes permiso para acceder a esta pagina');
-      // }
+        if (!auth()->user()->can('ver lista de contrato')) {
+         abort(403, 'No tienes permiso para acceder a esta pagina');
+       }
        return view('facturacion.morosos');
     }
 }

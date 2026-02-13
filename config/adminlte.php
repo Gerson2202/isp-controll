@@ -365,7 +365,7 @@ return [
                     'text' => 'Clientes Morosos',
                     'route' => 'contratos.morosos', // Ruta para agregar cliente
                     'icon' => 'fas fa-exclamation-triangle', // Icono para agregar
-                    // 'can'   => 'ver lista de contrato', // 👈 solo si tiene este permiso
+                    'can'   => 'ver lista de contrato', // 👈 solo si tiene este permiso
                 ],
 
             ],
