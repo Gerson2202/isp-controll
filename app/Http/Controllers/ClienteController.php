@@ -7,7 +7,8 @@ use App\Models\Inventario;
 use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Spatie\Permission\Exceptions\UnauthorizedException;
-
+use Illuminate\Support\Facades\DB;
+use App\Services\MikroTikService;
 
 class ClienteController extends Controller
 {
@@ -182,7 +183,7 @@ class ClienteController extends Controller
 
             $cliente->save();
 
-           Ticket::create([
+            Ticket::create([
                 'tipo_reporte' => 'Actualización de datos',
                 'situacion' => "Se modificaron los siguientes campos:\n\n" . $detalleCambios,
                 'estado' => 'cerrado',
@@ -196,7 +197,86 @@ class ClienteController extends Controller
         return redirect()->back()
             ->with('success', 'Información del cliente actualizada correctamente');
     }
+    public function darBaja(Cliente $cliente)
+    {
+        DB::beginTransaction();
 
+        try {
+            $cliente = Cliente::with(['contratos.plan.nodo'])
+                ->lockForUpdate()
+                ->findOrFail($cliente->id);
+
+            $ipAsignada = $cliente->ip;
+            $ipDisplay = $ipAsignada ?? 'N/A';
+
+            $nodo = null;
+            $nombrePlan = null;
+
+            foreach ($cliente->contratos as $contrato) {
+                if ($contrato->estado === 'activo' && $contrato->plan && $contrato->plan->nodo) {
+                    $nodo = $contrato->plan->nodo;
+                    $nombrePlan = $contrato->plan->nombre;
+                    break;
+                }
+            }
+
+            if (!$nodo) throw new \Exception('No se pudo determinar el nodo del cliente.');
+            if (!$ipAsignada || !$nombrePlan) throw new \Exception('No se pudo determinar IP o plan del cliente.');
+
+            // MikroTik
+            $mikroTikService = new \App\Services\MikroTikService(
+                $nodo->ip,
+                $nodo->user,
+                $nodo->pass,
+                $nodo->puerto_api ?? 8728
+            );
+
+            if (!$mikroTikService->isReachable()) {
+                throw new \Exception("No se pudo conectar al router {$nodo->nombre}");
+            }
+
+            $mikroTikService->eliminarCola($ipAsignada, $nombrePlan, $cliente->id);
+
+            // Actualizar DB
+            $cliente->update([
+                'estado' => 'cortado',
+                'ip' => null
+            ]);
+
+            $cliente->contratos()->where('estado', 'activo')->update(['estado' => 'cancelado']);
+
+            // Crear ticket
+            $situacion = "Cliente dado de baja.\n";
+            $situacion .= "IP asignada liberada: {$ipDisplay}\n";
+            $situacion .= "Nodo: {$nodo->nombre}\n";
+            $situacion .= "MikroTik: Colas eliminadas correctamente.";
+
+            $solucion = "Cliente dado de baja automáticamente.\n";
+            $solucion .= "IP {$ipDisplay} liberada.\n";
+            $solucion .= "Colas eliminadas en MikroTik.\n";
+            $solucion .= "Contrato(s) cancelado(s).\n";
+            $solucion .= "IP Cliente cortada.";
+
+            \App\Models\Ticket::create([
+                'tipo_reporte' => 'Baja manual',
+                'situacion' => $situacion,
+                'fecha_cierre' => now(),
+                'solucion' => $solucion,
+                'estado' => 'cerrado',
+                'cliente_id' => $cliente->id,
+                'user_id' => auth()->id(),
+            ]);
+
+            DB::commit();
+
+            // ✅ Flash message para mostrar en la vista
+            return redirect()->back()->with('success', "Cliente {$cliente->nombre} dado de baja correctamente. IP {$ipDisplay} liberada y colas eliminadas.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error("Error en baja cliente {$cliente->id}: " . $e->getMessage());
+            return redirect()->back()->with('error', "No se pudo completar la baja: " . $e->getMessage());
+        }
+    }
 
 
     /**

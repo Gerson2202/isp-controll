@@ -51,7 +51,7 @@ class GenerarFacturasMensuales extends Component
         // Obtener contratos activos sin factura este mes
         $contratos = Contrato::with(['cliente', 'plan', 'facturas.pagos'])
             ->where('estado', 'activo')
-            ->whereDoesntHave('facturas', function($query) {
+            ->whereDoesntHave('facturas', function ($query) {
                 $query->whereMonth('fecha_emision', $this->mes)
                     ->whereYear('fecha_emision', $this->anio);
             })
@@ -59,6 +59,21 @@ class GenerarFacturasMensuales extends Component
 
         foreach ($contratos as $contrato) {
             try {
+
+                // NUEVA CONDICIÓN SOLO PARA FERNET --- 
+                $inicioPeriodo = now()->setDate($this->anio, $this->mes, 1)->startOfDay();
+
+                $inicioPeriodo = now()->setDate($this->anio, $this->mes, 1)->startOfMonth();
+
+                if ($contrato->fecha_inicio && $contrato->fecha_inicio >= $inicioPeriodo) {
+                    $this->resultados[] = [
+                        'cliente' => $contrato->cliente->nombre,
+                        'estado' => 'omitido',
+                        'mensaje' => 'Contrato iniciado este mes, se facturará el próximo'
+                    ];
+                    continue;
+                }
+                // FIN DE NUEVA CODICION SOLO PARA FERNET--
                 // 1. Verificar facturas pendientes (sin pagos completos)
                 $tieneFacturasPendientes = $contrato->facturas()
                     ->where('estado', 'pendiente')
@@ -79,7 +94,8 @@ class GenerarFacturasMensuales extends Component
                     if ($factura->pagos()
                         ->whereMonth('fecha_pago', $this->mes)
                         ->whereYear('fecha_pago', $this->anio)
-                        ->exists()) {
+                        ->exists()
+                    ) {
                         $pagoEnMesActual = true;
                         break;
                     }
@@ -89,7 +105,7 @@ class GenerarFacturasMensuales extends Component
                     $this->resultados[] = [
                         'cliente' => $contrato->cliente->nombre,
                         'estado' => 'omitido',
-                        'mensaje' => 'Realizó pago en ' . $this->mes . '/' . $this->anio
+                        'mensaje' => 'Realizó pago reciente ; en ' . $this->mes . '/' . $this->anio
                     ];
                     continue;
                 }
@@ -118,7 +134,6 @@ class GenerarFacturasMensuales extends Component
                     'estado' => 'éxito',
                     'mensaje' => 'Factura generada: ' . $factura->numero_factura
                 ];
-
             } catch (\Exception $e) {
                 $this->resultados[] = [
                     'cliente' => $contrato->cliente->nombre,
@@ -128,7 +143,7 @@ class GenerarFacturasMensuales extends Component
             }
         }
         // === AGREGAR AQUÍ === //
-        if (empty(array_filter($this->resultados, function($item) {
+        if (empty(array_filter($this->resultados, function ($item) {
             return $item['estado'] === 'éxito';
         }))) {
             $this->resultados[] = [
@@ -154,22 +169,24 @@ class GenerarFacturasMensuales extends Component
             ->get();
 
         if ($facturas->isEmpty()) {
-            $this->dispatch('notify', 
+            $this->dispatch(
+                'notify',
                 type: 'warning',
-                message: 'No hay facturas para el período '.$this->mes.'/'.$this->anio
+                message: 'No hay facturas para el período ' . $this->mes . '/' . $this->anio
             );
             return;
         }
 
         // Verificar pagos
-        $facturasConPagos = $facturas->filter(function($factura) {
+        $facturasConPagos = $facturas->filter(function ($factura) {
             return $factura->pagos()->exists();
         });
 
         if ($facturasConPagos->isNotEmpty()) {
-            $this->dispatch('notify', 
+            $this->dispatch(
+                'notify',
                 type: 'error',
-                message: $facturasConPagos->count().' facturas no pueden eliminarse porque tienen pagos asociados'
+                message: $facturasConPagos->count() . ' facturas no pueden eliminarse porque tienen pagos asociados'
             );
             return;
         }
@@ -181,21 +198,22 @@ class GenerarFacturasMensuales extends Component
                 Factura::whereIn('id', $facturas->pluck('id'))->delete();
             });
 
-            $this->dispatch('notify', 
+            $this->dispatch(
+                'notify',
                 type: 'success',
-                message: 'Se eliminaron '.$facturas->count().' facturas'
+                message: 'Se eliminaron ' . $facturas->count() . ' facturas'
             );
-            
+
             $this->resultados = [];
-            
         } catch (\Exception $e) {
-            $this->dispatch('notify', 
+            $this->dispatch(
+                'notify',
                 type: 'error',
-                message: 'Error al eliminar facturas: '.$e->getMessage()
+                message: 'Error al eliminar facturas: ' . $e->getMessage()
             );
         }
     }
-    
+
     public function render()
     {
         return view('livewire.facturacion.generar-facturas-mensuales', [

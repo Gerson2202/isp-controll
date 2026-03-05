@@ -47,6 +47,7 @@
                         </button>
                     </div>
                 @endif
+
             </div>
             <div class="card-body">
                 <!-- Nav tabs -->
@@ -92,7 +93,7 @@
                                 <div>
                                     <!-- Contenedor para alinear botones horizontalmente -->
                                     <div class="d-flex flex-wrap gap-2 mb-3 mt-3">
-                                        <!-- Botón para abrir el modal -->
+                                        <!-- Botón para editar info -->
                                         @php
                                             $esCancelado = optional($cliente->contrato)->estado === 'cancelado';
                                         @endphp
@@ -105,17 +106,37 @@
                                             Editar Inf
                                         </button>
 
-                                        <!-- Botón para ir a la vista de imágenes del cliente -->
+                                        <!-- Botón para ver imágenes -->
                                         <a href="{{ route('cliente.imagenes', $cliente->id) }}" class="btn btn-info btn-sm">
                                             <i class="fas fa-image me-1"></i> Ver Imágenes
                                         </a>
 
-                                        <!-- Botón para ver bodega del cliente -->
+                                        <!-- Botón para ver bodega -->
                                         <a href="{{ route('inventario.detalle', ['tipo' => 'cliente', 'id' => $cliente->id]) }}"
                                             class="btn btn-primary btn-sm">
                                             <i class="fas fa-warehouse me-1"></i> Ver Bodega
                                         </a>
+
+                                        <!-- Botón DAR DE BAJA -->
+                                        @php
+                                            $contratoActivo = optional($cliente->contrato); // Evita error si no hay contrato
+                                            $deshabilitarBoton =
+                                                !$cliente->ip || $contratoActivo->estado === 'cancelado';
+                                        @endphp
+
+                                        <button id="btnDarBaja"
+                                            class="btn btn-sm {{ $deshabilitarBoton ? 'btn-secondary' : 'btn-danger' }}"
+                                            {{ $deshabilitarBoton ? 'disabled' : '' }}>
+                                            <i class="fas fa-user-slash me-1"></i> Dar de Baja
+                                        </button>
+
+                                        <form id="formDarBaja" action="{{ route('clientes.darBaja', $cliente->id) }}"
+                                            method="POST" style="display:none;">
+                                            @csrf
+                                        </form>
                                     </div>
+
+
 
 
 
@@ -652,6 +673,35 @@
             <!-- /.card-body -->
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.getElementById('btnDarBaja')?.addEventListener('click', function() {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                html: `<strong>Se dará de baja al cliente:</strong><br><br>{{ $cliente->nombre }}<br><br>
+                   <span style="color:red;">⚠ Esto realizará lo siguiente:</span>
+                   <ul style="text-align:left;">
+                       <li>Eliminar colas en MikroTik</li>
+                       <li>Cancelar contratos activos</li>
+                       <li>Liberar IP asignada</li>
+                       <li>Marcar cliente como CORTADO</li>
+                       <li>Crear ticket automático</li>
+                   </ul>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, dar de baja',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('formDarBaja').submit();
+                }
+            });
+        });
+    </script>
 @stop
 
 {{-- include footer y logo  --}}
