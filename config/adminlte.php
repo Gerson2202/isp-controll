@@ -419,6 +419,13 @@ return [
                     'icon' => 'fas fa-plug', // Icono para listar
                     'can'   => 'cortar clientes masivos', // 👈 solo si tiene este permiso
                 ],
+                 [
+                    'text'  => 'Access Points',
+                    'route' => 'aps.index',
+                    'icon'  => 'fas fa-wifi',
+                    'can'   => 'ver monitoreo de nodos',
+                    // 'can'   => 'ver access points',
+                ],
             ],
         ],
 
@@ -596,6 +603,7 @@ return [
                     'can'   => 'ver monitoreo de nodos', // 👈 solo si tiene este permiso
 
                 ],
+               
 
             ],
         ],

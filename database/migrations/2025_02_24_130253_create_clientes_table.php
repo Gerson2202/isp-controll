@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('clientes', function (Blueprint $table) {
             $table->id();  // Esto crea la columna 'id' con AUTO_INCREMENT y como clave primaria
             $table->string('nombre');
-            $table->string('telefono')->nullable(); // El campo 'telefono' no debe tener AUTO_INCREMENT
+            $table->strting('elefono')->nullable(); // El campo 'telefono' no debe tener AUTO_INCREMENT
             $table->string('cedula')->nullable();
             $table->decimal('latitud', 10, 8)->nullable();
             $table->decimal('longitud', 11, 8)->nullable();
@@ -25,10 +25,8 @@ return new class extends Migration
             $table->string('descripcion')->nullable();
             $table->foreignId('pool_id')->nullable()->constrained()->onDelete('cascade'); // Relación con el pool   
             $table->enum('estado', ['activo', 'cortado'])->default('activo');
-
             $table->timestamps();  // created_at, updated_at
         });
-        
     }
 
     /**

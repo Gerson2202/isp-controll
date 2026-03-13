@@ -7,10 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cliente extends Model
 {
-    use HasFactory;  
+    use HasFactory;
 
     protected $fillable = [
-        'nombre', 'telefono', 'cedula','direccion', 'latitud', 'longitud', 'ip', 'correo', 'punto_referencia', 'electronico', 'plan_id', 'estado', 'nodo_id','descripcion', 'pool_id'
+        'nombre',
+        'telefono',
+        'cedula',
+        'direccion',
+        'latitud',
+        'longitud',
+        'ip',
+        'correo',
+        'punto_referencia',
+        'electronico',
+        'plan_id',
+        'estado',
+        'nodo_id',
+        'descripcion',
+        'pool_id'
     ];
 
     public function plan()
@@ -33,23 +47,23 @@ class Cliente extends Model
         return $this->belongsTo(Nodo::class);
     }
 
-     // Relación con Contratos
-     public function contratos()
-     {
-         return $this->hasMany(Contrato::class);
-     }
-     public function contrato()
-     {
-         return $this->hasOne(Contrato::class); // Un cliente tiene un contrato
-     }
-     // Relación con Pool
+    // Relación con Contratos
+    public function contratos()
+    {
+        return $this->hasMany(Contrato::class);
+    }
+    public function contrato()
+    {
+        return $this->hasOne(Contrato::class); // Un cliente tiene un contrato
+    }
+    // Relación con Pool
     public function pool()
     {
         return $this->belongsTo(Pool::class);
     }
 
     // ---- FACTURAACION 
-   
+
     public function facturas()
     {
         return $this->hasManyThrough(Factura::class, Contrato::class);
@@ -60,9 +74,14 @@ class Cliente extends Model
         return $this->hasMany(HistorialCorte::class);
     }
 
-    
+
     public function fotos()
     {
         return $this->hasMany(ClienteFoto::class);
+    }
+
+    public function ap()
+    {
+        return $this->belongsTo(Ap::class);
     }
 }

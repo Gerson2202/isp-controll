@@ -7,7 +7,17 @@ use Illuminate\Database\Eloquent\Model;
 class Inventario extends Model
 {
     protected $fillable = [
-        'modelo_id', 'mac', 'descripcion', 'foto', 'cliente_id','nodo_id','user_id','bodega_id', 'fecha','visita_id','serial'
+        'modelo_id',
+        'mac',
+        'descripcion',
+        'foto',
+        'cliente_id',
+        'nodo_id',
+        'user_id',
+        'bodega_id',
+        'fecha',
+        'visita_id',
+        'serial'
     ];
 
     public function modelo()
@@ -20,25 +30,30 @@ class Inventario extends Model
         return $this->belongsTo(Cliente::class);
     }
 
-     public function bodega()
+    public function bodega()
     {
         return $this->belongsTo(Bodega::class);
     }
-    
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id'); // 'modelo_id' es la clave foránea
     }
-    
+
 
     // Relación inversa (Un inventario pertenece a un nodo)
     public function nodo()
     {
         return $this->belongsTo(Nodo::class, 'nodo_id');  // Un inventario pertenece a un nodo
     }
-    
-     public function movimientos()
+
+    public function movimientos()
     {
         return $this->hasMany(MovimientoInventario::class);
+    }
+    // RELACION CON APS
+    public function ap()
+    {
+        return $this->hasOne(Ap::class);
     }
 }

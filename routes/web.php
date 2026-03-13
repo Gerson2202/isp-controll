@@ -371,4 +371,8 @@ Route::middleware([
     Route::get('/tecnico/asignaciones', [TecnicoController::class, 'asignaciones'])->name('tecnico.asignaciones');
 
     Route::get('/tecnico/visitas/{visita}/cerrar', [TecnicoController::class, 'cerrar'])->name('tecnico.visitas.cerrar');
+
+    // APSL
+    Route::view('/aps', 'aps.index')->name('aps.index');
+
 });

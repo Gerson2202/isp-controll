@@ -116,24 +116,6 @@
                                             class="btn btn-primary btn-sm">
                                             <i class="fas fa-warehouse me-1"></i> Ver Bodega
                                         </a>
-
-                                        <!-- Botón DAR DE BAJA -->
-                                        @php
-                                            $contratoActivo = optional($cliente->contrato); // Evita error si no hay contrato
-                                            $deshabilitarBoton =
-                                                !$cliente->ip || $contratoActivo->estado === 'cancelado';
-                                        @endphp
-
-                                        <button id="btnDarBaja"
-                                            class="btn btn-sm {{ $deshabilitarBoton ? 'btn-secondary' : 'btn-danger' }}"
-                                            {{ $deshabilitarBoton ? 'disabled' : '' }}>
-                                            <i class="fas fa-user-slash me-1"></i> Dar de Baja
-                                        </button>
-
-                                        <form id="formDarBaja" action="{{ route('clientes.darBaja', $cliente->id) }}"
-                                            method="POST" style="display:none;">
-                                            @csrf
-                                        </form>
                                     </div>
 
 
@@ -337,6 +319,26 @@
                                         <i class="{{ $icon }} fa-fw me-1 {{ $color }}"></i>
                                         <strong class="{{ $color }}">Estado:</strong>
                                         <span class="{{ $color }}">{{ $estadoTexto }}</span>
+
+                                    </li>
+                                    <li class="ml-1 mt-1">
+                                        <!-- Botón DAR DE BAJA -->
+                                        @php
+                                            $contratoActivo = optional($cliente->contrato); // Evita error si no hay contrato
+                                            $deshabilitarBoton =
+                                                !$cliente->ip || $contratoActivo->estado === 'cancelado';
+                                        @endphp
+
+                                        <button id="btnDarBaja"
+                                            class="btn btn-sm {{ $deshabilitarBoton ? 'btn-secondary' : 'btn-danger' }}"
+                                            {{ $deshabilitarBoton ? 'disabled' : '' }}>
+                                            <i class="fas fa-user-slash me-1"></i> Dar de Baja
+                                        </button>
+
+                                        <form id="formDarBaja" action="{{ route('clientes.darBaja', $cliente->id) }}"
+                                            method="POST" style="display:none;">
+                                            @csrf
+                                        </form>
                                     </li>
                                 </ul>
 
@@ -396,6 +398,24 @@
                                                         title="Abrir {{ $urlPrivada }}">
                                                         {{ $ip }}
                                                     </a>
+                                                </li>
+                                                <li
+                                                    class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <span>
+                                                        <i class="fas fa-broadcast-tower me-2 text-primary"></i>
+                                                        <strong>AP:</strong>
+                                                    </span>
+
+                                                    @if ($cliente->ap)
+                                                        <a href="{{ route('aps.index') }}" target="_blank"
+                                                            class="badge bg-primary bg-opacity-10 text-dark text-decoration-none">
+                                                            {{ $cliente->ap->nombre }}
+                                                        </a>
+                                                    @else
+                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                                            No asignado
+                                                        </span>
+                                                    @endif
                                                 </li>
                                             @endif
                                         </ul>
