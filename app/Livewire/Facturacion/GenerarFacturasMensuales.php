@@ -65,7 +65,10 @@ class GenerarFacturasMensuales extends Component
 
                 $inicioPeriodo = now()->setDate($this->anio, $this->mes, 1)->startOfMonth();
 
-                if ($contrato->fecha_inicio && $contrato->fecha_inicio >= $inicioPeriodo) {
+                if (
+                    $contrato->fecha_inicio &&
+                    $contrato->fecha_inicio->gte($inicioPeriodo)
+                ) {
                     $this->resultados[] = [
                         'cliente' => $contrato->cliente->nombre,
                         'estado' => 'omitido',

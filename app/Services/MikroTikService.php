@@ -705,7 +705,7 @@ class MikroTikService
     /**
      * Activa un cliente moviendo su IP a la lista "activado"
      */
-    private function activarCliente($ipCliente)
+    public function activarCliente($ipCliente)
     {
 
         // Agregar a la lista "activado"

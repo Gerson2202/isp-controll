@@ -286,9 +286,13 @@ Route::middleware([
             ->join('plans', 'plans.id', '=', 'contratos.plan_id')
             ->join('nodos', 'nodos.id', '=', 'plans.nodo_id')
             ->select([
-                'contratos.*', // Esto trae todos los campos de contratos
+                'contratos.*',
                 'clientes.nombre as cliente_nombre',
                 'clientes.ip as cliente_ip',
+                'clientes.telefono as cliente_telefono',
+                'clientes.cedula as cliente_cedula',
+                'clientes.correo as cliente_correo',
+                'clientes.direccion as cliente_direccion',
                 'plans.nombre as plan_nombre',
                 'nodos.nombre as nodo_nombre'
             ])
@@ -296,12 +300,17 @@ Route::middleware([
             ->map(function ($contrato) {
                 return [
                     'Cliente' => $contrato->cliente_nombre,
+                    'Cedula' => $contrato->cliente_cedula ?? 'N/A',
+                    'Teléfono' => $contrato->cliente_telefono ?? 'N/A',
+                    'Correo' => $contrato->cliente_correo ?? 'N/A',
+                    'Dirección' => $contrato->cliente_direccion ?? 'N/A',
+
                     'Plan' => str_replace('_REHUSO', '', $contrato->plan_nombre),
                     'Tecnologia' => ucfirst($contrato->tecnologia),
                     'Precio' => number_format($contrato->precio, 0, ',', '.'),
                     'Fecha inicio' => $contrato->fecha_inicio ? date('d/m/Y', strtotime($contrato->fecha_inicio)) : 'N/A',
                     'Fecha Fin' => $contrato->fecha_fin ? date('d/m/Y', strtotime($contrato->fecha_fin)) : 'N/A',
-                    'Estado' => ucfirst($contrato->estado), // Ahora sí viene de contratos
+                    'Estado' => ucfirst($contrato->estado),
                     'IP' => $contrato->cliente_ip ?? 'sin ip',
                     'Nodo' => $contrato->nodo_nombre ?? 'sin Nodo',
                 ];
@@ -374,5 +383,4 @@ Route::middleware([
 
     // APSL
     Route::view('/aps', 'aps.index')->name('aps.index');
-
 });

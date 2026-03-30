@@ -2,24 +2,52 @@
 
 namespace App\Livewire\Contratos;
 
+use Carbon\Carbon;
+
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Contrato;
 use App\Models\Cliente;
 use App\Models\Nodo;
 use App\Models\Plan;
+use App\Models\Ticket;
 
 class ContratosList extends Component
 {
-   
     use WithPagination;
 
+    // 🔍 Busqueda
     public $search = '';
+
+    // 📄 Paginación
     public $perPage = 10;
+
+    // 🔃 Orden
     public $sortField = 'fecha_inicio';
     public $sortDirection = 'desc';
-    protected $queryString = ['search', 'perPage', 'sortField', 'sortDirection'];
-    // Variables para edición
+
+    // 🎯 FILTROS
+    public $filterEstado = '';
+    public $filterTecnologia = '';
+    public $filterNodo = '';
+    public $filterEstadoCliente = '';
+
+    // 📦 Datos cacheados (mejora rendimiento)
+    public $clientesList;
+    public $planesList;
+
+    protected $queryString = [
+        'search',
+        'perPage',
+        'sortField',
+        'sortDirection',
+        'filterEstado',
+        'filterTecnologia',
+        'filterNodo',
+        'filterEstadoCliente'
+    ];
+
+    // ✏️ Variables edición
     public $showModal = false;
     public $contratoId;
     public $cliente_id;
@@ -40,49 +68,40 @@ class ContratosList extends Component
         'precio' => 'required|regex:/^[\d.,]+$/',
     ];
 
-    
-    public function updateContrato()
+    // 🚀 Carga inicial optimizada
+    public function mount()
     {
-         if (!auth()->user()->can('editar contrato')) {
-            abort(403, 'No tienes permiso para acceder a esta pagina');
-        }
-        // Validar los datos usando las reglas definidas
-        $this->validate();
-
-        // Buscar el cliente por ID
-        $cliente = Cliente::find($this->cliente_id);
-
-        // Verificar si el cliente tiene IP asignada
-        // if (!$cliente || empty($cliente->ip)) {
-        //     $this->dispatch('notify', 
-        //         type: 'error',
-        //         message: 'El cliente no tiene una IP asignada, no se puede actualizar el contrato.'
-        //     );
-        //     return; // Detener la ejecución
-        // }
-        // Formatear el precio: eliminar puntos y comas
-        $precioFormateado = str_replace(['.', ','], '', $this->precio);
-        
-        $contrato = Contrato::findOrFail($this->contratoId);
-
-        $contrato->update([
-            'cliente_id' => $this->cliente_id,
-            'plan_id' => $this->plan_id,
-            'tecnologia' => $this->tecnologia,
-            'fecha_inicio' => $this->fecha_inicio,
-            'fecha_fin' => $this->fecha_fin,
-            'estado' => $this->estado,
-            'precio' => $precioFormateado, // Usamos el precio formateado
-        ]);
-
-        $this->dispatch('cerrar-modal');
-            
-        // Notificación Toastr
-        $this->dispatch('notify', 
-            type: 'success',
-            message: 'Contrato actualizado exitosamente!'
-        );
+        $this->clientesList = Cliente::orderBy('nombre')->get();
+        $this->planesList = Plan::orderBy('nombre')->get();
     }
+
+    // 🔄 Reset paginación
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+    public function updatingPerPage()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterEstado()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterTecnologia()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterNodo()
+    {
+        $this->resetPage();
+    }
+    public function updatingFilterEstadoCliente()
+    {
+        $this->resetPage();
+    }
+
+    // 🔃 Ordenar
     public function sortBy($field)
     {
         if ($this->sortField === $field) {
@@ -92,37 +111,145 @@ class ContratosList extends Component
         }
         $this->sortField = $field;
     }
-    
-    // Funcion oculatar modal
-    public function hide()
+
+    // 🧼 Limpiar filtros
+    public function resetFilters()
     {
-        $this->showModal = false;
-    }
-    public function updatingSearch()
-    {
+        $this->reset([
+            'search',
+            'filterEstado',
+            'filterTecnologia',
+            'filterNodo',
+            'filterEstadoCliente'
+        ]);
+
         $this->resetPage();
     }
-    public function updatingPerPage()
-    {
-        $this->resetPage();
-    }
+
+    // ✏️ Editar contrato
     public function openEditModal($contratoId)
     {
+        $this->resetErrorBag();
+        $this->resetValidation();
+
         $this->dispatch('abrir-modal');
-        // $this->showModal = true;
+
         $contrato = Contrato::findOrFail($contratoId);
+
         $this->contratoId = $contrato->id;
         $this->cliente_id = $contrato->cliente_id;
         $this->plan_id = $contrato->plan_id;
         $this->tecnologia = $contrato->tecnologia;
         $this->estado = $contrato->estado;
-        $this->fecha_inicio = $contrato->fecha_inicio; // Formato Y-m-d
-        $this->fecha_fin = $contrato->fecha_fin;       // Formato Y-m-d o null
+
+
+        $this->fecha_inicio = $contrato->fecha_inicio
+            ? Carbon::parse($contrato->fecha_inicio)->format('Y-m-d')
+            : null;
+
+        $this->fecha_fin = $contrato->fecha_fin
+            ? Carbon::parse($contrato->fecha_fin)->format('Y-m-d')
+            : null;
+
         $this->precio = $contrato->precio;
-        
     }
-    
-     protected function getEstadisticasNodos()
+
+    public function hide()
+    {
+        $this->showModal = false;
+    }
+
+    // 💾 Actualizar contrato
+    public function updateContrato()
+    {
+        if (!auth()->user()->can('editar contrato')) {
+            abort(403);
+        }
+
+        $this->validate();
+
+        $contrato = Contrato::findOrFail($this->contratoId);
+
+        // 🔴 CAPTURAR ANTES DEL UPDATE
+        $original = $contrato->getOriginal();
+
+        // 🔥 Limpieza correcta del precio
+        $precioFormateado = (int) preg_replace('/\D/', '', $this->precio);
+
+        // 🧠 DETECTAR CAMBIOS ANTES
+        $changes = [];
+
+        // Estado
+        if ($original['estado'] != $this->estado) {
+            $changes[] = "Estado: {$original['estado']} -> {$this->estado}";
+        }
+
+        // Precio
+        if ($original['precio'] != $precioFormateado) {
+            $changes[] = "Precio: {$original['precio']} -> {$precioFormateado}";
+        }
+
+        // Tecnología
+        if ($original['tecnologia'] != $this->tecnologia) {
+            $changes[] = "Tecnología: {$original['tecnologia']} -> {$this->tecnologia}";
+        }
+
+        // Fecha inicio
+        $fechaInicioOriginal = $original['fecha_inicio']
+            ? \Carbon\Carbon::parse($original['fecha_inicio'])->format('Y-m-d')
+            : null;
+
+        if ($fechaInicioOriginal != $this->fecha_inicio) {
+            $changes[] = "Fecha inicio: {$fechaInicioOriginal} -> {$this->fecha_inicio}";
+        }
+
+        // Fecha fin
+        $fechaFinOriginal = $original['fecha_fin']
+            ? \Carbon\Carbon::parse($original['fecha_fin'])->format('Y-m-d')
+            : null;
+
+        if ($fechaFinOriginal != $this->fecha_fin) {
+            $changes[] = "Fecha fin: {$fechaFinOriginal} -> {$this->fecha_fin}";
+        }
+
+        // ✅ UPDATE (SOLO UNA VEZ)
+        $contrato->update([
+            'cliente_id' => $this->cliente_id,
+            'plan_id' => $this->plan_id,
+            'tecnologia' => $this->tecnologia,
+            'fecha_inicio' => $this->fecha_inicio,
+            'fecha_fin' => $this->fecha_fin,
+            'estado' => $this->estado,
+            'precio' => $precioFormateado,
+        ]);
+
+        // 📝 MENSAJE FINAL
+        $detalle = empty($changes)
+            ? 'Actualizacion sin cambios relevantes'
+            : implode(', ', $changes);
+
+        // 🎫 CREAR TICKET
+        Ticket::create([
+            'tipo_reporte' => 'Actualizacion de contrato',
+            'situacion' => $detalle,
+            'fecha_cierre' => now(),
+            'solucion' => 'Actualizacion realizada por ' . auth()->user()->name,
+            'estado' => 'cerrado',
+            'cliente_id' => $this->cliente_id,
+            'user_id' => auth()->id(),
+        ]);
+
+        $this->dispatch('cerrar-modal');
+
+        $this->dispatch(
+            'notify',
+            type: 'success',
+            message: 'Contrato actualizado exitosamente!'
+        );
+    }
+
+    // 📊 Estadísticas
+    protected function getEstadisticasNodos()
     {
         return Nodo::select('nodos.id', 'nodos.nombre as nodo_nombre')
             ->selectRaw('COUNT(DISTINCT clientes.id) as total_clientes')
@@ -134,38 +261,75 @@ class ContratosList extends Component
             ->orderBy('nodos.nombre')
             ->get();
     }
+
     public function render()
     {
-        $contratos = Contrato::select('contratos.*')
+        $query = Contrato::select('contratos.*')
             ->with(['cliente', 'plan.nodo'])
             ->join('clientes', 'clientes.id', '=', 'contratos.cliente_id')
             ->join('plans', 'plans.id', '=', 'contratos.plan_id')
-            ->join('nodos', 'nodos.id', '=', 'plans.nodo_id')
-            ->when($this->search, function ($query) {
-                $query->where(function($q) {
-                    $q->where('clientes.nombre', 'like', "%{$this->search}%")
+            ->join('nodos', 'nodos.id', '=', 'plans.nodo_id');
+
+        // 🔍 BUSCADOR
+        $query->when($this->search, function ($q) {
+            $q->where(function ($q2) {
+                $q2->where('clientes.nombre', 'like', "%{$this->search}%")
                     ->orWhere('clientes.ip', 'like', "%{$this->search}%")
                     ->orWhere('contratos.tecnologia', 'like', "%{$this->search}%")
                     ->orWhere('contratos.estado', 'like', "%{$this->search}%")
                     ->orWhere('nodos.nombre', 'like', "%{$this->search}%")
                     ->orWhere('clientes.estado', 'like', "%{$this->search}%");
-                });
-            })
-            ->orderBy(
-                $this->sortField === 'ip' ? 'clientes.ip' : 
-                ($this->sortField === 'cliente_id' ? 'clientes.nombre' : 
-                ($this->sortField === 'nodo' ? 'nodos.nombre' : 
-                ($this->sortField === 'estado_cliente' ? 'clientes.estado' : 'contratos.'.$this->sortField))),
-                $this->sortDirection
-            )
+            });
+        });
+
+        // 🎯 FILTROS
+        $query->when(
+            $this->filterEstado,
+            fn($q) =>
+            $q->where('contratos.estado', $this->filterEstado)
+        );
+
+        $query->when(
+            $this->filterTecnologia,
+            fn($q) =>
+            $q->where('contratos.tecnologia', $this->filterTecnologia)
+        );
+
+        $query->when(
+            $this->filterNodo,
+            fn($q) =>
+            $q->where('nodos.id', $this->filterNodo)
+        );
+
+        $query->when(
+            $this->filterEstadoCliente,
+            fn($q) =>
+            $q->where('clientes.estado', $this->filterEstadoCliente)
+        );
+
+        // 📊 TOTAL FILTRADOS
+        $totalFiltrados = $query->count();
+
+        // 🔃 ORDENAMIENTO LIMPIO
+        $sortMap = [
+            'ip' => 'clientes.ip',
+            'cliente_id' => 'clientes.nombre',
+            'nodo' => 'nodos.nombre',
+            'estado_cliente' => 'clientes.estado',
+        ];
+
+        $orderField = $sortMap[$this->sortField] ?? 'contratos.' . $this->sortField;
+
+        $contratos = $query
+            ->orderBy($orderField, $this->sortDirection)
             ->paginate($this->perPage);
 
         return view('livewire.contratos.contratos-list', [
             'contratos' => $contratos,
-            'clientes' => Cliente::orderBy('nombre')->get(),
-            'planes' => Plan::orderBy('nombre')->get(),
+            'totalFiltrados' => $totalFiltrados,
+            'clientes' => $this->clientesList,
+            'planes' => $this->planesList,
             'estadisticasNodos' => $this->getEstadisticasNodos()
         ]);
     }
-
 }

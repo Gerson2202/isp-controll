@@ -9,8 +9,8 @@ class Contrato extends Model
 {
     use HasFactory;
 
-     // Campos que pueden ser asignados masivamente
-     protected $fillable = [
+    // Campos que pueden ser asignados masivamente
+    protected $fillable = [
         'cliente_id',  // ID del cliente
         'plan_id',     // ID del plan
         'fecha_inicio',
@@ -19,24 +19,27 @@ class Contrato extends Model
         'estado',
         'precio',      // Cambié 'monto' por 'precio'
     ];
+    protected $casts = [
+        'fecha_inicio' => 'date',
+    ];
 
-     // Relación con Cliente
-     public function cliente()
-     {
-         return $this->belongsTo(Cliente::class);
-     }
- 
-     // Relación con Plan
-     public function plan()
-     {
-         return $this->belongsTo(Plan::class);
-     }
+    // Relación con Cliente
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class);
+    }
+
+    // Relación con Plan
+    public function plan()
+    {
+        return $this->belongsTo(Plan::class);
+    }
 
 
     //  ---RELACIONES DE FACTURACION
-    
 
-   
+
+
 
     public function facturas()
     {

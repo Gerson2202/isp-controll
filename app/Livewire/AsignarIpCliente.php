@@ -7,7 +7,9 @@ use App\Models\Cliente;
 use App\Services\MikroTikService;
 use Livewire\Component;
 use App\Models\pool;
+use App\Models\Ticket;
 use Illuminate\Support\Facades\DB; // Agrega esta línea
+
 class AsignarIpCliente extends Component
 {
     public $cliente_id;
@@ -98,57 +100,72 @@ class AsignarIpCliente extends Component
         DB::beginTransaction();
 
         try {
-            // Obtener datos necesarios para MikroTik
+            // Obtener relaciones necesarias
             $clienteConRelaciones = $this->cliente->load('contrato.plan.nodo');
 
-            // Llamar al método para crear cola hija
-            $this->crearColaHija($clienteConRelaciones, $this->ip);
+            // 🔥 1. Crear cola + activar cliente (TODO EN UNO)
+            $this->crearColaYActivar($clienteConRelaciones, $this->ip);
 
-            // Actualizaciones atómicas
+            // 🔥 2. Guardar IP en cliente
             $this->cliente->update([
                 'ip' => $this->ip,
-                'pool_id' => $this->pool_id
+                'pool_id' => $this->pool_id,
+                'estado' => 'activo'
             ]);
 
-            // Actualizar estado del contrato si existe
+            // 🔥 3. Actualizar contrato
             if ($this->cliente->contrato) {
                 $this->cliente->contrato->update([
-                    'estado' => 'Activo',
-                    'fecha_activacion' => now() // Opcional: registrar fecha de activación
+                    'estado' => 'activo',
+                    'fecha_activacion' => now()
                 ]);
             }
 
+            // 🔥 4. CREAR TICKET
+            Ticket::create([
+                'tipo_reporte' => 'Activacion de servicio',
+                'situacion' => "IP {$this->ip} asignada y servicio activado correctamente",
+                'fecha_cierre' => now(),
+                'solucion' => 'Configuracion aplicada en MikroTik',
+                'estado' => 'cerrado',
+                'cliente_id' => $this->cliente->id,
+                'user_id' => auth()->id(),
+            ]);
+
             DB::commit();
 
-            session()->flash('success', 'La IP fue asignada correctamente y la restricción se creó con éxito en MikroTik.');
+            session()->flash(
+                'success',
+                'La IP fue asignada, el cliente fue activado y la cola se creó correctamente.'
+            );
+
             return redirect()->route('asignarIPindex');
         } catch (\Throwable $e) {
+
             DB::rollBack();
 
-            // Registro detallado del error
             logger()->error('Error en asignarIp: ' . $e->getMessage(), [
                 'cliente_id' => $this->cliente->id ?? null,
                 'ip' => $this->ip,
                 'trace' => $e->getTraceAsString()
             ]);
 
-            $mensajeError = 'Error al crear la restricción: el plan no fue encontrado en MikroTik. Verifica si el plan está correctamente creado en tu router.' . $e->getMessage();
+            $mensajeError = 'Error al crear la restriccion: ' . $e->getMessage();
 
-            // Mensaje más específico para errores de MikroTik
             if (str_contains($e->getMessage(), 'MikroTik')) {
-                $mensajeError = 'Error de conexión con MikroTik: ' . $e->getMessage();
+                $mensajeError = 'Error de conexion con MikroTik: ' . $e->getMessage();
             }
 
             session()->flash('error', $mensajeError);
+
             return back();
         }
     }
 
-    protected function crearColaHija($cliente, $ipAsignada)
+    protected function crearColaYActivar($cliente, $ipAsignada)
     {
-
         try {
-            // Verificar que existan todas las relaciones necesarias
+            // Validar relaciones
             if (!$cliente->contrato || !$cliente->contrato->plan || !$cliente->contrato->plan->nodo) {
                 throw new \Exception("Faltan datos necesarios para configurar MikroTik");
             }
@@ -156,7 +173,7 @@ class AsignarIpCliente extends Component
             $plan = $cliente->contrato->plan;
             $nodo = $plan->nodo;
 
-            // Crear instancia del servicio MikroTik
+            // 🔥 Instancia del service
             $mikroTikService = new MikroTikService(
                 $nodo->ip,
                 $nodo->user,
@@ -164,24 +181,31 @@ class AsignarIpCliente extends Component
                 $nodo->puerto_api ?? 8728
             );
 
-            // Llamar al método del servicio para crear cola hija
-            $resultado = $mikroTikService->crearColaHija(
-                $this->cliente, //enviamos todo el cliente
-                $plan, //enviamos todo el plan  
-                $ipAsignada //enviamos la ip seleccionada 
+            // 🔥 1. Crear cola
+            $resultadoCola = $mikroTikService->crearColaHija(
+                $cliente,
+                $plan,
+                $ipAsignada
             );
 
+            // 🔥 2. Activar cliente
+            $mikroTikService->activarCliente($ipAsignada);
 
-
-            // Opcional: Log del resultado
-            Log::info("Cola hija creada en MikroTik", [
+            // 🧾 Log completo
+            Log::info("Cola creada y cliente activado en MikroTik", [
                 'cliente_id' => $cliente->id,
                 'ip' => $ipAsignada,
-                'resultado' => $resultado
+                'plan' => $plan->nombre,
+                'resultado' => $resultadoCola
             ]);
         } catch (\Exception $e) {
-            Log::error("Error al crear cola hija en MikroTik: " . $e->getMessage());
-            throw $e; // Re-lanzamos la excepción para manejarla en el método principal
+
+            Log::error("Error en MikroTik (cola + activacion): " . $e->getMessage(), [
+                'cliente_id' => $cliente->id ?? null,
+                'ip' => $ipAsignada
+            ]);
+
+            throw $e;
         }
     }
 
