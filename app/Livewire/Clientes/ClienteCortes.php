@@ -38,14 +38,14 @@ class ClienteCortes extends Component
                 ->whereMonth('fecha_emision', Carbon::now()->month)
                 ->whereYear('fecha_emision', Carbon::now()->year)
                 ->where('estado', 'pendiente')
-                ->whereHas('contrato.cliente', function($q) {
+                ->whereHas('contrato.cliente', function ($q) {
                     $q->where('estado', 'activo')
-                      ->whereNotNull('ip');
+                        ->whereNotNull('ip');
                 })
                 ->get();
 
             foreach ($facturasPendientes as $factura) {
-                DB::transaction(function() use ($factura) {
+                DB::transaction(function () use ($factura) {
                     $cliente = $factura->contrato->cliente;
                     $cliente->update(['estado' => 'cortado']);
 
@@ -73,13 +73,15 @@ class ClienteCortes extends Component
                 });
             }
 
-            $this->dispatch('notify',
+            $this->dispatch(
+                'notify',
                 type: 'success',
                 message: "Corte masivo completado: " . count($facturasPendientes) . " clientes procesados"
             );
         } catch (\Exception $e) {
             Log::error("Error en corte masivo: " . $e->getMessage());
-            $this->dispatch('notify',
+            $this->dispatch(
+                'notify',
                 type: 'error',
                 message: "Ocurrio un error durante el proceso: " . $e->getMessage()
             );
@@ -95,7 +97,8 @@ class ClienteCortes extends Component
         $nuevoEstado = $cliente->estado == 'activo' ? 'cortado' : 'activo';
 
         if (empty($cliente->ip)) {
-            $this->dispatch('notify',
+            $this->dispatch(
+                'notify',
                 type: 'error',
                 message: 'Error: El cliente no tiene IP asignada',
             );
@@ -135,16 +138,17 @@ class ClienteCortes extends Component
 
             DB::commit();
 
-            $this->dispatch('notify',
+            $this->dispatch(
+                'notify',
                 type: 'success',
                 message: 'Estado actualizado correctamente'
             );
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al actualizar estado: ' . $e->getMessage());
 
-            $this->dispatch('notify',
+            $this->dispatch(
+                'notify',
                 type: 'error',
                 message: 'Error: ' . $e->getMessage()
             );
@@ -156,18 +160,47 @@ class ClienteCortes extends Component
         $this->resetPage();
     }
 
+    // para enio --- (trae registros del mes actual)
+    // public function render()
+    // {
+    //     $fechaActual = Carbon::now();
+    //     $mesActual = $fechaActual->month;
+    //     $anioActual = $fechaActual->year;
+
+    //     $query = Factura::with(['contrato.cliente', 'contrato.plan.nodo'])
+    //         ->whereMonth('fecha_emision', $mesActual)
+    //         ->whereYear('fecha_emision', $anioActual);
+
+    //     if (!empty($this->search)) {
+    //         $query->whereHas('contrato.cliente', function($q) {
+    //             $q->where('nombre', 'like', '%' . $this->search . '%');
+    //         });
+    //     }
+
+    //     if (!empty($this->filterEstado)) {
+    //         $query->where('estado', $this->filterEstado);
+    //     }
+
+    //     if (!empty($this->filterMikrotik)) {
+    //         $query->whereHas('contrato.cliente', function($q) {
+    //             $q->where('estado', $this->filterMikrotik);
+    //         });
+    //     }
+
+    //     $facturas = $query->orderBy('fecha_vencimiento', 'asc')->get();
+
+    //     return view('livewire.clientes.cliente-cortes', [
+    //         'facturas' => $facturas
+    //     ]);
+    // }
+    // para fernert ( Trae la ultima factura de cada contrato )
     public function render()
     {
-        $fechaActual = Carbon::now();
-        $mesActual = $fechaActual->month;
-        $anioActual = $fechaActual->year;
-
         $query = Factura::with(['contrato.cliente', 'contrato.plan.nodo'])
-            ->whereMonth('fecha_emision', $mesActual)
-            ->whereYear('fecha_emision', $anioActual);
+            ->whereHas('contrato.cliente'); // 🔥 evita nulls
 
         if (!empty($this->search)) {
-            $query->whereHas('contrato.cliente', function($q) {
+            $query->whereHas('contrato.cliente', function ($q) {
                 $q->where('nombre', 'like', '%' . $this->search . '%');
             });
         }
@@ -177,12 +210,16 @@ class ClienteCortes extends Component
         }
 
         if (!empty($this->filterMikrotik)) {
-            $query->whereHas('contrato.cliente', function($q) {
+            $query->whereHas('contrato.cliente', function ($q) {
                 $q->where('estado', $this->filterMikrotik);
             });
         }
 
-        $facturas = $query->orderBy('fecha_vencimiento', 'asc')->get();
+        $facturas = $query
+            ->orderBy('fecha_emision', 'desc')
+            ->get()
+            ->unique('contrato_id')
+            ->values();
 
         return view('livewire.clientes.cliente-cortes', [
             'facturas' => $facturas

@@ -23,6 +23,7 @@
                         <th>Rehuso</th>
                         <th>Nodo</th>
                         <th>Descripción</th>
+                        <th>#clientes</th>
                         <th class="text-end">Acciones</th>
                     </tr>
                 </thead>
@@ -47,6 +48,28 @@
                             </td>
                             <td>
                                 <small class="text-muted">{{ Str::limit($plan->descripcion, 40) }}</small>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span
+                                        class="badge 
+                                        {{ $plan->contratos_count >= 50
+                                            ? 'bg-danger'
+                                            : ($plan->contratos_count >= 45
+                                                ? 'bg-warning text-dark'
+                                                : 'bg-success') }}">
+
+                                        {{ $plan->contratos_count }}/50
+                                    </span>
+
+                                    <div class="progress w-100" style="height: 6px;">
+                                        <div class="progress-bar 
+                                          {{ $plan->contratos_count >= 50 ? 'bg-danger' : ($plan->contratos_count >= 45 ? 'bg-warning' : 'bg-success') }}"
+                                            role="progressbar"
+                                            style="width: {{ min(($plan->contratos_count / 50) * 100, 100) }}%">
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm">
@@ -76,6 +99,12 @@
                                             <i class="fas fa-exclamation-circle"></i>
                                         </button>
                                     @endif
+                                    <button wire:click="showClientes({{ $plan->id }})" class="btn btn-sm btn-info"
+                                        title="Ver Clientes">
+                                        <i class="fas fa-users"></i>
+                                    </button>
+                                    
+                                    
                                 </div>
                             </td>
                         </tr>
@@ -278,6 +307,73 @@
                         <div wire:loading.class="pe-none" wire:target="updatePlan">
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Clientes -->
+    <div class="modal fade @if ($clientesModal) show @endif" tabindex="-1"
+        style="display: @if ($clientesModal) block @else none @endif;">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">Clientes asociados al plan</h5>
+                    <button type="button" class="btn-close" wire:click="$set('clientesModal', false)"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" class="form-control shadow-sm" placeholder="Buscar cliente..."
+                        wire:model.live="clienteSearch">
+
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>ip</th>
+                                    <th>Contrato ID</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($clientesFiltrados as $cliente)
+                                    <tr>
+                                        <td>
+                                            <a href="{{ route('clientes.show', $cliente->id) }}" target="_blank">
+                                                {{ $cliente->nombre }}
+                                            </a>
+                                        </td>
+                                        <td>{{ $cliente->ip }}</td>
+                                        <td>{{ $cliente->contratos->firstWhere('plan_id', $plan_id)->id ?? '-' }}</td>
+                                        <td>
+                                            @php
+                                                $estado =
+                                                    $cliente->contratos->firstWhere('plan_id', $plan_id)->estado ??
+                                                    null;
+                                            @endphp
+
+                                            <span
+                                                class="
+                                                    badge 
+                                                    @if ($estado == 'activo') bg-success
+                                                    @elseif($estado == 'suspendido') bg-warning text-dark
+                                                    @else bg-secondary @endif
+                                                ">
+                                                {{ $estado ?? '-' }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="3" class="text-center">No hay clientes asociados a este plan
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" wire:click="$set('clientesModal', false)">Cerrar</button>
                 </div>
             </div>
         </div>

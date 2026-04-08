@@ -4,7 +4,7 @@
 @section('content_header')
 <h1 class="ml-3">
     <i class="fas fa-clipboard-list mr-2 text-success"></i>
-    Gestión de Planes
+    Gestion de Planes
 </h1>
 @stop
 
@@ -16,7 +16,7 @@
 
             <!-- Pestaña Crear -->
             <li class="nav-item" role="presentation">
-                <a class="nav-link active"
+                <a class="nav-link "
                    id="link-tab"
                    data-bs-toggle="tab"
                    href="#link"
@@ -29,7 +29,7 @@
 
             <!-- Pestaña Listar -->
             <li class="nav-item" role="presentation">
-                <a class="nav-link"
+                <a class="nav-link active"
                    id="planes-tab"
                    data-bs-toggle="tab"
                    href="#planes"
@@ -47,7 +47,7 @@
         <div class="tab-content" id="myTabContent">
 
             <!-- ================= TAB PLANES ================= -->
-            <div class="tab-pane fade"
+            <div class="tab-pane fade show active"
                  id="planes"
                  role="tabpanel"
                  aria-labelledby="planes-tab">
@@ -57,7 +57,7 @@
             </div>
 
             <!-- ================= TAB CREAR ================= -->
-            <div class="tab-pane fade show active"
+            <div class="tab-pane fade "
                  id="link"
                  role="tabpanel"
                  aria-labelledby="link-tab">

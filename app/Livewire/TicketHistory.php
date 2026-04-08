@@ -25,9 +25,9 @@ class TicketHistory extends Component
             $this->sortDirection = 'asc';
         }
     }
-    
+
     // Funciones para que sirva el buscador entando en cualquier pagina
-     public function updatingSearch()
+    public function updatingSearch()
     {
         $this->resetPage();
     }
@@ -40,25 +40,37 @@ class TicketHistory extends Component
     public function render()
     {
         $tickets = Ticket::with('cliente')
+
+            // 🔥 SOLO traer tickets cuyo cliente NO esté eliminado (soft delete)
+            ->whereHas('cliente', function ($q) {
+                $q->whereNull('deleted_at');
+            })
+
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('tipo_reporte', 'like', '%'.$this->search.'%')
-                      ->orWhere('situacion', 'like', '%'.$this->search.'%')
-                      ->orWhere('solucion', 'like', '%'.$this->search.'%')
-                      ->orWhereHas('cliente', function ($q) {
-                          $q->where('nombre', 'like', '%'.$this->search.'%');
-                      });
+                    $q->where('tipo_reporte', 'like', '%' . $this->search . '%')
+                        ->orWhere('situacion', 'like', '%' . $this->search . '%')
+                        ->orWhere('solucion', 'like', '%' . $this->search . '%')
+                        ->orWhereHas('cliente', function ($q) {
+                            $q->where('nombre', 'like', '%' . $this->search . '%');
+                        });
                 });
             })
+
             ->when($this->selectedStatus, function ($query) {
                 $query->where('estado', $this->selectedStatus);
             })
+
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
         return view('livewire.ticket-history', [
             'tickets' => $tickets,
-            'statusOptions' => ['abierto' => 'Abierto', 'cerrado' => 'Cerrado', 'en_proceso' => 'En Proceso']
+            'statusOptions' => [
+                'abierto' => 'Abierto',
+                'cerrado' => 'Cerrado',
+                'en_proceso' => 'En Proceso'
+            ]
         ]);
     }
 }

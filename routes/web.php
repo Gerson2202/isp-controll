@@ -48,10 +48,19 @@ Route::middleware([
             'clientesCount' => Cliente::whereHas('contratos', function ($query) {
                 $query->where('estado', 'activo');
             })->count(),
+
             'equiposCount' => Inventario::count(),
             'nodosCount' => Nodo::count(),
+
             'ticketsAbiertos' => Ticket::where('estado', 'Abierto')->count(),
-            'ticketsRecientes' => Ticket::with('cliente')->latest()->take(5)->get(),
+
+            'ticketsRecientes' => Ticket::whereHas('cliente', function ($q) {
+                $q->whereNull('deleted_at'); // 🔥 solo clientes activos
+            })
+                ->with('cliente')
+                ->latest()
+                ->take(5)
+                ->get(),
         ]);
     })->name('dashboard');
 
@@ -285,6 +294,7 @@ Route::middleware([
             ->join('clientes', 'clientes.id', '=', 'contratos.cliente_id')
             ->join('plans', 'plans.id', '=', 'contratos.plan_id')
             ->join('nodos', 'nodos.id', '=', 'plans.nodo_id')
+            ->whereNull('clientes.deleted_at') // 👈 FILTRO CLAVE
             ->select([
                 'contratos.*',
                 'clientes.nombre as cliente_nombre',
@@ -293,6 +303,7 @@ Route::middleware([
                 'clientes.cedula as cliente_cedula',
                 'clientes.correo as cliente_correo',
                 'clientes.direccion as cliente_direccion',
+                'clientes.estado as cliente_estado',
                 'plans.nombre as plan_nombre',
                 'nodos.nombre as nodo_nombre'
             ])
@@ -304,7 +315,7 @@ Route::middleware([
                     'Teléfono' => $contrato->cliente_telefono ?? 'N/A',
                     'Correo' => $contrato->cliente_correo ?? 'N/A',
                     'Dirección' => $contrato->cliente_direccion ?? 'N/A',
-
+                    'estado_cliente' => $contrato->cliente_estado ?? 'N/A',
                     'Plan' => str_replace('_REHUSO', '', $contrato->plan_nombre),
                     'Tecnologia' => ucfirst($contrato->tecnologia),
                     'Precio' => number_format($contrato->precio, 0, ',', '.'),

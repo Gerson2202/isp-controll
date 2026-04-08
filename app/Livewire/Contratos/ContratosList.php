@@ -67,7 +67,19 @@ class ContratosList extends Component
         'estado' => 'required|in:activo,cancelado,suspendido',
         'precio' => 'required|regex:/^[\d.,]+$/',
     ];
+    public function eliminarCliente($contratoId)
+    {
+        $contrato = Contrato::with('cliente')->find($contratoId);
 
+        if (!$contrato || !$contrato->cliente) {
+            session()->flash('error', 'Cliente no encontrado');
+            return;
+        }
+
+        $contrato->cliente->delete();
+
+        session()->flash('message', 'Cliente eliminado correctamente');
+    }
     // 🚀 Carga inicial optimizada
     public function mount()
     {
@@ -266,8 +278,10 @@ class ContratosList extends Component
     {
         $query = Contrato::select('contratos.*')
             ->with(['cliente', 'plan.nodo'])
-            ->join('clientes', 'clientes.id', '=', 'contratos.cliente_id')
-            ->join('plans', 'plans.id', '=', 'contratos.plan_id')
+            ->join('clientes', function ($join) {
+                $join->on('clientes.id', '=', 'contratos.cliente_id')
+                    ->whereNull('clientes.deleted_at');
+            })->join('plans', 'plans.id', '=', 'contratos.plan_id')
             ->join('nodos', 'nodos.id', '=', 'plans.nodo_id');
 
         // 🔍 BUSCADOR

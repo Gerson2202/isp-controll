@@ -7,8 +7,6 @@ use Livewire\Component;
 use App\Models\Nodo;
 use App\Models\Plan;
 use App\Services\MikroTikService;
-
-
 use Illuminate\Support\Facades\Log; // Importar la clase Log
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -42,39 +40,81 @@ class ListarPlanes extends Component
     public $tiempo_rafaga_subida;
     public $prioridad;
     public $usar_rafaga = false;
-
-
-
     public $tiempo_input_bajada;
     public $tiempo_input_subida;
-
     // Calculados (solo display)
     public $burst_time_bajada;
     public $burst_time_subida;
 
+    // SHOW CLIENTES 
+    public $clientesModal = false; // Para mostrar el modal de clientes
+    public $clientesFiltrados = []; // Clientes filtrados para el buscador
+    public $clienteSearch = ''; // Buscador de clientes
 
+    // Validación de los campos
+    protected $rules = [
+        'nombre' => 'required|string|max:255',
+        'descripcion' => 'required|string',
+        'velocidad_bajada' => 'required|integer|min:0',
+        'velocidad_subida' => 'required|integer|min:0',
+        'rehuso' => 'required|in:1:1,1:2,1:4,1:6',
+        'nodo_id' => 'exists:nodos,id', // Validar que el nodo_id existe en la tabla nodos
+    ];
+    public function showClientes($planId)
+    {
+        $this->plan_id = $planId;
+        $this->clientesModal = true;
+
+        $this->clientesFiltrados = Cliente::whereHas('contratos', function ($q) use ($planId) {
+            $q->where('plan_id', $planId)
+                ->whereIn('estado', ['activo', 'suspendido']); // 🔹 Solo estos estados
+        })
+            ->when($this->clienteSearch, function ($query) {
+                $query->where('nombre', 'like', '%' . $this->clienteSearch . '%');
+            })
+            ->get();
+    }
+
+    public function updatedClienteSearch()
+    {
+        if ($this->plan_id) {
+            $this->clientesFiltrados = Cliente::whereHas('contratos', function ($q) {
+                $q->where('plan_id', $this->plan_id)
+                    ->whereIn('estado', ['activo', 'suspendido']); // 🔹 Solo estos estados
+            })
+                ->where('nombre', 'like', '%' . $this->clienteSearch . '%')
+                ->get();
+        }
+    }
     public function mount()
     {
         // Cargar todos los planes con su relación de nodo, ordenados por el nombre del nodo
-        $this->filteredPlans = Plan::with('nodo')->get();
+        $this->filteredPlans = Plan::with('nodo')
+            ->withCount(['contratos' => function ($q) {
+                $q->whereIn('estado', ['activo', 'suspendido']); // 🔹 ahora incluye activo y suspendido
+            }])
+            ->get();
         $this->nodos = Nodo::all();
-    }
-    // Funcion oculatar modal
-    public function hide()
-    {
-        $this->showModal = false;
-        $this->resetForm();
     }
 
     protected function applyFilter()
     {
-        $query = Plan::with('nodo');
+        $query = Plan::with('nodo')
+            ->withCount(['contratos' => function ($q) {
+                $q->whereIn('estado', ['activo', 'suspendido']); // 🔹 igual aquí
+            }]);
 
         if (!empty($this->nodo_id_Filtro)) {
             $query->where('nodo_id', $this->nodo_id_Filtro);
         }
 
         $this->filteredPlans = $query->get();
+    }
+    // Funcion oculatar modal
+    public function hide()
+    {
+        $this->showModal = false;
+        $this->resetForm();
     }
     // Mostrar el modal para actualizar
     public function editPlan($id)
@@ -142,13 +182,28 @@ class ListarPlanes extends Component
     }
 
 
-    // Actualizar el plan-- ultimo cambio solo se agrego la condicion de if para dejar actualizar sino tiene contrato
     public function updatePlan()
     {
         try {
             // 🔥 VALIDACIONES
             $this->validate();
             $this->validateRafagas();
+
+            // 🔥 NORMALIZAR NOMBRE (del código 2)
+            $nombreNormalizado = strtoupper(Str::slug(trim($this->nombre), '_'));
+
+            // 🔥 VALIDAR DUPLICADO (del código 2)
+            if (
+                Plan::where('nombre', $nombreNormalizado)
+                ->where('id', '!=', $this->plan_id)
+                ->exists()
+            ) {
+                return $this->dispatch(
+                    'notify',
+                    type: 'error',
+                    message: 'El plan ya existe'
+                );
+            }
         } catch (\Illuminate\Validation\ValidationException $e) {
 
             foreach ($e->validator->errors()->all() as $message) {
@@ -159,19 +214,20 @@ class ListarPlanes extends Component
                 );
             }
 
-            return; // ⛔ NO SIGUE
+            return;
         }
 
         $plan = Plan::findOrFail($this->plan_id);
-        // 1. Verificar si SOLO cambió la descripción (y ningún otro campo relevante para MikroTik)
+
+        // 🔥 SOLO CAMBIO DESCRIPCIÓN (usando nombre normalizado)
         $soloDescripcionCambio =
-            $plan->nombre === $this->nombre &&
+            $plan->nombre === $nombreNormalizado &&
             $plan->velocidad_bajada == $this->velocidad_bajada &&
             $plan->velocidad_subida == $this->velocidad_subida &&
             $plan->rehuso === $this->rehuso &&
             $plan->nodo_id == $this->nodo_id &&
-            $plan->descripcion !== $this->descripcion; // Solo esto cambió
-        // 2. Si solo es la descripción, actualiza directo en DB sin tocar MikroTik
+            $plan->descripcion !== $this->descripcion;
+
         if ($soloDescripcionCambio) {
             $plan->update(['descripcion' => $this->descripcion]);
 
@@ -182,23 +238,24 @@ class ListarPlanes extends Component
             );
             $this->showModal = false;
             $this->resetForm();
-            return; // Termina la ejecución aquí
+            return;
         }
+
+        // 🔥 NINGÚN CAMBIO (usando nombre normalizado)
         $ningunCambio =
-            $plan->nombre === $this->nombre &&
+            $plan->nombre === $nombreNormalizado &&
             $plan->velocidad_bajada == $this->velocidad_bajada &&
             $plan->velocidad_subida == $this->velocidad_subida &&
             $plan->rehuso === $this->rehuso &&
             $plan->nodo_id == $this->nodo_id &&
             $plan->descripcion === $this->descripcion &&
-            // ===== RÁFAGAS =====
             (bool) $plan->rafaga_max_bajada === (bool) $this->rafaga_max_bajada &&
             (bool) $plan->rafaga_max_subida === (bool) $this->rafaga_max_subida &&
             (bool) $plan->velocidad_media_bajada === (bool) $this->velocidad_media_bajada &&
             (bool) $plan->velocidad_media_subida === (bool) $this->velocidad_media_subida &&
             (int) $plan->tiempo_rafaga_bajada === (int) $this->burst_time_bajada &&
             (int) $plan->tiempo_rafaga_subida === (int) $this->burst_time_subida;
-        // Si no hay cambios, salir sin hacer nada
+
         if ($ningunCambio) {
             return;
         }
@@ -208,8 +265,10 @@ class ListarPlanes extends Component
 
             $this->isProcessing = true;
             $this->progress = 0;
+
             // Iniciar transacción de base de datos
             DB::beginTransaction();
+
             try {
                 // 1. Obtener el plan y su nodo relacionado
                 $plan = Plan::with('nodo')->findOrFail($this->plan_id);
@@ -234,20 +293,22 @@ class ListarPlanes extends Component
                     $this->nodo->puerto_api ?? 8728
                 );
 
-                // 5. Eliminar cola padre y sus hijas
+                // 5. Eliminar cola padre y sus hijas (usando nombre VIEJO de la BD)
                 $mikroTikService->eliminarColaPadreYHijas($plan->nombre);
-                // 6. Crear nueva cola padre
-                $mikroTikService->crearColaPadre($this->nombre, $this->velocidad_subida, $this->velocidad_bajada);
+
+                // 6. Crear nueva cola padre (usando nombre NORMALIZADO)
+                $mikroTikService->crearColaPadre($nombreNormalizado, $this->velocidad_subida, $this->velocidad_bajada);
+
                 // Indicadores de carga
                 $this->totalClients = count($this->clientesAsociados);
                 $processedClients = 0;
 
-                // 7. Crear colas hijas
+                // 7. Crear colas hijas (usando nombre NORMALIZADO)
                 foreach ($this->clientesAsociados as $cliente) {
                     $mikroTikService->crearColaHija(
                         $cliente,
                         [
-                            'nombre' => $this->nombre,
+                            'nombre' => $nombreNormalizado, // 👈 Usamos el normalizado
                             'velocidad_subida' => $this->velocidad_subida,
                             'velocidad_bajada' => $this->velocidad_bajada,
                             'rehuso' => $this->rehuso,
@@ -266,27 +327,21 @@ class ListarPlanes extends Component
                     $this->progress = intval(($processedClients / $this->totalClients) * 100);
                 }
 
-                // 8. Actualizar el plan en la base de datos (dentro de la transacción)
+                // 8. Actualizar el plan en la base de datos (usando nombre NORMALIZADO)
                 $plan->update([
-                    'nombre' => $this->nombre,
+                    'nombre' => $nombreNormalizado, // 👈 Usamos el normalizado
                     'descripcion' => $this->descripcion,
                     'velocidad_bajada' => $this->velocidad_bajada,
                     'velocidad_subida' => $this->velocidad_subida,
                     'rehuso' => $this->rehuso,
                     'nodo_id' => $this->nodo_id,
-
                     'rafaga_max_bajada' => $this->usar_rafaga ? $this->rafaga_max_bajada : null,
                     'rafaga_max_subida' => $this->usar_rafaga ? $this->rafaga_max_subida : null,
-
                     'velocidad_media_bajada' => $this->usar_rafaga ? $this->velocidad_media_bajada : null,
                     'velocidad_media_subida' => $this->usar_rafaga ? $this->velocidad_media_subida : null,
-
-                    // 🔥 BURST TIME → SEGUNDOS (INT)
                     'tiempo_rafaga_bajada' => $this->usar_rafaga ? (int) $this->burst_time_bajada : null,
                     'tiempo_rafaga_subida' => $this->usar_rafaga ? (int) $this->burst_time_subida : null,
-
                 ]);
-
 
                 // 9. Confirmar la transacción si todo fue exitoso
                 DB::commit();
@@ -305,6 +360,7 @@ class ListarPlanes extends Component
                 $this->showModal = false;
                 $this->resetForm();
             } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                // ✅ Mantenemos el catch específico del código 1
                 DB::rollBack();
                 $this->dispatch(
                     'notify',
@@ -319,38 +375,34 @@ class ListarPlanes extends Component
                     message: 'Error al actualizar el plan: ' . $e->getMessage()
                 );
             } finally {
-                $this->isProcessing = false; // Desactivar indicador
+                $this->isProcessing = false;
             }
         } else {
-            // Si no tiene contrato asociado me deja actualizar con normalidad
+            // Si no tiene contrato asociado me deja actualizar con normalidad (usando nombre NORMALIZADO)
             $plan->update([
-                'nombre' => $this->nombre,
+                'nombre' => $nombreNormalizado, // 👈 Usamos el normalizado
                 'descripcion' => $this->descripcion,
                 'velocidad_bajada' => $this->velocidad_bajada,
                 'velocidad_subida' => $this->velocidad_subida,
                 'rehuso' => $this->rehuso,
                 'nodo_id' => $this->nodo_id,
-
                 'rafaga_max_bajada' => $this->usar_rafaga ? $this->rafaga_max_bajada : null,
                 'rafaga_max_subida' => $this->usar_rafaga ? $this->rafaga_max_subida : null,
-
                 'velocidad_media_bajada' => $this->usar_rafaga ? $this->velocidad_media_bajada : null,
                 'velocidad_media_subida' => $this->usar_rafaga ? $this->velocidad_media_subida : null,
-
-                // 🔥 BURST TIME → SEGUNDOS (INT)
                 'tiempo_rafaga_bajada' => $this->usar_rafaga ? (int) $this->burst_time_bajada : null,
                 'tiempo_rafaga_subida' => $this->usar_rafaga ? (int) $this->burst_time_subida : null,
-
             ]);
 
-
             $this->plans = Plan::all();
+
             // Notificación Toastr
             $this->dispatch(
                 'notify',
                 type: 'success',
                 message: 'Plan actualizado exitosamente!'
             );
+
             // Cerrar el modal y resetear formulario
             $this->showModal = false;
             $this->resetForm();
@@ -389,16 +441,6 @@ class ListarPlanes extends Component
             );
         }
     }
-
-    // Validación de los campos
-    protected $rules = [
-        'nombre' => 'required|string|max:255',
-        'descripcion' => 'required|string',
-        'velocidad_bajada' => 'required|integer|min:0',
-        'velocidad_subida' => 'required|integer|min:0',
-        'rehuso' => 'required|in:1:1,1:2,1:4,1:6',
-        'nodo_id' => 'exists:nodos,id', // Validar que el nodo_id existe en la tabla nodos
-    ];
 
 
     public function resetForm()
@@ -462,8 +504,6 @@ class ListarPlanes extends Component
             $errors[] = 'La ráfaga de subida debe ser mayor que la velocidad base.';
         }
 
-
-
         if (!empty($errors)) {
             throw \Illuminate\Validation\ValidationException::withMessages([
                 'rafaga' => $errors
@@ -480,7 +520,7 @@ class ListarPlanes extends Component
             // Resto de tus datos...
         ]);
     }
-
+    
     // Función para activar un plan en MikroTik
     public function activatePlan($planId)
     {
@@ -541,3 +581,4 @@ class ListarPlanes extends Component
         }
     }
 }
+

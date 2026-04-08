@@ -198,6 +198,17 @@
                                     <td>
                                         <button wire:click="openEditModal({{ $contrato->id }})"
                                             class="btn btn-sm btn-primary">Editar</button>
+                                            {{-- Solo proteccion en fronted --}}
+                                        @auth
+                                            @if (auth()->id() === 1)
+                                                <button
+                                                    onclick="confirm('¿Seguro que deseas eliminar este cliente?') || event.stopImmediatePropagation()"
+                                                    wire:click="eliminarCliente({{ $contrato->id }})"
+                                                    class="btn btn-sm btn-danger">
+                                                    Eliminar
+                                                </button>
+                                            @endif
+                                        @endauth
                                     </td>
                                 </tr>
                             @endforeach

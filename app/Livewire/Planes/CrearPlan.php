@@ -105,12 +105,16 @@ class CrearPlan extends Component
         }
 
         $nombreNormalizado = strtoupper(Str::slug($this->nombre, '_'));
-
-        if (Plan::where('nombre', $nombreNormalizado)->exists()) {
+        // validar que no exista el mismo plan en el mismo nodo
+        if (
+            Plan::where('nombre', $nombreNormalizado)
+            ->where('nodo_id', $this->nodo_id)
+            ->exists()
+        ) {
             return $this->dispatch(
                 'notify',
                 type: 'error',
-                message: 'El plan ya existe'
+                message: 'El plan ya existe en este nodo'
             );
         }
 

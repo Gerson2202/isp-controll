@@ -46,6 +46,9 @@ class EditarPlanCliente extends Component
 
         $this->id_nodo = optional($this->cliente->contrato?->plan?->nodo)->id;
         $this->planes = Plan::where('nodo_id', $this->id_nodo)
+            ->withCount(['contratos' => function ($q) {
+                $q->whereIn('estado', ['activo', 'suspendido']);
+            }])
             ->orderBy('nombre')
             ->get();
         $this->plan_seleccionado = $this->cliente->contrato->plan_id;
@@ -74,7 +77,29 @@ class EditarPlanCliente extends Component
             // Datos actuales
             $planAnterior = $this->cliente->contrato->plan;
             $nuevoPlan = Plan::find($this->plan_seleccionado);
+            // 🔥 VALIDAR LÍMITE DE CLIENTES (SOLO SI CAMBIA DE PLAN)
+            if ($planAnterior->id != $this->plan_seleccionado) {
 
+                $limite = 50;
+
+                $totalClientes = \App\Models\Cliente::whereHas('contrato', function ($q) use ($nuevoPlan) {
+                    $q->where('plan_id', $nuevoPlan->id);
+                })->count();
+
+                if ($totalClientes >= $limite) {
+
+                    DB::rollBack(); // ⛔ IMPORTANTE
+
+                    $this->dispatch(
+                        'notify',
+                        type: 'error',
+                        message: "El plan {$nuevoPlan->nombre} alcanzó su capacidad máxima ({$limite} clientes). Seleccione otro plan o cree uno nuevo."
+                    );
+
+                    $this->isLoading = false;
+                    return; // ⛔ DETIENE TODO
+                }
+            }
             // 1. Actualizar en base de datos
             $this->cliente->contrato->update([
                 'plan_id' => $this->plan_seleccionado,
