@@ -34,23 +34,47 @@ class ClienteCortes extends Component
         $this->procesando = true;
 
         try {
+            // 🔥 Subconsulta: última factura por contrato (más segura por ID)
+            $sub = Factura::selectRaw('MAX(id) as max_id')
+                ->groupBy('contrato_id');
+
             $facturasPendientes = Factura::with(['contrato.cliente', 'contrato.plan.nodo'])
-                ->whereMonth('fecha_emision', Carbon::now()->month)
-                ->whereYear('fecha_emision', Carbon::now()->year)
-                ->where('estado', 'pendiente')
+                ->joinSub($sub, 'ultimas', function ($join) {
+                    $join->on('facturas.id', '=', 'ultimas.max_id');
+                })
+                ->where('facturas.estado', 'pendiente')
+
+                // 🔥 NUEVA CONDICIÓN CLAVE
+                ->whereDate('facturas.fecha_vencimiento', '<', now())
+                // ✅ CONTRATO ACTIVO
+                ->whereHas('contrato', function ($q) {
+                    $q->where('estado', 'activo');
+                })
+
+                // ✅ CLIENTE ACTIVO + CON IP
                 ->whereHas('contrato.cliente', function ($q) {
                     $q->where('estado', 'activo')
                         ->whereNotNull('ip');
                 })
+
                 ->get();
 
             foreach ($facturasPendientes as $factura) {
                 DB::transaction(function () use ($factura) {
+
                     $cliente = $factura->contrato->cliente;
+
+                    // 🔒 Evitar reprocesar si ya está cortado
+                    if ($cliente->estado === 'cortado') {
+                        return;
+                    }
+
+                    // 🔻 Cambiar estado del cliente
                     $cliente->update(['estado' => 'cortado']);
 
+                    // 🧾 Crear ticket
                     Ticket::create([
-                        'user_id' => auth()->id(), // O el ID del usuario correspondiente
+                        'user_id' => auth()->id(),
                         'tipo_reporte' => 'corte masivo',
                         'situacion' => 'Corte automatico por factura pendiente',
                         'estado' => 'cerrado',
@@ -59,16 +83,23 @@ class ClienteCortes extends Component
                         'solucion' => 'Corte realizado automaticamente por sistema'
                     ]);
 
-                    if ($nodo = $factura->contrato->plan->nodo) {
+                    // 📡 Corte en MikroTik
+                    if ($nodo = optional($factura->contrato->plan)->nodo) {
+
                         $mikroTikService = new MikroTikService(
                             $nodo->ip,
                             $nodo->user,
                             $nodo->pass,
                             $nodo->puerto_api ?? 8728
                         );
+
                         if ($mikroTikService->isReachable()) {
                             $mikroTikService->manejarEstadoCliente($cliente->ip, 'cortado');
+                        } else {
+                            Log::warning("Nodo no alcanzable para cliente ID: {$cliente->id}");
                         }
+                    } else {
+                        Log::warning("Cliente sin nodo asignado ID: {$cliente->id}");
                     }
                 });
             }
@@ -80,10 +111,11 @@ class ClienteCortes extends Component
             );
         } catch (\Exception $e) {
             Log::error("Error en corte masivo: " . $e->getMessage());
+
             $this->dispatch(
                 'notify',
                 type: 'error',
-                message: "Ocurrio un error durante el proceso: " . $e->getMessage()
+                message: "Ocurrió un error durante el proceso: " . $e->getMessage()
             );
         } finally {
             $this->procesando = false;
@@ -160,55 +192,36 @@ class ClienteCortes extends Component
         $this->resetPage();
     }
 
-    // para enio --- (trae registros del mes actual)
-    // public function render()
-    // {
-    //     $fechaActual = Carbon::now();
-    //     $mesActual = $fechaActual->month;
-    //     $anioActual = $fechaActual->year;
 
-    //     $query = Factura::with(['contrato.cliente', 'contrato.plan.nodo'])
-    //         ->whereMonth('fecha_emision', $mesActual)
-    //         ->whereYear('fecha_emision', $anioActual);
-
-    //     if (!empty($this->search)) {
-    //         $query->whereHas('contrato.cliente', function($q) {
-    //             $q->where('nombre', 'like', '%' . $this->search . '%');
-    //         });
-    //     }
-
-    //     if (!empty($this->filterEstado)) {
-    //         $query->where('estado', $this->filterEstado);
-    //     }
-
-    //     if (!empty($this->filterMikrotik)) {
-    //         $query->whereHas('contrato.cliente', function($q) {
-    //             $q->where('estado', $this->filterMikrotik);
-    //         });
-    //     }
-
-    //     $facturas = $query->orderBy('fecha_vencimiento', 'asc')->get();
-
-    //     return view('livewire.clientes.cliente-cortes', [
-    //         'facturas' => $facturas
-    //     ]);
-    // }
-    // para fernert ( Trae la ultima factura de cada contrato )
     public function render()
     {
-        $query = Factura::with(['contrato.cliente', 'contrato.plan.nodo'])
-            ->whereHas('contrato.cliente'); // 🔥 evita nulls
+        // 🔥 Usar el mismo criterio que el corte (por ID)
+        $sub = Factura::selectRaw('MAX(id) as max_id')
+            ->groupBy('contrato_id');
 
+        $query = Factura::with(['contrato.cliente', 'contrato.plan.nodo'])
+            ->joinSub($sub, 'ultimas', function ($join) {
+                $join->on('facturas.id', '=', 'ultimas.max_id');
+            })
+
+            ->whereHas('contrato.cliente') // evita nulls
+            ->whereHas('contrato', function ($q) {
+                $q->where('estado', 'activo'); // 🔥 filtro contrato activo
+            });
+
+        // 🔍 BUSCADOR
         if (!empty($this->search)) {
             $query->whereHas('contrato.cliente', function ($q) {
                 $q->where('nombre', 'like', '%' . $this->search . '%');
             });
         }
 
+        // 📌 FILTRO ESTADO FACTURA
         if (!empty($this->filterEstado)) {
-            $query->where('estado', $this->filterEstado);
+            $query->where('facturas.estado', $this->filterEstado);
         }
 
+        // 📡 FILTRO MIKROTIK (estado cliente)
         if (!empty($this->filterMikrotik)) {
             $query->whereHas('contrato.cliente', function ($q) {
                 $q->where('estado', $this->filterMikrotik);
@@ -216,10 +229,8 @@ class ClienteCortes extends Component
         }
 
         $facturas = $query
-            ->orderBy('fecha_emision', 'desc')
-            ->get()
-            ->unique('contrato_id')
-            ->values();
+            ->orderBy('facturas.fecha_emision', 'desc')
+            ->get();
 
         return view('livewire.clientes.cliente-cortes', [
             'facturas' => $facturas
