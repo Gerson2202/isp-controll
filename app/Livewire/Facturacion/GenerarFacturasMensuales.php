@@ -91,7 +91,7 @@ class GenerarFacturasMensuales extends Component
                     continue;
                 }
 
-                // 2. Verificar si hay pagos recientes (a través de facturas)
+                // 2. Verificar si hay pagos recientes (a través de facturas) ( esta validacion no va para fernet 14/04/26)
                 $pagoEnMesActual = false;
                 foreach ($contrato->facturas as $factura) {
                     if ($factura->pagos()

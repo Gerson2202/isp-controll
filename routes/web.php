@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AIChatController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ContratoController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\FotoTicketController;
+use App\Http\Controllers\IAController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\NodoController;
 use App\Http\Controllers\PagoController;
@@ -394,4 +396,6 @@ Route::middleware([
 
     // APSL
     Route::view('/aps', 'aps.index')->name('aps.index');
+    // CHAT IA
+    Route::post('/chat-ask', [AIChatController::class, 'ask']);
 });

@@ -45,8 +45,9 @@ class ClienteCortes extends Component
                 ->where('facturas.estado', 'pendiente')
 
                 // 🔥 NUEVA CONDICIÓN CLAVE
-                ->whereDate('facturas.fecha_vencimiento', '<', now())
+                ->whereDate('facturas.fecha_emision', '<', now())
                 // ✅ CONTRATO ACTIVO
+                
                 ->whereHas('contrato', function ($q) {
                     $q->where('estado', 'activo');
                 })
@@ -58,7 +59,6 @@ class ClienteCortes extends Component
                 })
 
                 ->get();
-
             foreach ($facturasPendientes as $factura) {
                 DB::transaction(function () use ($factura) {
 

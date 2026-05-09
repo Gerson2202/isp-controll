@@ -129,6 +129,164 @@
             <a href="{{ route('tickets.historial') }}" class="btn btn-sm btn-secondary float-right">Ver Todos</a>
         </div>
     </div>
+    <!-- Chat flotante solo para admin -->
+    @auth
+        @if (auth()->user()->email === 'gersonpsj@gmail.com')
+            {{-- Cambia por tu condición de admin --}}
+            <div id="chatWidget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+                <button id="chatButton"
+                    style="
+                width: 60px; height: 60px; border-radius: 50%;
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                color: white; font-size: 24px;
+            ">💬</button>
+
+                <div id="chatWindow"
+                    style="
+                position: absolute; bottom: 80px; right: 0;
+                width: 380px; height: 500px; background: white;
+                border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+                display: none; flex-direction: column; overflow: hidden;
+                border: 1px solid #e0e0e0;
+            ">
+                    <div
+                        style="
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    color: white; padding: 15px; font-weight: bold;
+                ">
+                        🤖 Asistente IA
+                        <button id="closeChat"
+                            style="float: right; background: none; border: none; color: white; cursor: pointer;">✕</button>
+                    </div>
+
+                    <div id="messages" style="flex: 1; overflow-y: auto; padding: 15px; background: #f5f5f5;">
+                        <div style="text-align: center; color: #999; padding: 20px;">
+                            💡 Pregúntame:<br>
+                            • ¿Cuántos clientes hay?<br>
+                            • Clientes en mora<br>
+                            • Instalaciones de este mes
+                        </div>
+                    </div>
+
+                    <div style="padding: 15px; background: white; border-top: 1px solid #ddd;">
+                        <form id="chatForm" style="display: flex; gap: 10px;">
+                            <input type="text" id="questionInput" placeholder="Escribe tu pregunta..."
+                                style="
+                            flex: 1; padding: 10px; border: 1px solid #ddd;
+                            border-radius: 20px; outline: none;
+                        ">
+                            <button type="submit"
+                                style="
+                            padding: 10px 20px;
+                            background: linear-gradient(135deg, #667eea, #764ba2);
+                            color: white; border: none; border-radius: 20px; cursor: pointer;
+                        ">Enviar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                const chatButton = document.getElementById('chatButton');
+                const chatWindow = document.getElementById('chatWindow');
+                const closeChat = document.getElementById('closeChat');
+                const chatForm = document.getElementById('chatForm');
+                const questionInput = document.getElementById('questionInput');
+                const messages = document.getElementById('messages');
+
+                chatButton.onclick = () => chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
+                closeChat.onclick = () => chatWindow.style.display = 'none';
+
+                function addMessage(text, isUser) {
+                    const div = document.createElement('div');
+                    div.style.marginBottom = '10px';
+                    div.style.textAlign = isUser ? 'right' : 'left';
+
+                    const bubble = document.createElement('div');
+                    bubble.style.display = 'inline-block';
+                    bubble.style.padding = '10px 15px';
+                    bubble.style.borderRadius = '15px';
+                    bubble.style.maxWidth = '80%';
+                    bubble.style.wordWrap = 'break-word';
+                    bubble.style.whiteSpace = 'pre-wrap';
+
+                    if (isUser) {
+                        bubble.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+                        bubble.style.color = 'white';
+                    } else {
+                        bubble.style.background = 'white';
+                        bubble.style.color = '#333';
+                        bubble.style.border = '1px solid #ddd';
+                    }
+
+                    bubble.textContent = text;
+                    div.appendChild(bubble);
+                    messages.appendChild(div);
+                    messages.scrollTop = messages.scrollHeight;
+                }
+
+                function addTyping() {
+                    const div = document.createElement('div');
+                    div.id = 'typing';
+                    div.style.marginBottom = '10px';
+                    div.style.textAlign = 'left';
+
+                    const bubble = document.createElement('div');
+                    bubble.style.display = 'inline-block';
+                    bubble.style.padding = '10px 15px';
+                    bubble.style.background = 'white';
+                    bubble.style.border = '1px solid #ddd';
+                    bubble.style.borderRadius = '15px';
+                    bubble.innerHTML = '🤖 Escribiendo...';
+
+                    div.appendChild(bubble);
+                    messages.appendChild(div);
+                    messages.scrollTop = messages.scrollHeight;
+                }
+
+                function removeTyping() {
+                    const typing = document.getElementById('typing');
+                    if (typing) typing.remove();
+                }
+
+                chatForm.onsubmit = async (e) => {
+                    e.preventDefault();
+                    const question = questionInput.value.trim();
+                    if (!question) return;
+
+                    addMessage(question, true);
+                    questionInput.value = '';
+                    addTyping();
+
+                    try {
+                        const response = await fetch('/chat-ask', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                question: question
+                            })
+                        });
+
+                        const data = await response.json();
+                        removeTyping();
+
+                        if (data.success) {
+                            addMessage(data.answer, false);
+                        } else {
+                            addMessage('Error: No se pudo procesar la pregunta', false);
+                        }
+                    } catch (error) {
+                        removeTyping();
+                        addMessage('Error de conexión', false);
+                    }
+                };
+            </script>
+        @endif
+    @endauth
 @stop
 {{-- include footer y logo  --}}
 @include('partials.global-footer')

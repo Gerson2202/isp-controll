@@ -272,7 +272,7 @@
                                             $mensaje .=
                                                 "¿Necesitas ayuda con tu conexión o tienes alguna duda? Estamos para servirte.\n\n";
                                             $mensaje .= "¡Gracias por preferirnos! ⚡💻\n\n";
-                                            $mensaje .= '*Equipo Suministro E Instalaciones En redes*';
+                                            $mensaje .= '*Equipo FerNet*';
                                         @endphp
 
                                         <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $facturaSeleccionada->contrato->cliente->telefono) }}?text={{ rawurlencode($mensaje) }}"
@@ -282,6 +282,9 @@
                                         <button class="btn btn-primary" wire:ignore
                                             onclick="generarImagenComprobante()">
                                             <i class="fas fa-image me-2"></i>Ver imagen
+                                        </button>
+                                        <button class="btn btn-dark" onclick="copiarImagenComprobante()">
+                                            <i class="fas fa-copy me-2"></i>Copiar
                                         </button>
                                     @endif
                                 </div>
@@ -301,6 +304,41 @@
                     toastr[data.type](data.message);
                 });
             });
+        </script>
+
+        <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+        <script>
+            async function copiarImagenComprobante() {
+                const elemento = document.getElementById("comprobantePago");
+
+                try {
+                    const canvas = await html2canvas(elemento, {
+                        scale: 2, // mejor calidad
+                        useCORS: true
+                    });
+
+                    canvas.toBlob(async (blob) => {
+                        try {
+                            await navigator.clipboard.write([
+                                new ClipboardItem({
+                                    "image/png": blob
+                                })
+                            ]);
+
+                            toastr.success("Comprobante copiado. Pégalo en WhatsApp 👍");
+
+                        } catch (err) {
+                            console.error(err);
+                            toastr.error("No se pudo copiar la imagen");
+                        }
+                    }, "image/png");
+
+                } catch (error) {
+                    console.error(error);
+                    toastr.error("Error generando la imagen");
+                }
+            }
         </script>
     @endpush
 </div>
