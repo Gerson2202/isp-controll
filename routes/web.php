@@ -4,6 +4,8 @@ use App\Http\Controllers\AIChatController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ContratoController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardController as ControllersDashboardController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\TicketController;
@@ -45,27 +47,8 @@ Route::middleware([
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard', [
-            'clientesCount' => Cliente::whereHas('contratos', function ($query) {
-                $query->where('estado', 'activo');
-            })->count(),
 
-            'equiposCount' => Inventario::count(),
-            'nodosCount' => Nodo::count(),
-
-            'ticketsAbiertos' => Ticket::where('estado', 'Abierto')->count(),
-
-            'ticketsRecientes' => Ticket::whereHas('cliente', function ($q) {
-                $q->whereNull('deleted_at'); // 🔥 solo clientes activos
-            })
-                ->with('cliente')
-                ->latest()
-                ->take(5)
-                ->get(),
-        ]);
-    })->name('dashboard');
-
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Rutas para Clientes
     Route::get('/clientes', [ClienteController::class, 'index'])->name('clientesIndex');

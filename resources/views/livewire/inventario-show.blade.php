@@ -101,10 +101,14 @@
                         <div class="col-md-4">
                             <div class="card border-0 bg-light">
                                 <div class="card-body text-center">
-                                    <h6 class="text-muted mb-3"><i class="fas fa-image me-2"></i>Imagen del Modelo</h6>
-                                    @if (!empty($inventario->modelo->foto) && file_exists(public_path('storage/' . $inventario->modelo->foto)))
+                                    <h6 class="text-muted mb-3">
+                                        <i class="fas fa-image me-2"></i>Imagen del Modelo
+                                    </h6>
+                            
+                                    @if (!empty($inventario->modelo->foto))
                                         <img src="{{ asset('storage/' . $inventario->modelo->foto) }}"
-                                            alt="Foto del modelo" class="img-fluid rounded shadow-sm"
+                                            alt="Foto del modelo"
+                                            class="img-fluid rounded shadow-sm"
                                             style="max-height: 200px;">
                                     @else
                                         <div class="py-4 text-muted">
