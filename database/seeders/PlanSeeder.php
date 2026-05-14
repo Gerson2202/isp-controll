@@ -17,13 +17,16 @@ class PlanSeeder extends Seeder
         // Insertar 4 planes con el campo rehuso
         DB::table('plans')->insert([
 
-            // Nodo Chicaro
+            // =========================
+            // Nodo Chicaro (ID 5)
+            // =========================
             [
                 'nombre' => 'PLAN-8-MEGAS-REHUSO-1-4',
                 'descripcion' => 'Clientes horario',
                 'velocidad_bajada' => 8,
                 'velocidad_subida' => 8,
                 'rehuso' => '1:4',
+                'nodo_id' => 5,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -33,6 +36,7 @@ class PlanSeeder extends Seeder
                 'velocidad_bajada' => 10,
                 'velocidad_subida' => 10,
                 'rehuso' => '1:4',
+                'nodo_id' => 5,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -42,6 +46,7 @@ class PlanSeeder extends Seeder
                 'velocidad_bajada' => 6,
                 'velocidad_subida' => 6,
                 'rehuso' => '1:4',
+                'nodo_id' => 5,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -51,17 +56,21 @@ class PlanSeeder extends Seeder
                 'velocidad_bajada' => 20,
                 'velocidad_subida' => 20,
                 'rehuso' => '1:4',
+                'nodo_id' => 5,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
 
-            // Nodo Sabana
+            // =========================
+            // Nodo Sabana (ID 3)
+            // =========================
             [
                 'nombre' => 'PLAN-8-MEGAS-REHUSO-1-4',
                 'descripcion' => 'Clientes horario',
                 'velocidad_bajada' => 8,
                 'velocidad_subida' => 8,
                 'rehuso' => '1:4',
+                'nodo_id' => 3,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -71,6 +80,7 @@ class PlanSeeder extends Seeder
                 'velocidad_bajada' => 10,
                 'velocidad_subida' => 10,
                 'rehuso' => '1:4',
+                'nodo_id' => 3,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -80,6 +90,7 @@ class PlanSeeder extends Seeder
                 'velocidad_bajada' => 6,
                 'velocidad_subida' => 6,
                 'rehuso' => '1:4',
+                'nodo_id' => 3,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -89,16 +100,21 @@ class PlanSeeder extends Seeder
                 'velocidad_bajada' => 20,
                 'velocidad_subida' => 20,
                 'rehuso' => '1:4',
+                'nodo_id' => 3,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-            // Nodo Portico
+
+            // =========================
+            // Nodo Portico (ID 4)
+            // =========================
             [
                 'nombre' => 'PLAN-8-MEGAS-REHUSO-1-4',
                 'descripcion' => 'Clientes horario',
                 'velocidad_bajada' => 8,
                 'velocidad_subida' => 8,
                 'rehuso' => '1:4',
+                'nodo_id' => 4,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -108,6 +124,7 @@ class PlanSeeder extends Seeder
                 'velocidad_bajada' => 10,
                 'velocidad_subida' => 10,
                 'rehuso' => '1:4',
+                'nodo_id' => 4,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -117,6 +134,7 @@ class PlanSeeder extends Seeder
                 'velocidad_bajada' => 6,
                 'velocidad_subida' => 6,
                 'rehuso' => '1:4',
+                'nodo_id' => 4,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -126,16 +144,21 @@ class PlanSeeder extends Seeder
                 'velocidad_bajada' => 20,
                 'velocidad_subida' => 20,
                 'rehuso' => '1:4',
+                'nodo_id' => 4,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-            // Nodo Pabellon 
+
+            // =========================
+            // Nodo Pabellon (ID 6)
+            // =========================
             [
                 'nombre' => 'PLAN-8-MEGAS-REHUSO-1-4',
                 'descripcion' => 'Clientes horario',
                 'velocidad_bajada' => 8,
                 'velocidad_subida' => 8,
                 'rehuso' => '1:4',
+                'nodo_id' => 6,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -145,6 +168,7 @@ class PlanSeeder extends Seeder
                 'velocidad_bajada' => 10,
                 'velocidad_subida' => 10,
                 'rehuso' => '1:4',
+                'nodo_id' => 6,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -154,6 +178,7 @@ class PlanSeeder extends Seeder
                 'velocidad_bajada' => 6,
                 'velocidad_subida' => 6,
                 'rehuso' => '1:4',
+                'nodo_id' => 6,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -163,9 +188,11 @@ class PlanSeeder extends Seeder
                 'velocidad_bajada' => 20,
                 'velocidad_subida' => 20,
                 'rehuso' => '1:4',
+                'nodo_id' => 6,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+
         ]);
     }
 }

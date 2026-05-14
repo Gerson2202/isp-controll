@@ -18,7 +18,7 @@ class ClienteFactory extends Factory
     {
         return [
             'nombre' => $this->faker->name(),  // Nombre del cliente
-            'telefono' => $this->faker->phoneNumber(),  // Número de teléfono
+            'telefono' => '573215852059',
             'direccion' => $this->faker->address(),  // Dirección
             'correo' => $this->faker->unique()->safeEmail(),  // Correo electrónico
             'cedula' => $this->faker->unique()->numerify('###########'),  // Cédula (números aleatorios)

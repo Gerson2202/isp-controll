@@ -15,9 +15,9 @@ class NodoSeeder extends Seeder
         DB::table('nodos')->insert([
 
             // NODOS RIOACHA
-              [
+            [
                 'nombre' => 'Nodo_Internexa',
-                'ip' => '179.1.87.82',
+                'ip' => '179.1.87.81',
                 'latitud' => 7.8939,   // Coordenada de Cúcuta
                 'longitud' => -72.5071,
                 'puerto_api' => 7185,
@@ -26,60 +26,60 @@ class NodoSeeder extends Seeder
             ],
 
             // NODOS EN1IO
-            //   [
-            //     'nombre' => 'CerroCapote',
-            //     'ip' => '45.65.136.244',
-            //     'latitud' => 7.8939,   // Coordenada de Cúcuta
-            //     'longitud' => -72.5071,
-            //     'puerto_api' => 7185,
-            //     'created_at' => now(),
-            //     'updated_at' => now(),
-            // ],
-            // [
-            //     'nombre' => 'Sabana',
-            //     'ip' => '45.65.136.244',
-            //     'latitud' => 7.8939,   // Coordenada de Cúcuta
-            //     'longitud' => -72.5071,
-            //     'puerto_api' => 7186,
-            //     'created_at' => now(),
-            //     'updated_at' => now(),
-            // ],
-            // [
-            //     'nombre' => 'Portico',
-            //     'ip' => '45.65.136.244',
-            //     'latitud' => 7.8939,   // Coordenada de Cúcuta
-            //     'longitud' => -72.5071,
-            //     'puerto_api' => 7187,
-            //     'created_at' => now(),
-            //     'updated_at' => now(),
-            // ],
-            // [
-            //     'nombre' => 'Chicaro',
-            //     'ip' => '45.65.136.244',
-            //     'latitud' => 7.8939,   // Coordenada de Cúcuta
-            //     'longitud' => -72.5071,
-            //     'puerto_api' => 7188,
-            //     'created_at' => now(),
-            //     'updated_at' => now(),
-            // ],
-            // [
-            //     'nombre' => 'Pabellon',
-            //     'ip' => '45.65.136.244',
-            //     'latitud' => 7.8939,   // Coordenada de Cúcuta
-            //     'longitud' => -72.5071,
-            //     'puerto_api' => 7189,
-            //     'created_at' => now(),
-            //     'updated_at' => now(),
-            // ],
-            // [
-            //     'nombre' => 'Epon_Fibra_Sabana',
-            //     'ip' => '45.65.136.244',
-            //     'latitud' => 7.8939,   // Coordenada de Cúcuta
-            //     'longitud' => -72.5071,
-            //     'puerto_api' => 7190,
-            //     'created_at' => now(),
-            //     'updated_at' => now(),
-            // ],
+            [
+                'nombre' => 'CerroCapote',
+                'ip' => '45.65.136.241',
+                'latitud' => 7.8939,   // Coordenada de Cúcuta
+                'longitud' => -72.5071,
+                'puerto_api' => 7185,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Sabana',
+                'ip' => '45.65.136.241',
+                'latitud' => 7.8939,   // Coordenada de Cúcuta
+                'longitud' => -72.5071,
+                'puerto_api' => 7186,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Portico',
+                'ip' => '45.65.136.241',
+                'latitud' => 7.8939,   // Coordenada de Cúcuta
+                'longitud' => -72.5071,
+                'puerto_api' => 7187,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Chicaro',
+                'ip' => '45.65.136.241',
+                'latitud' => 7.8939,   // Coordenada de Cúcuta
+                'longitud' => -72.5071,
+                'puerto_api' => 7188,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Pabellon',
+                'ip' => '45.65.136.241',
+                'latitud' => 7.8939,   // Coordenada de Cúcuta
+                'longitud' => -72.5071,
+                'puerto_api' => 7189,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'nombre' => 'Epon_Fibra_Sabana',
+                'ip' => '45.65.136.241',
+                'latitud' => 7.8939,   // Coordenada de Cúcuta
+                'longitud' => -72.5071,
+                'puerto_api' => 7190,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
     }
 }
