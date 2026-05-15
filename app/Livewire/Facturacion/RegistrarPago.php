@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Facturacion;
 
+use App\Models\Empresa;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Factura;
@@ -14,9 +15,9 @@ use Exception;
 class RegistrarPago extends Component
 {
     use WithPagination;
-    
+
     protected $paginationTheme = 'bootstrap';
-    
+
     public $search = '';
     public $facturaSeleccionada;
     public $monto;
@@ -24,7 +25,12 @@ class RegistrarPago extends Component
     public $fecha_pago;
     public $pagoRegistrado = null;
     public $mostrarComprobante = false;
+    public $empresa;
 
+    public function mount()
+    {
+        $this->empresa = Empresa::first();
+    }
     public function seleccionarFactura($facturaId)
     {
         $this->facturaSeleccionada = Factura::with('contrato.cliente')->find($facturaId);
@@ -42,7 +48,7 @@ class RegistrarPago extends Component
         $this->pagoRegistrado = null;
     }
 
-  public function registrarPago()
+    public function registrarPago()
     {
         try {
             if (!$this->facturaSeleccionada) {
@@ -56,9 +62,10 @@ class RegistrarPago extends Component
                     'min:1',
                     function ($attribute, $value, $fail) {
                         if ($value > $this->facturaSeleccionada->saldo_pendiente) {
-                            $message = 'El monto no puede ser mayor al saldo pendiente ($'.number_format($this->facturaSeleccionada->saldo_pendiente, 2).')';
-                            $this->dispatch('notify', 
-                                type: 'error', 
+                            $message = 'El monto no puede ser mayor al saldo pendiente ($' . number_format($this->facturaSeleccionada->saldo_pendiente, 2) . ')';
+                            $this->dispatch(
+                                'notify',
+                                type: 'error',
                                 message: $message
                             );
                             $fail($message);
@@ -109,7 +116,7 @@ class RegistrarPago extends Component
                                 'fecha_cierre' => now(),
                                 'cliente_id' => $cliente->id,
                                 'solucion' => 'Estado actualizado tras pago de factura',
-                                'user_id' => auth()->id() 
+                                'user_id' => auth()->id()
                             ]);
 
                             $nodo = $contrato->plan->nodo;
@@ -141,19 +148,20 @@ class RegistrarPago extends Component
                 }
             });
 
-            $this->dispatch('notify', 
-                type: 'success', 
+            $this->dispatch(
+                'notify',
+                type: 'success',
                 message: $mensaje
             );
             $this->mostrarComprobante = true;
             $this->reset(['monto', 'metodo_pago', 'fecha_pago']);
-
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
         } catch (Exception $e) {
             DB::rollBack();
-            $this->dispatch('notify', 
-                type: 'error', 
+            $this->dispatch(
+                'notify',
+                type: 'error',
                 message: 'Error: ' . $e->getMessage()
             );
         }
@@ -175,12 +183,12 @@ class RegistrarPago extends Component
     public function getFacturasProperty()
     {
         return Factura::where('estado', 'pendiente')
-            ->when($this->search, function($query) {
-                $query->where(function($q) {
-                    $q->where('numero_factura', 'like', '%'.$this->search.'%')
-                    ->orWhereHas('contrato.cliente', function($subQuery) {
-                        $subQuery->where('nombre', 'like', '%'.$this->search.'%');
-                    });
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('numero_factura', 'like', '%' . $this->search . '%')
+                        ->orWhereHas('contrato.cliente', function ($subQuery) {
+                            $subQuery->where('nombre', 'like', '%' . $this->search . '%');
+                        });
                 });
             })
             ->with('contrato.cliente')

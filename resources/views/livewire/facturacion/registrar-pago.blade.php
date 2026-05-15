@@ -143,25 +143,10 @@
 
                                 <!-- Cuerpo con logo profesional -->
                                 <div class="modal-body p-4" id="comprobantePago">
-                                    <!-- Sección superior con logo y marca -->
-                                    {{-- <div class="text-center mb-4 border-bottom pb-3">
-                                        <img src="{{ asset('img/logo-empresa.png') }}" 
-                                             alt="Suministro e Instalaciones en Redes" 
-                                             class="img-fluid mb-3" 
-                                             style="max-height: 80px;">
-                                        
-                                        <div class="d-flex justify-content-center align-items-center">
-                                            <div class="text-start">
-                                                <h2 class="fw-bold mb-0 text-success">RECIBO DE PAGO</h2>
-                                                <small class="text-muted">Servicios Profesionales de Internet</small>
-                                            </div>
-                                        </div>
-                                    </div> --}}
-
                                     <!-- Icono de éxito -->
                                     <div class="text-center"> <!-- Eliminé mb-4 del contenedor principal -->
                                         <!-- Logo con margen inferior reducido -->
-                                        <img src="{{ asset('img/logo-fernet.png') }}"
+                                        <img src="{{ asset('storage/' . $empresa->logo) }}"
                                             alt="Suministro e Instalaciones en Redes" class="img-fluid"
                                             style="height: 120px; width: auto; max-width: 120%; margin-bottom: 0.5rem !important;">
                                         <!-- mb-2 -->
@@ -252,9 +237,9 @@
                                             <i class="fas fa-info-circle text-primary mt-1 me-2"></i>
                                             <div>
                                                 <p class="small mb-0 text-muted">
-                                                    <strong>ISP Sas </strong><br>
-                                                    Este documento es un comprobante de pago válido. Para consultas
-                                                    contactar al: +57 ######
+                                                    <strong>{{ $empresa->nombre }}</strong> Este documento es un
+                                                    comprobante de pago válido. Para consultas
+                                                    contactar al: {{ $empresa->telefono }}
                                                 </p>
                                             </div>
                                         </div>
@@ -272,7 +257,7 @@
                                             $mensaje .=
                                                 "¿Necesitas ayuda con tu conexión o tienes alguna duda? Estamos para servirte.\n\n";
                                             $mensaje .= "¡Gracias por preferirnos! ⚡💻\n\n";
-                                            $mensaje .= '*Equipo FerNet*';
+                                            $mensaje .= "*Equipo {$this->empresa->nombre}*";
                                         @endphp
 
                                         <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $facturaSeleccionada->contrato->cliente->telefono) }}?text={{ rawurlencode($mensaje) }}"

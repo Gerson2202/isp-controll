@@ -31,7 +31,8 @@ class DatabaseSeeder extends Seeder
             ConsumibleSeeder::class,
             ModeloSeeder::class,
             PoolSeeder::class,
-            ContratoSeeder::class
+            ContratoSeeder::class,
+            EmpresaSeeder::class
         ]);
     }
 }
