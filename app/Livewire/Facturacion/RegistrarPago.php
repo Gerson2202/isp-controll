@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Facturacion;
 
+use App\Services\ComprobanteImageGenerator;
+
 use App\Models\Empresa;
 use Illuminate\Support\Facades\Http;
 use Livewire\Component;
@@ -155,7 +157,8 @@ class RegistrarPago extends Component
             );
             $this->mostrarComprobante = true;
 
-            // Crear carpeta si no existe
+
+            // Generar imagen con GD Library
             $rutaRelativa = 'comprobantes/pago-' . $this->pagoRegistrado->id . '.png';
             $rutaCompleta = public_path($rutaRelativa);
             $directorio = dirname($rutaCompleta);
@@ -164,32 +167,21 @@ class RegistrarPago extends Component
                 mkdir($directorio, 0777, true);
             }
 
-            // Generar la imagen con altura suficiente
-            Browsershot::html(
-                view('comprobantes.pago', [
-                    'facturaSeleccionada' => $this->facturaSeleccionada,
-                    'pagoRegistrado' => $this->pagoRegistrado,
-                    'usuario' => auth()->user()->name,
-                    'paraImagen' => true,
-                    'empresa' => $this->empresa
-                ])->render()
-            )
-                ->setChromePath('C:\Program Files\Google\Chrome\Application\chrome.exe')
-                ->windowSize(550, 1000)  // Ancho fijo, altura grande
-                ->fullPage()              // Captura todo el scroll
-                ->waitUntilNetworkIdle()  // Espera a que cargue todo
-                ->save($rutaCompleta);
+            // Usar GD en lugar de Browsershot
+            $generador = new ComprobanteImageGenerator();
+            $generador->generate(
+                $this->facturaSeleccionada,
+                $this->pagoRegistrado,
+                $this->empresa,
+                $rutaCompleta
+            );
 
-            // ✅ Verificar que la imagen se creó antes de leerla
-            if (!file_exists($rutaCompleta)) {
-                throw new Exception('No se pudo generar la imagen del comprobante');
-            }
-
+            // Convertir a Base64 para enviar a n8n
             $imagenData = file_get_contents($rutaCompleta);
             $imagenBase64 = 'data:image/png;base64,' . base64_encode($imagenData);
 
-            // Enviar a n8n
-            $response = Http::post('http://localhost:5678/webhook-test/pago-factura', [
+            // Enviar a n8n (esto sigue igual)
+            Http::post('http://localhost:5678/webhook-test/pago-factura', [
                 'cliente' => $this->facturaSeleccionada->contrato->cliente->nombre ?? '',
                 'telefono' => $this->facturaSeleccionada->contrato->cliente->telefono ?? '',
                 'factura' => $this->facturaSeleccionada->numero_factura,
@@ -198,12 +190,6 @@ class RegistrarPago extends Component
                 'fecha_pago' => $this->pagoRegistrado->fecha_pago,
                 'usuario' => auth()->user()->name,
                 'imagen' => $imagenBase64
-            ]);
-
-            // ✅ Opcional: Log para depurar
-            \Log::info('Respuesta de n8n:', [
-                'status' => $response->status(),
-                'body' => $response->body()
             ]);
 
             $this->reset(['monto', 'metodo_pago', 'fecha_pago']);
