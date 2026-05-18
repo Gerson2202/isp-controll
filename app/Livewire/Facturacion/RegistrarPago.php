@@ -180,17 +180,23 @@ class RegistrarPago extends Component
             $imagenData = file_get_contents($rutaCompleta);
             $imagenBase64 = 'data:image/png;base64,' . base64_encode($imagenData);
 
-            // Enviar a n8n (esto sigue igual)
-            Http::post('http://localhost:5678/webhook-test/pago-factura', [
-                'cliente' => $this->facturaSeleccionada->contrato->cliente->nombre ?? '',
-                'telefono' => $this->facturaSeleccionada->contrato->cliente->telefono ?? '',
-                'factura' => $this->facturaSeleccionada->numero_factura,
-                'monto' => $this->pagoRegistrado->monto,
-                'metodo_pago' => $this->pagoRegistrado->metodo_pago,
-                'fecha_pago' => $this->pagoRegistrado->fecha_pago,
-                'usuario' => auth()->user()->name,
-                'imagen' => $imagenBase64
-            ]);
+            // // Enviar a n8n (esto sigue igual)
+            // URL EN LOCAL SOLO SE CAMBIA ACA Y LO DEMAS SIGUE FUNCIONANDO CORRECTO
+            // Http::post('http://localhost:5678/webhook-test/pago-factura', [
+
+            Http::timeout(60)->post(
+                'https://unmoving-handstand-mastiff.ngrok-free.dev/webhook/pago-factura',
+                [
+                    'cliente' => $this->facturaSeleccionada->contrato->cliente->nombre ?? '',
+                    'telefono' => $this->facturaSeleccionada->contrato->cliente->telefono ?? '',
+                    'factura' => $this->facturaSeleccionada->numero_factura,
+                    'monto' => $this->pagoRegistrado->monto,
+                    'metodo_pago' => $this->pagoRegistrado->metodo_pago,
+                    'fecha_pago' => $this->pagoRegistrado->fecha_pago,
+                    'usuario' => auth()->user()->name,
+                    'imagen' => $imagenBase64
+                ]
+            );
 
             $this->reset(['monto', 'metodo_pago', 'fecha_pago']);
         } catch (\Illuminate\Validation\ValidationException $e) {

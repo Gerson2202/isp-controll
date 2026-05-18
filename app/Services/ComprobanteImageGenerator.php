@@ -15,8 +15,9 @@ class ComprobanteImageGenerator
         $alto = 920;
 
         // Cargar fuentes Roboto
-        $this->fuenteRegular = public_path('fonts/Roboto-VariableFont_wdth,wght.ttf');
-        $this->fuenteBold = public_path('fonts/Roboto-VariableFont_wdth,wght.ttf');
+       
+        $this->fuenteRegular = public_path('fonts/OpenSans-Regular.ttf');
+        $this->fuenteBold = public_path('fonts/OpenSans-Regular.ttf');
 
         if (!file_exists($this->fuenteRegular)) {
             $this->fuenteRegular = public_path('fonts/Roboto-Regular.ttf');
