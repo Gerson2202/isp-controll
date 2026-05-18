@@ -15,7 +15,7 @@ class ComprobanteImageGenerator
         $alto = 920;
 
         // Cargar fuentes Roboto
-       
+
         $this->fuenteRegular = public_path('fonts/OpenSans-Regular.ttf');
         $this->fuenteBold = public_path('fonts/OpenSans-Regular.ttf');
 
@@ -63,7 +63,7 @@ class ComprobanteImageGenerator
         $logoCargado = false;
 
         if (!empty($empresa->logo)) {
-            $logoPath = public_path('storage/' . $empresa->logo);
+            $logoPath = storage_path('app/public/' . $empresa->logo);
             if (file_exists($logoPath)) {
                 $logo = @imagecreatefromstring(file_get_contents($logoPath));
                 if ($logo) {
