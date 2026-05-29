@@ -102,7 +102,10 @@ Route::middleware([
 
     Route::get('/nodos', [NodoController::class, 'index'])->name('nodosIndex');
     Route::get('/nodos/detalle/{nodo}', [NodoController::class, 'show'])->name('nodos.show');
-    Route::get('/Nonitoreo', [NodoController::class, 'index1'])->name('MonitoreoIndex');
+    Route::get('/Monitoreo', [NodoController::class, 'index1'])->name('MonitoreoIndex');
+    // Ruta de detalles con parámetro dinámico
+    Route::get('/nodo/{id}', function ($id) { return view('nodos.estadisticas', ['nodo' => $id]);})->name('nodo.estadisticas')->where('id', '[0-9]+');
+    
     // Rutas para Contratos
     Route::get('/contratos', [ContratoController::class, 'index'])->name('contratoIndex');
     Route::get('/contratos/list', [ContratoController::class, 'list'])->name('contratos.list');
