@@ -2,7 +2,10 @@
 
 namespace App\Livewire\Facturacion;
 
+use App\Services\ComprobanteImageGenerator;
+
 use App\Models\Empresa;
+use Illuminate\Support\Facades\Http;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Factura;
@@ -10,6 +13,7 @@ use App\Models\Pago;
 use App\Models\Ticket;
 use App\Services\MikroTikService;
 use Illuminate\Support\Facades\DB;
+use Spatie\Browsershot\Browsershot;
 use Exception;
 
 class RegistrarPago extends Component
@@ -25,12 +29,13 @@ class RegistrarPago extends Component
     public $fecha_pago;
     public $pagoRegistrado = null;
     public $mostrarComprobante = false;
-    public $empresa;
+    public $empresa; // ✅ Del segundo archivo
 
-    public function mount()
+    public function mount() // ✅ Del segundo archivo
     {
         $this->empresa = Empresa::first();
     }
+
     public function seleccionarFactura($facturaId)
     {
         $this->facturaSeleccionada = Factura::with('contrato.cliente')->find($facturaId);
@@ -76,7 +81,7 @@ class RegistrarPago extends Component
                 'fecha_pago' => 'required|date|before_or_equal:today'
             ]);
 
-            $mensaje = 'Pago registrado exitosamente'; // Mensaje por defecto
+            $mensaje = 'Pago registrado exitosamente';
 
             DB::transaction(function () use (&$mensaje) {
                 $this->pagoRegistrado = Pago::create([
@@ -85,7 +90,7 @@ class RegistrarPago extends Component
                     'metodo_pago' => $this->metodo_pago,
                     'fecha_pago' => $this->fecha_pago,
                     'notas' => 'Pago registrado por: ' . auth()->user()->name,
-                    'user_id' => auth()->id() // ⬅️ Agrega esta línea
+                    'user_id' => auth()->id()
                 ]);
 
                 $this->facturaSeleccionada->saldo_pendiente -= $this->monto;
@@ -94,14 +99,12 @@ class RegistrarPago extends Component
                     $this->facturaSeleccionada->estado = 'pagada';
                     $this->facturaSeleccionada->save();
 
-                    // Cambiar estado del cliente en MikroTik si corresponde
                     $contrato = $this->facturaSeleccionada->contrato;
                     $cliente = $contrato->cliente ?? null;
 
                     if ($cliente && !empty($cliente->ip)) {
                         $estadoAnterior = $cliente->estado;
 
-                        // Si el cliente estaba cortado, lo activamos y notificamos
                         if ($estadoAnterior == 'cortado') {
                             $nuevoEstado = 'activo';
 
@@ -136,7 +139,6 @@ class RegistrarPago extends Component
 
                             $mensaje = 'Pago realizado exitosamente y cliente activado en MikroTik';
                         } else {
-                            // Cliente ya estaba activo
                             $mensaje = 'Pago registrado exitosamente';
                         }
                     } else {
@@ -154,6 +156,48 @@ class RegistrarPago extends Component
                 message: $mensaje
             );
             $this->mostrarComprobante = true;
+
+
+            // Generar imagen con GD Library
+            $rutaRelativa = 'comprobantes/pago-' . $this->pagoRegistrado->id . '.png';
+            $rutaCompleta = public_path($rutaRelativa);
+            $directorio = dirname($rutaCompleta);
+
+            if (!file_exists($directorio)) {
+                mkdir($directorio, 0777, true);
+            }
+
+            // Usar GD en lugar de Browsershot
+            $generador = new ComprobanteImageGenerator();
+            $generador->generate(
+                $this->facturaSeleccionada,
+                $this->pagoRegistrado,
+                $this->empresa,
+                $rutaCompleta
+            );
+
+            // Convertir a Base64 para enviar a n8n
+            $imagenData = file_get_contents($rutaCompleta);
+            $imagenBase64 = 'data:image/png;base64,' . base64_encode($imagenData);
+
+            // // Enviar a n8n (esto sigue igual)
+            // URL EN LOCAL SOLO SE CAMBIA ACA Y LO DEMAS SIGUE FUNCIONANDO CORRECTO
+            // Http::post('http://localhost:5678/webhook-test/pago-factura', [
+
+            Http::timeout(60)->post(
+                'https://unmoving-handstand-mastiff.ngrok-free.dev/webhook/pago-factura',
+                [
+                    'cliente' => $this->facturaSeleccionada->contrato->cliente->nombre ?? '',
+                    'telefono' => $this->facturaSeleccionada->contrato->cliente->telefono ?? '',
+                    'factura' => $this->facturaSeleccionada->numero_factura,
+                    'monto' => $this->pagoRegistrado->monto,
+                    'metodo_pago' => $this->pagoRegistrado->metodo_pago,
+                    'fecha_pago' => $this->pagoRegistrado->fecha_pago,
+                    'usuario' => auth()->user()->name,
+                    'imagen' => $imagenBase64
+                ]
+            );
+
             $this->reset(['monto', 'metodo_pago', 'fecha_pago']);
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
