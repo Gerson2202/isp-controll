@@ -273,6 +273,7 @@ Route::middleware([
     Route::get('/pagos/index', [PagoController::class, 'index'])->name('pagos.index');
     Route::get('/facturacion/dashboard', [FacturaController::class, 'dashboard'])->name('facturacion.dashboard');
     Route::get('/facturacion/corte', [FacturaController::class, 'cortes'])->name('facturacion.corte');
+    Route::get('/facturacion/mis-pagos', [FacturaController::class, 'mispagos'])->name('facturacion.mis-pagos');
 
     //  RUTA PARA EXPORTAR EXCEL
 
@@ -324,53 +325,7 @@ Route::middleware([
 
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
 
-    // Route::get('/test-whatsapp', function() {
-    //         // Configuración de Twilio
-    //         $sid = env('TWILIO_SID');
-    //         $token = env('TWILIO_AUTH_TOKEN');
-    //         $twilio = new Client($sid, $token);
-
-    //         // Números (usa tu número sandbox de Twilio)
-    //         $from = env('TWILIO_WHATSAPP_FROM'); // Ej: 'whatsapp:+14155238886'
-    //         $to = 'whatsapp:+573215852059'; // Tu número de prueba
-
-    //         // Crear mensaje con emojis
-    //         $message = "✨ *Recordatorio de Pago* ✨\n\n" .
-    //                 "📋 *Factura #:* INV-2023-789\n" .
-    //                 "👤 *Cliente:* Cliente de Prueba\n" .
-    //                 "📅 *Vencimiento:* " . now()->addDays(3)->format('d/m/Y') . "\n" .
-    //                 "💰 *Total:* $1,500,000 COP\n\n" .
-    //                 "🔗 [Pagar Ahora](https://tudominio.com/pagar)\n\n" .
-    //                 "📲 *Métodos de pago:*\n" .
-    //                 "💳 Tarjeta crédito/débito\n" .
-    //                 "🏦 Transferencia bancaria\n" .
-    //                 "📱 Nequi/Daviplata\n\n" .
-    //                 "❓ ¿Necesitas ayuda? Escríbenos";
-
-    //         try {
-    //             // Enviar mensaje
-    //             $response = $twilio->messages->create($to, [
-    //                 'from' => $from,
-    //                 'body' => $message
-    //             ]);
-
-    //             return response()->json([
-    //                 'success' => true,
-    //                 'message' => 'Mensaje enviado correctamente',
-    //                 'data' => [
-    //                     'to' => $to,
-    //                     'message' => $message,
-    //                     'status' => $response->status
-    //                 ]
-    //             ]);
-    //         } catch (\Exception $e) {
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'error' => $e->getMessage()
-    //             ], 500);
-    //         }
-    // });
-
+    
     // RUTAS AREA TECNICO
     Route::get('/tecnico', [TecnicoController::class, 'index'])->name('tecnico.index');
     Route::get('/tecnico/bodega', [TecnicoController::class, 'bodega'])->name('tecnico.bodega');

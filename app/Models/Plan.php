@@ -71,4 +71,9 @@ class Plan extends Model
     {
         return $this->hasMany(Contrato::class);
     }
+
+    public function contrato()
+    {
+        return $this->belongsTo(Contrato::class);
+    }
 }

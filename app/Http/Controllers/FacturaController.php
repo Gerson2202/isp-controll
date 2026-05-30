@@ -25,6 +25,14 @@ class FacturaController extends Controller
        return view('facturacion.dashboard');
     }
 
+    public function mispagos()
+    { 
+         
+        if (!auth()->user()->can('registrar pagos')) {
+          abort(403, 'No tienes permiso para acceder a esta pagina');
+        }
+       return view('facturacion.mis-pagos');
+    }
     public function cortes()
     {
         if (!auth()->user()->can('cortar clientes masivos')) {

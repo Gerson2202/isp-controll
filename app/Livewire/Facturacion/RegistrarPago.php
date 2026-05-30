@@ -185,7 +185,7 @@ class RegistrarPago extends Component
             // Http::post('http://localhost:5678/webhook-test/pago-factura', [
 
             Http::timeout(60)->post(
-                'https://unmoving-handstand-mastiff.ngrok-free.dev/webhook/pago-factura',
+                'http://localhost:5678/webhook-test/pago-factura',
                 [
                     'cliente' => $this->facturaSeleccionada->contrato->cliente->nombre ?? '',
                     'telefono' => $this->facturaSeleccionada->contrato->cliente->telefono ?? '',

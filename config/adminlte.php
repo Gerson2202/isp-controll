@@ -393,6 +393,12 @@ return [
                     'icon' => 'fas fa-money-bill-wave', // Icono para listar
                     'can'   => 'registrar pagos', // 👈 solo si tiene este permiso
                 ],
+                [
+                    'text' => 'Mis Pagos',
+                    'route' => 'facturacion.mis-pagos',
+                    'icon' => 'fas fa-file-invoice-dollar',
+                    'can'   => 'registrar pagos',
+                ],
             ],
         ],
 
@@ -419,7 +425,7 @@ return [
                     'icon' => 'fas fa-plug', // Icono para listar
                     'can'   => 'cortar clientes masivos', // 👈 solo si tiene este permiso
                 ],
-                 [
+                [
                     'text'  => 'Access Points',
                     'route' => 'aps.index',
                     'icon'  => 'fas fa-wifi',
@@ -603,7 +609,7 @@ return [
                     'can'   => 'ver monitoreo de nodos', // 👈 solo si tiene este permiso
 
                 ],
-               
+
 
             ],
         ],

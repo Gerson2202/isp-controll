@@ -199,6 +199,7 @@
 
     </div>
     <!-- Chat flotante solo para admin -->
+    <!--
     @auth
         @if (auth()->user()->email === 'gersonpsj@gmail.com')
             {{-- Cambia por tu condición de admin --}}
@@ -356,6 +357,9 @@
             </script>
         @endif
     @endauth
+ -->
+    {{-- chat IA N8N --}}
+    <livewire:floating-chat />
     {{-- FOOTER --}}
     @include('partials.global-footer')
 
