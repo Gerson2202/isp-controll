@@ -52,7 +52,31 @@ class RegistrarPago extends Component
         $this->mostrarComprobante = false;
         $this->pagoRegistrado = null;
     }
+    private function formatearTelefono($telefono)
+    {
+        // 1. quitar todo lo que no sea número
+        $telefono = preg_replace('/\D+/', '', $telefono);
 
+        // 2. normalizar prefijo Colombia
+        // casos comunes:
+        // 57XXXXXXXXXX
+        // 0057XXXXXXXXXX
+        // 321XXXXXXXX (sin 57)
+
+        if (str_starts_with($telefono, '0057')) {
+            $telefono = substr($telefono, 4);
+        }
+
+        // si viene sin 57 y tiene 10 dígitos (Colombia móvil)
+        if (strlen($telefono) === 10) {
+            $telefono = '57' . $telefono;
+        }
+
+        // si viene con más de 12 dígitos, recortamos basura final (opcional defensivo)
+        $telefono = substr($telefono, 0, 12);
+
+        return $telefono;
+    }
     public function registrarPago()
     {
         try {
@@ -185,10 +209,12 @@ class RegistrarPago extends Component
             // Http::post('http://localhost:5678/webhook-test/pago-factura', [
 
             Http::timeout(60)->post(
-                'http://localhost:5678/webhook-test/pago-factura',
+                'https://automatizacion-isprotik1-n8n.ijnhto.easypanel.host/webhook/pago-factura',
                 [
                     'cliente' => $this->facturaSeleccionada->contrato->cliente->nombre ?? '',
-                    'telefono' => $this->facturaSeleccionada->contrato->cliente->telefono ?? '',
+                    'telefono' => $this->formatearTelefono(
+                        $this->facturaSeleccionada->contrato->cliente->telefono ?? ''
+                    ),
                     'factura' => $this->facturaSeleccionada->numero_factura,
                     'monto' => $this->pagoRegistrado->monto,
                     'metodo_pago' => $this->pagoRegistrado->metodo_pago,
