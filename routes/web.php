@@ -104,8 +104,10 @@ Route::middleware([
     Route::get('/nodos/detalle/{nodo}', [NodoController::class, 'show'])->name('nodos.show');
     Route::get('/Monitoreo', [NodoController::class, 'index1'])->name('MonitoreoIndex');
     // Ruta de detalles con parámetro dinámico
-    Route::get('/nodo/{id}', function ($id) { return view('nodos.estadisticas', ['nodo' => $id]);})->name('nodo.estadisticas')->where('id', '[0-9]+');
-    
+    Route::get('/nodo/{id}', function ($id) {
+        return view('nodos.estadisticas', ['nodo' => $id]);
+    })->name('nodo.estadisticas')->where('id', '[0-9]+');
+
     // Rutas para Contratos
     Route::get('/contratos', [ContratoController::class, 'index'])->name('contratoIndex');
     Route::get('/contratos/list', [ContratoController::class, 'list'])->name('contratos.list');
@@ -283,7 +285,8 @@ Route::middleware([
             ->join('clientes', 'clientes.id', '=', 'contratos.cliente_id')
             ->join('plans', 'plans.id', '=', 'contratos.plan_id')
             ->join('nodos', 'nodos.id', '=', 'plans.nodo_id')
-            ->whereNull('clientes.deleted_at') // 👈 FILTRO CLAVE
+            ->whereNull('clientes.deleted_at')      // Excluye clientes eliminados lógicamente
+            ->where('contratos.estado', '!=', 'cancelado') // Excluye contratos cancelados
             ->select([
                 'contratos.*',
                 'clientes.nombre as cliente_nombre',
@@ -325,7 +328,7 @@ Route::middleware([
 
     Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
 
-    
+
     // RUTAS AREA TECNICO
     Route::get('/tecnico', [TecnicoController::class, 'index'])->name('tecnico.index');
     Route::get('/tecnico/bodega', [TecnicoController::class, 'bodega'])->name('tecnico.bodega');

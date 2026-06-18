@@ -72,13 +72,39 @@ class ContratosList extends Component
         $contrato = Contrato::with('cliente')->find($contratoId);
 
         if (!$contrato || !$contrato->cliente) {
-            session()->flash('error', 'Cliente no encontrado');
+            $this->dispatch(
+                'notify',
+                type: 'error',
+                message: 'Cliente no encontrado.'
+            );
+            return;
+        }
+
+        if (strtolower($contrato->estado) !== 'cancelado') {
+            $this->dispatch(
+                'notify',
+                type: 'error',
+                message: 'Solo se puede eliminar un cliente cuando el contrato está activo.'
+            );
+            return;
+        }
+
+        if (!is_null($contrato->cliente->ip)) {
+            $this->dispatch(
+                'notify',
+                type: 'error',
+                message: 'No se puede eliminar el cliente porque tiene una IP asignada.'
+            );
             return;
         }
 
         $contrato->cliente->delete();
 
-        session()->flash('message', 'Cliente eliminado correctamente');
+        $this->dispatch(
+            'notify',
+            type: 'success',
+            message: 'Cliente eliminado correctamente.'
+        );
     }
     // 🚀 Carga inicial optimizada
     public function mount()

@@ -22,7 +22,7 @@ class FloatingChat extends Component
             return;
         }
 
-        // Guardar mensaje usuario
+        // Guardar mensaje del usuario en el historial local
         $this->messages[] = [
             'role' => 'user',
             'content' => $this->prompt
@@ -30,48 +30,46 @@ class FloatingChat extends Component
 
         $userMessage = $this->prompt;
 
-        // Limpiar input
+        // Limpiar el input inmediatamente para mejorar la experiencia del usuario
         $this->prompt = '';
 
         try {
-
-            // Enviar mensaje a n8n
-            $response = Http::timeout(30)->post(
-                'http://localhost:5678/webhook-test/chat-isp',
-                [
-                    'message' => $userMessage,
-                ]
-            );
+            // ENVIAR MENSAJE AL WEBHOOK DE N8N EN EASYPANEL
+            $response = Http::timeout(45)
+                ->withoutVerifying() // ◄— Agrega esto para saltar bloqueos de SSL del VPS
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ])
+                ->post('https://automatizacion-isprotik1-n8n.ijnhto.easypanel.host/webhook/chat-isp', [
+                    'message'   => $userMessage,
+                    'sessionId' => session()->getId(),
+                ]);
 
             if ($response->successful()) {
-
-                // Respuesta del webhook
                 $data = $response->json();
 
-                $botReply = $data['output'] ?? 'Sin respuesta';
+                // n8n mapea el resultado del AI Agent en la propiedad 'output'
+                $botReply = $data['output'] ?? 'Sin respuesta del asistente.';
 
                 $this->messages[] = [
                     'role' => 'bot',
                     'content' => $botReply
                 ];
-
             } else {
-
                 $this->messages[] = [
                     'role' => 'bot',
-                    'content' => '⚠️ Error comunicando con n8n'
+                    'content' => '⚠️ Error de comunicación con el asistente técnico.'
                 ];
             }
-
         } catch (\Exception $e) {
-
             $this->messages[] = [
                 'role' => 'bot',
-                'content' => '⚠️ n8n no responde'
+                'content' => '⚠️ El servicio de asistencia no se encuentra disponible.'
             ];
 
-            // Para debug
-            logger()->error($e->getMessage());
+            // Guardar el error en los logs de Laravel para debuguear en el VPS
+            logger()->error("Error en FloatingChat con n8n: " . $e->getMessage());
         }
     }
 
