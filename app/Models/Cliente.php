@@ -88,4 +88,8 @@ class Cliente extends Model
     {
         return $this->belongsTo(Ap::class);
     }
+    public function conversaciones()
+    {
+        return $this->hasMany(Conversacion::class);
+    }
 }

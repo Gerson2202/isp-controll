@@ -32,7 +32,9 @@ class DatabaseSeeder extends Seeder
             ModeloSeeder::class,
             PoolSeeder::class,
             ContratoSeeder::class,
-            EmpresaSeeder::class
+            EmpresaSeeder::class,
+            ConversacionesSeeder::class,
+
         ]);
     }
 }

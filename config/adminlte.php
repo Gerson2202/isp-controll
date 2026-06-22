@@ -589,8 +589,19 @@ return [
 
             ],
         ],
-        // Botón de monitoreo
 
+        [
+            'text' => 'Comunicaciones',
+            'icon' => 'fas fa-comments',
+            'submenu' => [
+                [
+                    'text' => 'Conversaciones',
+                    'route' => 'conversacionesIndex',
+                    'icon' => 'fas fa-comment-dots',
+                ],
+            ],
+        ],
+        // Botón de monitoreo
         [
             'text'    => 'Nodos', // Texto principal
             'icon'    => 'fas fa-broadcast-tower', // Icono principal

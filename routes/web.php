@@ -4,6 +4,7 @@ use App\Http\Controllers\AIChatController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ContratoController;
+use App\Http\Controllers\ConversacionesController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DashboardController as ControllersDashboardController;
 use App\Http\Controllers\FacturaController;
@@ -342,4 +343,7 @@ Route::middleware([
     Route::view('/aps', 'aps.index')->name('aps.index');
     // CHAT IA
     Route::post('/chat-ask', [AIChatController::class, 'ask']);
+    // Ruta de envio ala vista
+    Route::get('/conversaciones', [ConversacionesController::class, 'index'])->name('conversacionesIndex');
+
 });
