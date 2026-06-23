@@ -343,7 +343,7 @@ Route::middleware([
     Route::view('/aps', 'aps.index')->name('aps.index');
     // CHAT IA
     Route::post('/chat-ask', [AIChatController::class, 'ask']);
-    // Ruta de envio ala vista
+    // Ruta de envio ala vista conversaciones
     Route::get('/conversaciones', [ConversacionesController::class, 'index'])->name('conversacionesIndex');
 
 });

@@ -24,13 +24,16 @@ class ConversacionesController extends Controller
             'whatsapp_message_id' => 'nullable|string',
         ]);
 
-        // 2. Buscar o crear la conversación usando el 'chatId' (telefono)
+        // BLINDAJE: Normalizamos el teléfono eliminando el '+' si existe
+        $telefonoNormalizado = ltrim($request->telefono, '+');
+
+        // 2. Buscar o crear la conversación usando siempre el número limpio
         $conversacion = Conversacion::updateOrCreate(
-            ['telefono' => $request->telefono],
+            ['telefono' => $telefonoNormalizado],
             [
                 'nombre_contacto' => $request->nombre_contacto,
                 'ultima_actividad' => Carbon::now(),
-                // Se mantiene en estado 'ia' por defecto si es nueva
+                // Se mantiene en estado 'ia' por defecto si es nueva según tus esquemas
             ]
         );
 
@@ -59,12 +62,12 @@ class ConversacionesController extends Controller
             'mensaje' => 'required|string',
         ]);
 
-        // 2. Buscar la conversación existente
+        // 2. Buscar la conversación existente (aquí ya busca directo por ID incremental)
         $conversacion = Conversacion::findOrFail($request->conversacion_id);
 
         // 3. Actualizar la última actividad de la conversación
         $conversacion->update([
-            'ultima_actividad' => \Carbon\Carbon::now()
+            'ultima_actividad' => Carbon::now()
         ]);
 
         // 4. Registrar el mensaje generado por la IA
@@ -72,12 +75,45 @@ class ConversacionesController extends Controller
             'tipo' => 'ia',
             'tipo_contenido' => 'texto',
             'mensaje' => $request->mensaje,
-            'fecha_mensaje' => \Carbon\Carbon::now(),
+            'fecha_mensaje' => Carbon::now(),
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Respuesta de la IA almacenada correctamente.'
         ], 200);
+    }
+
+    public function storeSystemMessage(Request $request)
+    {
+        // 1. Validar los datos de entrada
+        $request->validate([
+            'telefono' => 'required|string',
+            'mensaje' => 'required|string',
+            'whatsapp_message_id' => 'nullable|string',
+        ]);
+
+        // BLINDAJE: Normalizamos el teléfono eliminando el '+' si existe
+        $telefonoNormalizado = ltrim($request->telefono, '+');
+
+        // 2. Buscar o crear la conversación usando el número limpio
+        $conversacion = Conversacion::updateOrCreate(
+            ['telefono' => $telefonoNormalizado],
+            [
+                'ultima_actividad' => Carbon::now(),
+            ]
+        );
+
+        // 3. Registrar el mensaje automático en la tabla mensajes
+        $conversacion->mensajes()->create([
+            'tipo' => 'sistema', // Identifica notificación automática de tu plataforma
+            'tipo_contenido' => 'texto',
+            'mensaje' => $request->mensaje,
+            'whatsapp_message_id' => $request->whatsapp_message_id,
+            'estado_whatsapp' => 'enviado', // Ya sabemos que WhatsApp lo aceptó en n8n
+            'fecha_mensaje' => Carbon::now(),
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

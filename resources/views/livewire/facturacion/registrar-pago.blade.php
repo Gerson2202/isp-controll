@@ -29,12 +29,18 @@
                                     <tr>
                                         <td data-label="N° Factura">{{ $factura->numero_factura }}</td>
                                         <td data-label="Cliente">
-                                            <a href="{{ route('clientes.show', $factura->contrato->cliente->id) }}"
-                                                class="badge bg-info text-decoration-none text-truncate"
-                                                style="max-width: 150px; display: inline-block;" target="_blank"
-                                                title="{{ $factura->contrato->cliente->nombre }}">
-                                                {{ $factura->contrato->cliente->nombre }}
-                                            </a>
+                                            @if ($factura->contrato && $factura->contrato->cliente)
+                                                <a href="{{ route('clientes.show', $factura->contrato->cliente->id) }}"
+                                                    class="badge bg-info text-decoration-none text-truncate"
+                                                    style="max-width: 150px; display: inline-block;" target="_blank"
+                                                    title="{{ $factura->contrato->cliente->nombre }}">
+                                                    {{ $factura->contrato->cliente->nombre }}
+                                                </a>
+                                            @else
+                                                <span class="badge bg-danger">
+                                                    Cliente eliminado
+                                                </span>
+                                            @endif
                                         </td>
                                         <td data-label="Mes">
                                             @php

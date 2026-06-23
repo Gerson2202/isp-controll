@@ -253,6 +253,9 @@ class RegistrarPago extends Component
     public function getFacturasProperty()
     {
         return Factura::where('estado', 'pendiente')
+            ->whereHas('contrato.cliente', function ($q) {
+                $q->whereNull('deleted_at'); // 👈 SOLO clientes activos
+            })
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('numero_factura', 'like', '%' . $this->search . '%')
