@@ -208,21 +208,21 @@ class RegistrarPago extends Component
             // URL EN LOCAL SOLO SE CAMBIA ACA Y LO DEMAS SIGUE FUNCIONANDO CORRECTO
             // Http::post('http://localhost:5678/webhook-test/pago-factura', [
 
-            Http::timeout(60)->post(
-                'https://automatizacion-isprotik1-n8n.ijnhto.easypanel.host/webhook/pago-factura',
-                [
-                    'cliente' => $this->facturaSeleccionada->contrato->cliente->nombre ?? '',
-                    'telefono' => $this->formatearTelefono(
-                        $this->facturaSeleccionada->contrato->cliente->telefono ?? ''
-                    ),
-                    'factura' => $this->facturaSeleccionada->numero_factura,
-                    'monto' => $this->pagoRegistrado->monto,
-                    'metodo_pago' => $this->pagoRegistrado->metodo_pago,
-                    'fecha_pago' => $this->pagoRegistrado->fecha_pago,
-                    'usuario' => auth()->user()->name,
-                    'imagen' => $imagenBase64
-                ]
-            );
+            // Http::timeout(60)->post(
+            //     'https://automatizacion-isprotik1-n8n.ijnhto.easypanel.host/webhook/pago-factura',
+            //     [
+            //         'cliente' => $this->facturaSeleccionada->contrato->cliente->nombre ?? '',
+            //         'telefono' => $this->formatearTelefono(
+            //             $this->facturaSeleccionada->contrato->cliente->telefono ?? ''
+            //         ),
+            //         'factura' => $this->facturaSeleccionada->numero_factura,
+            //         'monto' => $this->pagoRegistrado->monto,
+            //         'metodo_pago' => $this->pagoRegistrado->metodo_pago,
+            //         'fecha_pago' => $this->pagoRegistrado->fecha_pago,
+            //         'usuario' => auth()->user()->name,
+            //         'imagen' => $imagenBase64
+            //     ]
+            // );
 
             $this->reset(['monto', 'metodo_pago', 'fecha_pago']);
         } catch (\Illuminate\Validation\ValidationException $e) {

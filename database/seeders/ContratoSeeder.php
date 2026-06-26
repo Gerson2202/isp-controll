@@ -1,6 +1,7 @@
 <?php
 
 namespace Database\Seeders;
+
 use App\Models\Contrato;
 use App\Models\Plan;
 use App\Models\Cliente;
@@ -35,7 +36,8 @@ class ContratoSeeder extends Seeder
                 'fecha_inicio' => $fechaInicio,
                 'fecha_fin' => $fechaInicio->copy()->addYear(), // Fecha fin = 1 año después
                 'estado' => 'activo',
-                'precio' => collect([16, 23, 30])->random(),               
+                // CAMBIO AQUÍ: Valores reales en Pesos Colombianos (COP)
+                'precio' => collect([60000, 100000, 150000])->random(),              
                 'created_at' => now(),
             ]);
         });
@@ -51,7 +53,7 @@ class ContratoSeeder extends Seeder
 
     private function getPrecioSegunPlan(Plan $plan): int
     {
-        // Ejemplo: Precio base del plan + variación aleatoria
-        return $plan->precio_base + rand(20000, 200000);
+        // Nota: Si vas a usar este método en el futuro, cámbialo también a valores COP
+        return $plan->precio_base + rand(20000, 50000);
     }
 }

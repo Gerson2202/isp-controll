@@ -345,5 +345,28 @@ Route::middleware([
     Route::post('/chat-ask', [AIChatController::class, 'ask']);
     // Ruta de envio ala vista conversaciones
     Route::get('/conversaciones', [ConversacionesController::class, 'index'])->name('conversacionesIndex');
+   
+    // RUTAS Finanzas
+    // 1. Dashboard Financiero
+    Route::get('/finanzas/dashboard', function () {return view('finanzas.dashboard'); })->name('finanzas.dashboard');
+    
+    // 2. Gastos (Listado)
+    Route::get('/finanzas/gastos', function () {return view('finanzas.gastos.index');})->name('finanzas.gastos.index');
+    
+    // 3. Categorías de Gastos
+    Route::get('/finanzas/categorias', function () {return view('finanzas.categorias.index');})->name('finanzas.categorias.index');
+    
+    // 4. Gastos Recurrentes
+    Route::get('/finanzas/gastos/recurrentes', function () {return view('finanzas.gastos.recurrentes');})->name('finanzas.gastos.recurrentes');
+    
+    // 5. Reportes Financieros
+    Route::get('/finanzas/reportes', function () {return view('finanzas.reportes.index');})->name('finanzas.reportes.index');
+    
+    // 6. Conciliación Mensual (Opcional)
+    Route::get('/finanzas/conciliacion', function () {return view('finanzas.conciliacion.index');})->name('finanzas.conciliacion.index');
+    
+    // 7. Proveedores (Opcional)
+    Route::get('/finanzas/proveedores', function () {return view('finanzas.proveedores.index');})->name('finanzas.proveedores.index');
 
-});
+    Route::get('/gastos/{gastoId}/adjuntos', function ($gastoId) {return view('finanzas.gastos.adjunto', compact('gastoId')); })->name('gastos.adjuntos');
+}); 

@@ -401,6 +401,65 @@ return [
                 ],
             ],
         ],
+        // Sección Finanzas
+        [
+            'text'    => 'Finanzas',
+            'icon'    => 'fas fa-coins', // Icono principal más representativo
+            'submenu' => [
+                // 1. Dashboard Financiero
+                [
+                    'text' => 'Dashboard',
+                    'route' => 'finanzas.dashboard',
+                    'icon' => 'fas fa-chart-pie',
+                    'can'   => 'ver dashborad financiero',
+                ],
+
+                // 2. Gestión de Gastos (Principal)
+                [
+                    'text' => 'Gastos',
+                    'route' => 'finanzas.gastos.index',
+                    'icon' => 'fas fa-file-invoice',
+                    'can'   => 'ver dashborad financiero',
+                ],
+
+                // 3. Categorías de Gastos
+                [
+                    'text' => 'Categorías',
+                    'route' => 'finanzas.categorias.index',
+                    'icon' => 'fas fa-tags',
+                    'can'   => 'ver dashborad financiero',
+                ],
+
+                // 4. Gastos Recurrentes
+                [
+                    'text' => 'Gastos Recurrentes',
+                    'route' => 'finanzas.gastos.recurrentes',
+                    'icon' => 'fas fa-sync-alt',
+                    'can'   => 'ver dashborad financiero',
+                ],
+
+                // 5. Proveedores (opcional pero recomendado)
+                // [
+                //     'text' => 'Proveedores',
+                //     'route' => 'finanzas.proveedores.index',
+                //     'icon' => 'fas fa-building',
+                // ],
+
+                // 6. Reportes Financieros
+                // [
+                //     'text' => 'Reportes',
+                //     'route' => 'finanzas.reportes.index',
+                //     'icon' => 'fas fa-file-pdf',
+                // ],
+
+                // // 7. Conciliación (Para socios)
+                // [
+                //     'text' => 'Conciliación Mensual',
+                //     'route' => 'finanzas.conciliacion.index',
+                //     'icon' => 'fas fa-balance-scale',
+                // ],
+            ],
+        ],
 
         // Seccion Centro de Gestion
         [
