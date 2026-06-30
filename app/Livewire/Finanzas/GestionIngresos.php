@@ -1,0 +1,337 @@
+<?php
+
+namespace App\Livewire\Finanzas;
+
+use App\Models\Cliente;
+use App\Models\Ingreso;
+use Livewire\Component;
+use Livewire\WithPagination;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+
+class GestionIngresos extends Component
+{
+    use WithPagination;
+
+    public $concepto;
+    public $monto;
+    public $fecha_ingreso;
+    public $tipo = 'otro';
+    public $cliente_id;
+    public $cliente_nombre = '';
+    public $descripcion;
+    public $metodo_pago;
+    public $numero_documento;
+
+    public $searchCliente = '';
+    public $showClienteList = false;
+
+    public $mostrarFormulario = false;
+    public $ingresoEditando = null;
+    public $search = '';
+
+    public $filtroEstado = '';
+    public $filtroTipo = '';
+    public $filtroMes = '';
+
+    public $meses = [
+        '' => 'Todos los meses',
+        '01' => 'Enero',
+        '02' => 'Febrero',
+        '03' => 'Marzo',
+        '04' => 'Abril',
+        '05' => 'Mayo',
+        '06' => 'Junio',
+        '07' => 'Julio',
+        '08' => 'Agosto',
+        '09' => 'Septiembre',
+        '10' => 'Octubre',
+        '11' => 'Noviembre',
+        '12' => 'Diciembre'
+    ];
+
+    protected $rules = [
+        'concepto' => 'required|string|max:255',
+        'monto' => 'required|numeric|min:0.01',
+        'fecha_ingreso' => 'required|date',
+        'tipo' => 'required|in:instalacion,servicio_extra,venta_producto,consultoria,otro',
+        'cliente_id' => 'nullable|exists:clientes,id',
+        'descripcion' => 'nullable|string',
+        'metodo_pago' => 'nullable|string|max:50',
+        'numero_documento' => 'nullable|string|max:50',
+    ];
+
+    protected $messages = [
+        'concepto.required' => 'El concepto es obligatorio.',
+        'concepto.max' => 'El concepto no puede tener más de 255 caracteres.',
+        'monto.required' => 'El monto es obligatorio.',
+        'monto.numeric' => 'El monto debe ser un número válido.',
+        'monto.min' => 'El monto debe ser mayor a 0.',
+        'fecha_ingreso.required' => 'La fecha es obligatoria.',
+        'fecha_ingreso.date' => 'La fecha no es válida.',
+        'tipo.required' => 'El tipo es obligatorio.',
+        'tipo.in' => 'El tipo seleccionado no es válido.',
+        'cliente_id.exists' => 'El cliente seleccionado no existe.',
+        'metodo_pago.max' => 'El método de pago no puede tener más de 50 caracteres.',
+        'numero_documento.max' => 'El número de documento no puede tener más de 50 caracteres.',
+    ];
+
+    public function render()
+    {
+        $anioActual = Carbon::now()->year;
+
+        // 🔥 1. PRIMERO: Construir la consulta base (sin paginar)
+        $query = Ingreso::with(['cliente', 'usuario'])
+            ->when($this->search, function ($query) {
+                $query->where('concepto', 'like', '%' . $this->search . '%')
+                    ->orWhere('numero_documento', 'like', '%' . $this->search . '%');
+            })
+            ->when($this->filtroEstado, function ($query) {
+                $query->where('estado', $this->filtroEstado);
+            })
+            ->when($this->filtroTipo, function ($query) {
+                $query->where('tipo', $this->filtroTipo);
+            })
+            ->when($this->filtroMes, function ($query) use ($anioActual) {
+                $query->whereYear('fecha_ingreso', $anioActual)
+                    ->whereMonth('fecha_ingreso', $this->filtroMes);
+            });
+
+        // 🔥 2. CALCULAR TOTALES (sobre TODOS los registros filtrados)
+        $totalIngresos = $query->sum('monto');
+        $totalConfirmados = (clone $query)->where('estado', 'confirmado')->sum('monto');
+        $totalAnulados = (clone $query)->where('estado', 'anulado')->sum('monto');
+
+        // 🔥 3. PAGINAR (sobre la misma consulta)
+        $ingresos = $query
+            ->orderBy('fecha_ingreso', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(15);
+
+        // Buscar clientes
+        $clientes = collect();
+        if (strlen($this->searchCliente) > 0) {
+            $clientes = Cliente::whereHas('contratos', function ($query) {
+                $query->where('estado', 'activo');
+            })
+                ->where('nombre', 'like', '%' . $this->searchCliente . '%')
+                ->orderBy('nombre')
+                ->limit(10)
+                ->get(['id', 'nombre']);
+        }
+
+        return view('livewire.finanzas.gestion-ingresos', [
+            'ingresos' => $ingresos,
+            'clientes' => $clientes,
+            'anioActual' => $anioActual,
+            // 🔥 PASAR LOS TOTALES A LA VISTA
+            'totalIngresos' => $totalIngresos,
+            'totalConfirmados' => $totalConfirmados,
+            'totalAnulados' => $totalAnulados,
+        ]);
+    }
+    public function mount()
+    {
+        // 🔥 ESTABLECER EL MES ACTUAL POR DEFECTO
+        $this->filtroMes = Carbon::now()->format('m');
+    }
+
+    // 🔥 MÉTODOS PARA RESETEAR LA PÁGINA CUANDO CAMBIAN LOS FILTROS
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFiltroEstado()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFiltroTipo()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFiltroMes()
+    {
+        $this->resetPage();
+    }
+
+    public function limpiarFiltros()
+    {
+        $this->filtroEstado = '';
+        $this->filtroTipo = '';
+        $this->filtroMes = '';
+        $this->search = '';
+        $this->resetPage(); // 🔥 Resetea la página al limpiar filtros
+    }
+
+    public function selectCliente($id, $nombre)
+    {
+        $this->cliente_id = $id;
+        $this->cliente_nombre = $nombre;
+        $this->searchCliente = $nombre;
+        $this->showClienteList = false;
+    }
+
+    public function clearCliente()
+    {
+        $this->cliente_id = null;
+        $this->cliente_nombre = '';
+        $this->searchCliente = '';
+        $this->showClienteList = false;
+    }
+
+    public function guardarIngreso()
+    {
+        $this->validate();
+
+        $montoLimpio = $this->limpiarMonto($this->monto);
+
+        $ingreso = Ingreso::create([
+            'concepto' => $this->concepto,
+            'monto' => $montoLimpio,
+            'fecha_ingreso' => $this->fecha_ingreso,
+            'tipo' => $this->tipo,
+            'cliente_id' => $this->cliente_id,
+            'descripcion' => $this->descripcion,
+            'metodo_pago' => $this->metodo_pago,
+            'numero_documento' => $this->numero_documento,
+            'user_id' => Auth::id(),
+            'estado' => 'confirmado',
+        ]);
+
+        $this->resetearFormulario();
+
+        $this->dispatch(
+            'notify',
+            type: 'success',
+            message: 'Ingreso registrado exitosamente #' . $ingreso->id
+        );
+    }
+
+    public function limpiarMonto($valor)
+    {
+        if (is_string($valor)) {
+            $valor = str_replace(['.', ','], '', $valor);
+        }
+        return number_format((float) $valor, 2, '.', '');
+    }
+
+    public function editarIngreso($id)
+    {
+        $this->resetValidation();
+
+        $ingreso = Ingreso::findOrFail($id);
+        $this->ingresoEditando = $ingreso->id;
+
+        $this->concepto = $ingreso->concepto;
+        $this->monto = $ingreso->monto;
+        $this->fecha_ingreso = $ingreso->fecha_ingreso->format('Y-m-d');
+        $this->tipo = $ingreso->tipo;
+
+        $this->cliente_id = $ingreso->cliente_id;
+        $this->cliente_nombre = $ingreso->cliente?->nombre ?? '';
+        $this->searchCliente = $this->cliente_nombre;
+
+        $this->descripcion = $ingreso->descripcion;
+        $this->metodo_pago = $ingreso->metodo_pago;
+        $this->numero_documento = $ingreso->numero_documento;
+
+        $this->mostrarFormulario = true;
+    }
+
+    public function actualizarIngreso()
+    {
+        $this->validate();
+
+        $montoLimpio = $this->limpiarMonto($this->monto);
+
+        $ingreso = Ingreso::findOrFail($this->ingresoEditando);
+        $ingreso->update([
+            'concepto' => $this->concepto,
+            'monto' => $montoLimpio,
+            'fecha_ingreso' => $this->fecha_ingreso,
+            'tipo' => $this->tipo,
+            'cliente_id' => $this->cliente_id,
+            'descripcion' => $this->descripcion,
+            'metodo_pago' => $this->metodo_pago,
+            'numero_documento' => $this->numero_documento,
+        ]);
+
+        $this->resetearFormulario();
+
+        $this->dispatch(
+            'notify',
+            type: 'success',
+            message: 'Ingreso actualizado exitosamente'
+        );
+    }
+
+    public function cambiarEstado($id, $nuevoEstado)
+    {
+        $ingreso = Ingreso::findOrFail($id);
+
+        if (!in_array($nuevoEstado, ['confirmado', 'anulado'])) {
+            $this->dispatch(
+                'notify',
+                type: 'error',
+                message: 'Estado no válido'
+            );
+            return;
+        }
+
+        if ($ingreso->estado === $nuevoEstado) {
+            $this->dispatch(
+                'notify',
+                type: 'warning',
+                message: 'El ingreso ya está en este estado'
+            );
+            return;
+        }
+
+        $ingreso->update(['estado' => $nuevoEstado]);
+
+        $mensajes = [
+            'confirmado' => 'Ingreso confirmado exitosamente',
+            'anulado' => 'Ingreso anulado correctamente'
+        ];
+
+        $this->dispatch(
+            'notify',
+            type: 'success',
+            message: $mensajes[$nuevoEstado]
+        );
+    }
+
+    public function resetearFormulario()
+    {
+        $this->resetValidation();
+
+        $this->reset([
+            'concepto',
+            'monto',
+            'fecha_ingreso',
+            'tipo',
+            'cliente_id',
+            'descripcion',
+            'metodo_pago',
+            'numero_documento',
+            'ingresoEditando',
+            'cliente_nombre',
+            'searchCliente'
+        ]);
+        $this->mostrarFormulario = false;
+        $this->showClienteList = false;
+    }
+
+    public function updatedSearchCliente()
+    {
+        $this->showClienteList = true;
+        if (empty($this->searchCliente)) {
+            $this->cliente_id = null;
+            $this->cliente_nombre = '';
+            $this->showClienteList = false;
+        }
+    }
+}

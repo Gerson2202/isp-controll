@@ -13,13 +13,10 @@ return new class extends Migration
     {
         Schema::create('categorias_gastos', function (Blueprint $table) {
             $table->id();
-
             $table->string('nombre');
             $table->string('color')->nullable();
             $table->text('descripcion')->nullable();
-
             $table->boolean('activo')->default(true);
-
             $table->timestamps();
         });
     }

@@ -14,36 +14,27 @@ return new class extends Migration
         Schema::create('gastos', function (Blueprint $table) {
 
             $table->id();
-
             $table->foreignId('categorias_gasto_id')
                 ->constrained()
                 ->restrictOnDelete();
-
             $table->string('concepto');
-
             $table->decimal('valor', 12, 2);
-
             $table->date('fecha_gasto');
-
             $table->enum('tipo', [
                 'fijo',
                 'variable'
             ])->default('variable');
-
             $table->enum('estado', [
                 'pendiente',
                 'pagado'
             ])->default('pagado');
-
             $table->text('descripcion')->nullable();
-
             $table->foreignId('user_id')
                 ->nullable()
                 ->constrained()
                 ->nullOnDelete();
             $table->string('numero_documento')->nullable();
             $table->string('beneficiario')->nullable();
-
             $table->timestamps();
         });
     }

@@ -399,6 +399,7 @@ return [
                     'icon' => 'fas fa-file-invoice-dollar',
                     'can'   => 'registrar pagos',
                 ],
+
             ],
         ],
         // Sección Finanzas
@@ -436,6 +437,12 @@ return [
                     'route' => 'finanzas.gastos.recurrentes',
                     'icon' => 'fas fa-sync-alt',
                     'can'   => 'ver dashborad financiero',
+                ],
+                [
+                    'text' => 'Ingresos',
+                    'route' => 'finanzas.ingresos.index',
+                    'icon' => 'fas fa-wallet',
+                    'can'   => 'registrar pagos',
                 ],
 
                 // 5. Proveedores (opcional pero recomendado)

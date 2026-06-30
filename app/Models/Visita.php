@@ -73,7 +73,7 @@ class Visita extends Model
     {
         return $this->hasMany(\App\Models\ConsumibleStock::class);
     }
-    
+
     //  public function users()
     //  {
     //     return $this->belongsToMany(User::class)
@@ -81,4 +81,15 @@ class Visita extends Model
     //          ->withTimestamps();
     //  }
 
+    // En app/Models/Visita.php
+    public function ingresos(): HasMany
+    {
+        return $this->hasMany(Ingreso::class);
+    }
+
+    // Método para obtener el total de ingresos de la visita
+    public function getTotalIngresosAttribute(): float
+    {
+        return $this->ingresos()->where('estado', '!=', 'anulado')->sum('monto') ?? 0;
+    }
 }
