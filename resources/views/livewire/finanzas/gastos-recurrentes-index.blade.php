@@ -1,4 +1,3 @@
-{{-- resources/views/livewire/finanzas/gastos-recurrentes-index.blade.php --}}
 <div>
     <div class="row g-4">
 
@@ -50,8 +49,7 @@
                                 <span class="input-group-text">$</span>
                                 <input type="text" class="form-control @error('valor') is-invalid @enderror"
                                     wire:model="valor_formateado" wire:keyup="updatedValor(valor_formateado)"
-                                    placeholder="0" x-data
-                                    x-on:input="$event.target.value = $event.target.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')">
+                                    placeholder="0">
                                 @error('valor')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -103,8 +101,7 @@
                                     <input class="form-check-input" type="checkbox" role="switch" wire:model="activo"
                                         id="flexSwitchCheckDefault">
                                     <label class="form-check-label fw-semibold" for="flexSwitchCheckDefault">
-                                        <i
-                                            class="fas fa-circle {{ $activo ? 'text-success' : 'text-danger' }} me-1"></i>
+                                        <i class="fas fa-circle {{ $activo ? 'text-success' : 'text-danger' }} me-1"></i>
                                         {{ $activo ? 'Activo' : 'Inactivo' }}
                                     </label>
                                 </div>
@@ -147,42 +144,77 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white py-3 border-bottom">
                     <div class="row g-2 align-items-center">
-                        <div class="col-sm-6">
+                        <div class="col-sm-4">
                             <h5 class="mb-0 fw-bold text-primary">
                                 <i class="fas fa-sync-alt me-2"></i> Gastos Recurrentes
-                                <span class="badge bg-secondary ms-2">{{ $registros->total() }}</span>
                             </h5>
                         </div>
-                        <div class="col-sm-6">
+                        <div class="col-sm-4">
+                            <div class="d-flex justify-content-center">
+                                <button class="btn btn-sm btn-outline-secondary" wire:click="cambiarMes('anterior')">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span class="mx-2 fw-bold">{{ $nombreMes }}</span>
+                                <button class="btn btn-sm btn-outline-secondary" wire:click="cambiarMes('siguiente')">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
                             <div class="input-group">
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fas fa-search text-muted"></i>
                                 </span>
                                 <input type="text" class="form-control border-start-0"
-                                    placeholder="Buscar gasto recurrente..." wire:model.live.debounce.300ms="buscar">
-                                @if ($buscar)
-                                    <button class="btn btn-outline-secondary" wire:click="$set('buscar', '')">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                @endif
+                                    placeholder="Buscar..." wire:model.live.debounce.300ms="buscar">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- RESUMEN DE TOTALES --}}
+                {{-- FILTROS --}}
                 <div class="card-body bg-light border-bottom">
                     <div class="row g-2">
-                        <div class="col-12">
+                        <div class="col-md-4">
                             <div class="p-2 bg-white rounded shadow-sm text-center">
-                                <small class="text-muted d-block">Total Gastos Mensuales</small>
-                                <strong class="text-primary">$
-                                    {{ number_format($totalMensual, 0, ',', '.') }}</strong>
+                                <small class="text-muted d-block">Total Gastos Base</small>
+                                <strong class="text-primary">$ {{ number_format($totalGastosBase, 0, ',', '.') }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-2 bg-white rounded shadow-sm text-center">
+                                <small class="text-muted d-block">Pagados en {{ $nombreMes }}</small>
+                                <strong class="text-success">$ {{ number_format($totalPagadosMes ?? 0, 0, ',', '.') }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-2 bg-white rounded shadow-sm text-center">
+                                <small class="text-muted d-block">Pendientes en {{ $nombreMes }}</small>
+                                <strong class="text-danger">$ {{ number_format(($totalGastosBase - ($totalPagadosMes ?? 0)), 0, ',', '.') }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="btn-group w-100" role="group">
+                                <button wire:click="$set('filtroEstado', 'todos')" 
+                                    class="btn btn-sm {{ $filtroEstado == 'todos' ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                    Todos
+                                </button>
+                                <button wire:click="$set('filtroEstado', 'pagados')" 
+                                    class="btn btn-sm {{ $filtroEstado == 'pagados' ? 'btn-success' : 'btn-outline-secondary' }}">
+                                    <i class="fas fa-check-circle me-1"></i> Pagados
+                                </button>
+                                <button wire:click="$set('filtroEstado', 'pendientes')" 
+                                    class="btn btn-sm {{ $filtroEstado == 'pendientes' ? 'btn-warning' : 'btn-outline-secondary' }}">
+                                    <i class="fas fa-clock me-1"></i> Pendientes
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                {{-- TABLA DE GASTOS BASE --}}
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0 align-middle">
@@ -191,15 +223,14 @@
                                     <th>Categoría</th>
                                     <th>Concepto</th>
                                     <th>Valor</th>
-                                    <th>Frecuencia</th>
                                     <th>Día</th>
-                                    <th>Tipo</th>
                                     <th>Estado</th>
-                                    <th width="120" class="text-center">Acciones</th>
+                                    <th class="text-center">Pago {{ $nombreMes }}</th>
+                                    <th width="100" class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($registros as $item)
+                                @forelse($gastosPaginated as $item)
                                     <tr>
                                         <td>
                                             <span class="badge px-3 py-2"
@@ -217,32 +248,47 @@
                                             <strong>$ {{ number_format($item->valor, 0, ',', '.') }}</strong>
                                         </td>
                                         <td>
-                                            <span class="badge bg-info">
-                                                <i
-                                                    class="fas {{ $item->frecuencia == 'mensual' ? 'fa-calendar-alt' : ($item->frecuencia == 'quincenal' ? 'fa-calendar-week' : 'fa-calendar-year') }} me-1"></i>
-                                                {{ ucfirst($item->frecuencia) }}
-                                            </span>
-                                        </td>
-                                        <td>
                                             <span class="badge bg-secondary">
                                                 <i class="fas fa-calendar-day me-1"></i>
                                                 {{ $item->dia_ejecucion }}
                                             </span>
                                         </td>
                                         <td>
-                                            <span
-                                                class="badge {{ $item->tipo == 'fijo' ? 'bg-primary' : 'bg-warning' }}">
-                                                {{ ucfirst($item->tipo) }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button
-                                                class="btn btn-sm {{ $item->activo ? 'btn-success' : 'btn-danger' }} w-100"
+                                            <button class="btn btn-sm {{ $item->activo ? 'btn-success' : 'btn-danger' }} w-100"
                                                 wire:click="cambiarEstado({{ $item->id }})">
-                                                <i
-                                                    class="fas {{ $item->activo ? 'fa-check-circle' : 'fa-times-circle' }} me-1"></i>
+                                                <i class="fas {{ $item->activo ? 'fa-check-circle' : 'fa-times-circle' }} me-1"></i>
                                                 {{ $item->activo ? 'Activo' : 'Inactivo' }}
                                             </button>
+                                        </td>
+                                        <td>
+                                            @if($item->activo)
+                                                @if($item->pagado_este_mes)
+                                                    <div class="text-center">
+                                                        <span class="badge bg-success py-2 px-3">
+                                                            <i class="fas fa-check-circle me-1"></i> Pagado
+                                                        </span>
+                                                        <small class="d-block text-muted">
+                                                            {{ $item->fecha_pago_mes ? $item->fecha_pago_mes->format('d/m/Y') : '' }}
+                                                        </small>
+                                                        <button class="btn btn-sm btn-secondary mt-1" 
+                                                            wire:click="anularPago({{ $item->registro_pago?->id ?? 0 }})"
+                                                            wire:confirm="¿Anular el pago de '{{ $item->concepto }}'?"
+                                                            title="Anular pago">
+                                                            <i class="fas fa-undo"></i> Anular
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <button class="btn btn-sm btn-warning w-100"
+                                                        wire:click="marcarComoPagado({{ $item->id }})"
+                                                        wire:confirm="¿Marcar '{{ $item->concepto }}' como pagado en {{ $nombreMes }}?">
+                                                        <i class="fas fa-hand-holding-usd me-1"></i> Marcar Pagado
+                                                    </button>
+                                                @endif
+                                            @else
+                                                <span class="badge bg-secondary py-2 px-3">
+                                                    <i class="fas fa-pause-circle me-1"></i> Inactivo
+                                                </span>
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="btn-group w-100" role="group">
@@ -261,11 +307,10 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-5">
+                                        <td colspan="7" class="text-center py-5">
                                             <i class="fas fa-sync-alt fa-3x text-muted mb-3 d-block"></i>
                                             <p class="text-muted mb-0">No hay gastos recurrentes registrados</p>
-                                            <small class="text-muted">Comienza creando un nuevo gasto
-                                                recurrente</small>
+                                            <small class="text-muted">Comienza creando un nuevo gasto recurrente</small>
                                         </td>
                                     </tr>
                                 @endforelse
@@ -274,14 +319,15 @@
                     </div>
                 </div>
 
+                {{-- PAGINACIÓN --}}
                 <div class="card-footer bg-white border-top">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="text-muted small">
-                            Mostrando {{ $registros->firstItem() ?? 0 }} - {{ $registros->lastItem() ?? 0 }} de
-                            {{ $registros->total() }}
+                            Mostrando {{ $gastosPaginated->firstItem() ?? 0 }} - {{ $gastosPaginated->lastItem() ?? 0 }} de
+                            {{ $gastosPaginated->total() }}
                         </div>
                         <div>
-                            {{ $registros->links() }}
+                            {{ $gastosPaginated->links() }}
                         </div>
                     </div>
                 </div>

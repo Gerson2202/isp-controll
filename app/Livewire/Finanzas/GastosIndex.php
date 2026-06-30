@@ -4,8 +4,10 @@ namespace App\Livewire\Finanzas;
 
 use App\Models\Gasto;
 use App\Models\CategoriaGasto;
+use App\Models\SaldoAcumulado; // <-- Agrega esta línea
 use Livewire\Component;
 use Livewire\WithPagination;
+use Carbon\Carbon;
 
 class GastosIndex extends Component
 {
@@ -67,6 +69,16 @@ class GastosIndex extends Component
 
         $this->validate();
 
+        // Guardar fecha original si es edición
+        $fechaOriginal = null;
+        if ($this->gasto_id) {
+            $gastoOriginal = Gasto::find($this->gasto_id);
+            if ($gastoOriginal) {
+                $fechaOriginal = $gastoOriginal->fecha_gasto;
+            }
+        }
+
+        // Guardar o actualizar el gasto
         Gasto::updateOrCreate(
             ['id' => $this->gasto_id],
             [
@@ -80,6 +92,16 @@ class GastosIndex extends Component
                 'user_id' => auth()->id()
             ]
         );
+
+        // Recalcular saldo para la fecha del gasto
+        $fecha = Carbon::parse($this->fecha_gasto);
+        SaldoAcumulado::recalcularMes($fecha->year, $fecha->month);
+
+        // Si cambió la fecha, recalcular también el mes anterior
+        if ($fechaOriginal && $fechaOriginal != $this->fecha_gasto) {
+            $fechaAnt = Carbon::parse($fechaOriginal);
+            SaldoAcumulado::recalcularMes($fechaAnt->year, $fechaAnt->month);
+        }
 
         $this->limpiar();
 
@@ -115,7 +137,13 @@ class GastosIndex extends Component
         try {
             $gasto = Gasto::findOrFail($id);
             $concepto = $gasto->concepto;
+            $fechaGasto = $gasto->fecha_gasto;
+            
             $gasto->delete();
+
+            // Recalcular saldo después de eliminar
+            $fecha = Carbon::parse($fechaGasto);
+            SaldoAcumulado::recalcularMes($fecha->year, $fecha->month);
 
             $this->dispatch(
                 'notify',
@@ -146,7 +174,6 @@ class GastosIndex extends Component
         $this->estado = 'pagado';
         
         $this->resetValidation();
-
     }
 
     public function render()

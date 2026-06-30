@@ -8,8 +8,11 @@ use App\Models\Pago;
 use App\Models\Gasto;
 use App\Models\CategoriaGasto;
 use App\Models\GastoRecurrente;
+use App\Models\Ingreso;
+use App\Models\SaldoAcumulado;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use PDF;
 
 class DashboardFinanciero extends Component
 {
@@ -25,6 +28,8 @@ class DashboardFinanciero extends Component
         $this->mesSeleccionado = Carbon::now()->month;
         $this->anoSeleccionado = Carbon::now()->year;
         $this->rangoFechas = $this->obtenerRangoFechas();
+
+        $this->calcularYGuardarSaldoAcumulado();
     }
 
     public function cambiarMes($direccion)
@@ -41,6 +46,8 @@ class DashboardFinanciero extends Component
         $this->anoSeleccionado = $fecha->year;
         $this->rangoFechas = $this->obtenerRangoFechas();
         $this->mostrarReportePDF = false;
+
+        $this->calcularYGuardarSaldoAcumulado();
     }
 
     private function obtenerRangoFechas()
@@ -54,32 +61,78 @@ class DashboardFinanciero extends Component
         ];
     }
 
-    public function getNombreMes()
+    private function calcularYGuardarSaldoAcumulado()
     {
-        return Carbon::create($this->anoSeleccionado, $this->mesSeleccionado, 1)->translatedFormat('F Y');
+        $mesAnterior = Carbon::create($this->anoSeleccionado, $this->mesSeleccionado, 1)->subMonth();
+        $saldoAnterior = SaldoAcumulado::where('ano', $mesAnterior->year)
+            ->where('mes', $mesAnterior->month)
+            ->first();
+
+        $saldoInicial = $saldoAnterior ? $saldoAnterior->saldo_acumulado : 0;
+
+        $ingresosMes = $this->calcularIngresosDelMes();
+        $gastosMes = $this->calcularGastosDelMes();
+
+        $saldoNetoMes = $ingresosMes - $gastosMes;
+        $saldoAcumulado = $saldoInicial + $saldoNetoMes;
+
+        SaldoAcumulado::updateOrCreate(
+            [
+                'ano' => $this->anoSeleccionado,
+                'mes' => $this->mesSeleccionado
+            ],
+            [
+                'saldo_acumulado' => $saldoAcumulado
+            ]
+        );
     }
 
-    public function getIngresosDelMesProperty()
+    private function calcularIngresosDelMes()
     {
-        return Pago::whereBetween('fecha_pago', [
+        $pagos = Pago::whereBetween('fecha_pago', [
             $this->rangoFechas['inicio'],
             $this->rangoFechas['fin']
         ])->sum('monto');
+
+        $ingresos = Ingreso::whereBetween('fecha_ingreso', [
+            $this->rangoFechas['inicio'],
+            $this->rangoFechas['fin']
+        ])->where('estado', '!=', 'anulado')
+            ->sum('monto');
+
+        return $pagos + $ingresos;
     }
 
-    public function getGastosDelMesProperty()
+    /**
+     * Calcula los gastos del mes con el nuevo enfoque de gastos recurrentes
+     */
+    private function calcularGastosDelMes()
     {
+        // Gastos normales (NO recurrentes)
         $gastosNormales = Gasto::whereBetween('fecha_gasto', [
             $this->rangoFechas['inicio'],
             $this->rangoFechas['fin']
         ])->where('estado', 'pagado')
             ->sum('valor');
 
-        $gastosRecurrentes = GastoRecurrente::where('activo', true)
-            ->where('frecuencia', 'mensual')
+        // Gastos recurrentes pagados en el mes (de la tabla gastos_recurrentes)
+        $gastosRecurrentes = GastoRecurrente::where('ano', $this->anoSeleccionado)
+            ->where('mes', $this->mesSeleccionado)
+            ->where('pagado', true)
             ->sum('valor');
 
         return $gastosNormales + $gastosRecurrentes;
+    }
+
+    // Propiedades computadas públicas
+    public function getIngresosDelMesProperty()
+    {
+        return $this->calcularIngresosDelMes();
+    }
+
+    public function getGastosDelMesProperty()
+    {
+        return $this->calcularGastosDelMes();
     }
 
     public function getSaldoNetoProperty()
@@ -87,25 +140,66 @@ class DashboardFinanciero extends Component
         return $this->ingresos_del_mes - $this->gastos_del_mes;
     }
 
+    public function getSaldoAcumuladoProperty()
+    {
+        $saldo = SaldoAcumulado::where('ano', $this->anoSeleccionado)
+            ->where('mes', $this->mesSeleccionado)
+            ->first();
+
+        return $saldo ? $saldo->saldo_acumulado : 0;
+    }
+
+    public function getSaldoAnteriorProperty()
+    {
+        $mesAnterior = Carbon::create($this->anoSeleccionado, $this->mesSeleccionado, 1)->subMonth();
+        $saldo = SaldoAcumulado::where('ano', $mesAnterior->year)
+            ->where('mes', $mesAnterior->month)
+            ->first();
+
+        return $saldo ? $saldo->saldo_acumulado : 0;
+    }
+
     public function getIngresosPorDiaProperty()
     {
-        return Pago::select(
-            DB::raw('DATE(fecha_pago) as fecha'),
-            DB::raw('SUM(monto) as total')
-        )
-            ->whereBetween('fecha_pago', [
-                $this->rangoFechas['inicio'],
-                $this->rangoFechas['fin']
-            ])
-            ->groupBy('fecha')
-            ->orderBy('fecha')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'fecha' => Carbon::parse($item->fecha)->format('d/m'),
-                    'total' => $item->total
-                ];
-            });
+        $sql = "
+        SELECT 
+            fecha,
+            SUM(total) as total
+        FROM (
+            SELECT 
+                DATE(fecha_pago) as fecha,
+                SUM(monto) as total
+            FROM pagos
+            WHERE fecha_pago BETWEEN ? AND ?
+            GROUP BY DATE(fecha_pago)
+            
+            UNION ALL
+            
+            SELECT 
+                DATE(fecha_ingreso) as fecha,
+                SUM(monto) as total
+            FROM ingresos
+            WHERE fecha_ingreso BETWEEN ? AND ?
+                AND estado != 'anulado'
+            GROUP BY DATE(fecha_ingreso)
+        ) as combined
+        GROUP BY fecha
+        ORDER BY fecha
+        ";
+
+        $resultados = DB::select($sql, [
+            $this->rangoFechas['inicio']->format('Y-m-d'),
+            $this->rangoFechas['fin']->format('Y-m-d'),
+            $this->rangoFechas['inicio']->format('Y-m-d'),
+            $this->rangoFechas['fin']->format('Y-m-d')
+        ]);
+
+        return collect($resultados)->map(function ($item) {
+            return [
+                'fecha' => Carbon::parse($item->fecha)->format('d/m'),
+                'total' => (float) $item->total
+            ];
+        });
     }
 
     public function getGastosPorDiaProperty()
@@ -194,10 +288,25 @@ class DashboardFinanciero extends Component
             ->sum('monto_total');
     }
 
+    /**
+     * Obtener gastos recurrentes base (total de gastos fijos mensuales)
+     */
     public function getGastosRecurrentesMensualesProperty()
     {
-        return GastoRecurrente::where('activo', true)
-            ->where('frecuencia', 'mensual')
+        return GastoRecurrente::whereNull('ano')
+            ->whereNull('mes')
+            ->where('activo', true)
+            ->sum('valor');
+    }
+
+    /**
+     * Obtener gastos recurrentes pagados en el mes actual
+     */
+    public function getGastosRecurrentesPagadosProperty()
+    {
+        return GastoRecurrente::where('ano', $this->anoSeleccionado)
+            ->where('mes', $this->mesSeleccionado)
+            ->where('pagado', true)
             ->sum('valor');
     }
 
@@ -218,6 +327,7 @@ class DashboardFinanciero extends Component
             ])
             ->where('gastos.estado', 'pagado');
 
+        // Gastos recurrentes pagados en el mes (solo los que se pagaron)
         $gastosRecurrentes = GastoRecurrente::select(
             'gastos_recurrentes.concepto',
             'gastos_recurrentes.valor',
@@ -227,8 +337,9 @@ class DashboardFinanciero extends Component
             DB::raw("'Recurrente' as tipo_gasto")
         )
             ->join('categorias_gastos', 'gastos_recurrentes.categorias_gasto_id', '=', 'categorias_gastos.id')
-            ->where('gastos_recurrentes.activo', true)
-            ->where('gastos_recurrentes.frecuencia', 'mensual');
+            ->where('gastos_recurrentes.ano', $this->anoSeleccionado)
+            ->where('gastos_recurrentes.mes', $this->mesSeleccionado)
+            ->where('gastos_recurrentes.pagado', true);
 
         return $gastosNormales->union($gastosRecurrentes)
             ->orderBy('valor', 'desc')
@@ -236,7 +347,6 @@ class DashboardFinanciero extends Component
             ->get();
     }
 
-    // CORREGIDO: Pagos de facturas separados
     public function getPagosFacturasProperty()
     {
         return Pago::select(
@@ -255,7 +365,6 @@ class DashboardFinanciero extends Component
             ->get();
     }
 
-    // CORREGIDO: Gastos separados (incluye todos los gastos)
     public function getGastosMovimientosProperty()
     {
         // Gastos normales
@@ -273,9 +382,9 @@ class DashboardFinanciero extends Component
                 $this->rangoFechas['fin']
             ]);
 
-        // Gastos recurrentes
+        // Gastos recurrentes pagados en el mes (solo los que se pagaron)
         $gastosRecurrentes = GastoRecurrente::select(
-            DB::raw("'" . $this->rangoFechas['inicio']->format('Y-m-d') . "' as fecha"),
+            'gastos_recurrentes.fecha_pago as fecha',
             'gastos_recurrentes.valor',
             DB::raw("CONCAT(gastos_recurrentes.concepto, ' (Recurrente)') as concepto"),
             'categorias_gastos.nombre as categoria',
@@ -283,10 +392,10 @@ class DashboardFinanciero extends Component
             DB::raw("'pagado' as estado")
         )
             ->join('categorias_gastos', 'gastos_recurrentes.categorias_gasto_id', '=', 'categorias_gastos.id')
-            ->where('gastos_recurrentes.activo', true)
-            ->where('gastos_recurrentes.frecuencia', 'mensual');
+            ->where('gastos_recurrentes.ano', $this->anoSeleccionado)
+            ->where('gastos_recurrentes.mes', $this->mesSeleccionado)
+            ->where('gastos_recurrentes.pagado', true);
 
-        // Unir ambos y ordenar
         $gastos = $gastosNormales->union($gastosRecurrentes)
             ->orderBy('fecha', 'desc')
             ->limit(15)
@@ -295,20 +404,36 @@ class DashboardFinanciero extends Component
         return $gastos;
     }
 
+    /**
+     * Detalle de gastos recurrentes - solo gastos base
+     */
+    /**
+     * 🔥 DETALLE DE GASTOS RECURRENTES - SOLO LOS PAGADOS EN EL MES
+     */
     public function getGastosRecurrentesDetalleProperty()
     {
-        return GastoRecurrente::select(
-            'gastos_recurrentes.concepto',
-            'gastos_recurrentes.valor',
-            'gastos_recurrentes.frecuencia',
-            'gastos_recurrentes.dia_ejecucion',
-            'categorias_gastos.nombre as categoria',
-            'categorias_gastos.color'
-        )
-            ->join('categorias_gastos', 'gastos_recurrentes.categorias_gasto_id', '=', 'categorias_gastos.id')
-            ->where('gastos_recurrentes.activo', true)
-            ->where('gastos_recurrentes.frecuencia', 'mensual')
+        // 🔥 SOLO GASTOS RECURRENTES PAGADOS EN EL MES SELECCIONADO
+        $gastosPagados = GastoRecurrente::where('ano', $this->anoSeleccionado)
+            ->where('mes', $this->mesSeleccionado)
+            ->where('pagado', true)
+            ->with('categoria')
             ->get();
+
+        $resultado = [];
+        foreach ($gastosPagados as $gasto) {
+            $resultado[] = (object)[
+                'id' => $gasto->id,
+                'concepto' => $gasto->concepto,
+                'valor' => $gasto->valor,
+                'frecuencia' => $gasto->frecuencia,
+                'dia_ejecucion' => $gasto->dia_ejecucion,
+                'categoria' => $gasto->categoria ? $gasto->categoria->nombre : 'Sin categoría',
+                'color' => $gasto->categoria ? $gasto->categoria->color : '#ffc107',
+                'fecha_pago_mes' => $gasto->fecha_pago,
+            ];
+        }
+
+        return collect($resultado);
     }
 
     public function getTasaRetencionProperty()
@@ -321,6 +446,15 @@ class DashboardFinanciero extends Component
         return round((($totalIngresos - $totalGastos) / $totalIngresos) * 100, 2);
     }
 
+    public function getIngresosRegistradosProperty()
+    {
+        return Ingreso::whereBetween('fecha_ingreso', [
+            $this->rangoFechas['inicio'],
+            $this->rangoFechas['fin']
+        ])->where('estado', '!=', 'anulado')
+            ->sum('monto');
+    }
+
     public function generarReporte()
     {
         $this->mostrarReportePDF = true;
@@ -330,19 +464,43 @@ class DashboardFinanciero extends Component
     {
         $this->mostrarReportePDF = false;
     }
+
     public function generarPDF()
     {
+        $ingresosList = Ingreso::whereBetween('fecha_ingreso', [
+            $this->rangoFechas['inicio'],
+            $this->rangoFechas['fin']
+        ])
+            ->where('estado', '!=', 'anulado')
+            ->orderBy('fecha_ingreso', 'desc')
+            ->get();
+
+        // Obtener gastos recurrentes pagados en el mes
+        $gastosRecurrentesPagados = GastoRecurrente::where('ano', $this->anoSeleccionado)
+            ->where('mes', $this->mesSeleccionado)
+            ->where('pagado', true)
+            ->get();
+
         $data = [
             'nombreMes' => $this->getNombreMes(),
             'ingresos' => $this->ingresos_del_mes,
+            'ingresosRegistrados' => $this->ingresos_registrados,
             'gastos' => $this->gastos_del_mes,
+            'gastosRecurrentesPagados' => $gastosRecurrentesPagados,
             'saldoNeto' => $this->saldo_neto,
+            'saldoAcumulado' => $this->saldo_acumulado,
+            'saldoAnterior' => $this->saldo_anterior,
             'tasaRetencion' => $this->tasa_retencion,
             'gastosPorCategoria' => $this->gastos_por_categoria,
             'topGastos' => $this->top_gastos,
             'gastosRecurrentes' => $this->gastos_recurrentes_mensuales,
             'gastosRecurrentesDetalle' => $this->gastos_recurrentes_detalle,
-            'gastosMovimientos' => $this->gastos_movimientos,  // Cambiado
+            'gastosMovimientos' => $this->gastos_movimientos,
+            'pagosFacturas' => $this->pagos_facturas,
+            'ingresosList' => $ingresosList,
+            'totalFacturas' => $this->total_facturas,
+            'facturasPagadas' => $this->facturas_pagadas,
+            'facturasPendientes' => $this->facturas_pendientes,
             'fechaGeneracion' => Carbon::now()->format('d/m/Y H:i:s'),
             'mesSeleccionado' => $this->mesSeleccionado,
             'anoSeleccionado' => $this->anoSeleccionado
@@ -353,14 +511,33 @@ class DashboardFinanciero extends Component
 
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
-        }, 'reporte-gastos-' . $this->anoSeleccionado . '-' . $this->mesSeleccionado . '.pdf');
+        }, 'reporte-financiero-' . $this->anoSeleccionado . '-' . $this->mesSeleccionado . '.pdf');
     }
+
+    public function getNombreMes()
+    {
+        return Carbon::create($this->anoSeleccionado, $this->mesSeleccionado, 1)->translatedFormat('F Y');
+    }
+
     public function render()
     {
+        $ingresosList = Ingreso::whereBetween('fecha_ingreso', [
+            $this->rangoFechas['inicio'],
+            $this->rangoFechas['fin']
+        ])
+            ->where('estado', '!=', 'anulado')
+            ->orderBy('fecha_ingreso', 'desc')
+            ->limit(15)
+            ->get();
+
         return view('livewire.finanzas.dashboard-financiero', [
             'ingresos' => $this->ingresos_del_mes,
+            'ingresosRegistrados' => $this->ingresos_registrados,
             'gastos' => $this->gastos_del_mes,
+            'gastosRecurrentesPagados' => $this->gastos_recurrentes_pagados,
             'saldoNeto' => $this->saldo_neto,
+            'saldoAcumulado' => $this->saldo_acumulado,
+            'saldoAnterior' => $this->saldo_anterior,
             'ingresosPorDia' => $this->ingresos_por_dia,
             'gastosPorDia' => $this->gastos_por_dia,
             'gastosPorCategoria' => $this->gastos_por_categoria,
@@ -374,6 +551,7 @@ class DashboardFinanciero extends Component
             'gastosMovimientos' => $this->gastos_movimientos,
             'tasaRetencion' => $this->tasa_retencion,
             'nombreMes' => $this->getNombreMes(),
+            'ingresosList' => $ingresosList,
         ]);
     }
 }

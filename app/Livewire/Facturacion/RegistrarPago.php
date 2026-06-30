@@ -14,6 +14,8 @@ use App\Models\Ticket;
 use App\Services\MikroTikService;
 use Illuminate\Support\Facades\DB;
 use Spatie\Browsershot\Browsershot;
+use App\Models\SaldoAcumulado;
+use Carbon\Carbon;
 use Exception;
 
 class RegistrarPago extends Component
@@ -173,7 +175,9 @@ class RegistrarPago extends Component
                     $mensaje = 'Pago registrado exitosamente';
                 }
             });
-
+            // 🔥 AGREGAR ESTAS LÍNEAS - ACTUALIZAR SALDO ACUMULADO
+            $fecha = Carbon::parse($this->fecha_pago);
+            SaldoAcumulado::recalcularMes($fecha->year, $fecha->month);
             $this->dispatch(
                 'notify',
                 type: 'success',

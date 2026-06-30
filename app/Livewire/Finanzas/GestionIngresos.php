@@ -4,6 +4,7 @@ namespace App\Livewire\Finanzas;
 
 use App\Models\Cliente;
 use App\Models\Ingreso;
+use App\Models\SaldoAcumulado;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Auth;
@@ -124,16 +125,16 @@ class GestionIngresos extends Component
             'ingresos' => $ingresos,
             'clientes' => $clientes,
             'anioActual' => $anioActual,
-            // 🔥 PASAR LOS TOTALES A LA VISTA
             'totalIngresos' => $totalIngresos,
             'totalConfirmados' => $totalConfirmados,
             'totalAnulados' => $totalAnulados,
         ]);
     }
+
     public function mount()
     {
-        // 🔥 ESTABLECER EL MES ACTUAL POR DEFECTO
         $this->filtroMes = Carbon::now()->format('m');
+        $this->fecha_ingreso = Carbon::now()->format('Y-m-d');
     }
 
     // 🔥 MÉTODOS PARA RESETEAR LA PÁGINA CUANDO CAMBIAN LOS FILTROS
@@ -163,7 +164,7 @@ class GestionIngresos extends Component
         $this->filtroTipo = '';
         $this->filtroMes = '';
         $this->search = '';
-        $this->resetPage(); // 🔥 Resetea la página al limpiar filtros
+        $this->resetPage();
     }
 
     public function selectCliente($id, $nombre)
@@ -200,6 +201,9 @@ class GestionIngresos extends Component
             'user_id' => Auth::id(),
             'estado' => 'confirmado',
         ]);
+
+        // 🔥 ACTUALIZAR SALDO ACUMULADO DESPUÉS DE CREAR
+        $this->actualizarSaldoAcumulado($this->fecha_ingreso);
 
         $this->resetearFormulario();
 
@@ -248,6 +252,10 @@ class GestionIngresos extends Component
         $montoLimpio = $this->limpiarMonto($this->monto);
 
         $ingreso = Ingreso::findOrFail($this->ingresoEditando);
+        
+        // Guardar fecha original antes de actualizar
+        $fechaOriginal = $ingreso->fecha_ingreso->format('Y-m-d');
+        
         $ingreso->update([
             'concepto' => $this->concepto,
             'monto' => $montoLimpio,
@@ -258,6 +266,14 @@ class GestionIngresos extends Component
             'metodo_pago' => $this->metodo_pago,
             'numero_documento' => $this->numero_documento,
         ]);
+
+        // 🔥 ACTUALIZAR SALDO ACUMULADO PARA LA NUEVA FECHA
+        $this->actualizarSaldoAcumulado($this->fecha_ingreso);
+        
+        // 🔥 SI CAMBIÓ LA FECHA, ACTUALIZAR TAMBIÉN EL MES ANTERIOR
+        if ($fechaOriginal != $this->fecha_ingreso) {
+            $this->actualizarSaldoAcumulado($fechaOriginal);
+        }
 
         $this->resetearFormulario();
 
@@ -292,6 +308,9 @@ class GestionIngresos extends Component
 
         $ingreso->update(['estado' => $nuevoEstado]);
 
+        // 🔥 ACTUALIZAR SALDO ACUMULADO CUANDO CAMBIA EL ESTADO
+        $this->actualizarSaldoAcumulado($ingreso->fecha_ingreso->format('Y-m-d'));
+
         $mensajes = [
             'confirmado' => 'Ingreso confirmado exitosamente',
             'anulado' => 'Ingreso anulado correctamente'
@@ -304,6 +323,71 @@ class GestionIngresos extends Component
         );
     }
 
+    public function eliminarIngreso($id)
+    {
+        try {
+            $ingreso = Ingreso::findOrFail($id);
+            $fechaIngreso = $ingreso->fecha_ingreso->format('Y-m-d');
+            $concepto = $ingreso->concepto;
+            
+            $ingreso->delete();
+
+            // 🔥 ACTUALIZAR SALDO ACUMULADO DESPUÉS DE ELIMINAR
+            $this->actualizarSaldoAcumulado($fechaIngreso);
+
+            $this->dispatch(
+                'notify',
+                type: 'success',
+                message: 'Ingreso "' . $concepto . '" eliminado correctamente'
+            );
+        } catch (\Exception $e) {
+            $this->dispatch(
+                'notify',
+                type: 'error',
+                message: 'Error al eliminar el ingreso: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * 🔥 MÉTODO PARA ACTUALIZAR EL SALDO ACUMULADO
+     */
+    private function actualizarSaldoAcumulado($fecha)
+    {
+        if (!$fecha) return;
+        
+        $fechaCarbon = Carbon::parse($fecha);
+        $ano = $fechaCarbon->year;
+        $mes = $fechaCarbon->month;
+        
+        // Recalcular saldo para este mes
+        SaldoAcumulado::recalcularMes($ano, $mes);
+        
+        // También recalcular los meses siguientes para mantener consistencia
+        $this->recalcularMesesSiguientes($ano, $mes);
+    }
+
+    /**
+     * Recalcula los meses siguientes para mantener consistencia
+     */
+    private function recalcularMesesSiguientes($ano, $mes)
+    {
+        $mesesSiguientes = SaldoAcumulado::where(function($query) use ($ano, $mes) {
+                $query->where('ano', '>', $ano)
+                      ->orWhere(function($q) use ($ano, $mes) {
+                          $q->where('ano', $ano)
+                            ->where('mes', '>', $mes);
+                      });
+            })
+            ->orderBy('ano')
+            ->orderBy('mes')
+            ->get();
+
+        foreach ($mesesSiguientes as $siguiente) {
+            SaldoAcumulado::recalcularMes($siguiente->ano, $siguiente->mes);
+        }
+    }
+
     public function resetearFormulario()
     {
         $this->resetValidation();
@@ -311,7 +395,6 @@ class GestionIngresos extends Component
         $this->reset([
             'concepto',
             'monto',
-            'fecha_ingreso',
             'tipo',
             'cliente_id',
             'descripcion',
@@ -321,6 +404,8 @@ class GestionIngresos extends Component
             'cliente_nombre',
             'searchCliente'
         ]);
+        
+        $this->fecha_ingreso = Carbon::now()->format('Y-m-d');
         $this->mostrarFormulario = false;
         $this->showClienteList = false;
     }

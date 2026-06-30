@@ -214,7 +214,6 @@
             </div>
 
             {{-- RESUMEN DE TOTALES --}}
-            {{-- RESUMEN DE TOTALES --}}
             <div class="row g-2 mb-3">
                 <div class="col-4">
                     <div class="p-2 bg-light rounded">
@@ -324,6 +323,34 @@
                                                 <i class="fas fa-check"></i>
                                             </button>
                                         @endif
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="btn-group w-100" role="group">
+                                        <button class="btn btn-sm btn-warning"
+                                            wire:click="editarIngreso({{ $ingreso->id }})" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        @if ($ingreso->estado == 'confirmado')
+                                            <button class="btn btn-sm btn-danger"
+                                                wire:click="cambiarEstado({{ $ingreso->id }}, 'anulado')"
+                                                wire:confirm="¿Estás seguro de anular este ingreso?" title="Anular">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        @else
+                                            <button class="btn btn-sm btn-success"
+                                                wire:click="cambiarEstado({{ $ingreso->id }}, 'confirmado')"
+                                                title="Confirmar">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        @endif
+                                        <!-- 🔥 BOTÓN DE ELIMINAR AGREGADO -->
+                                        <button class="btn btn-sm btn-danger"
+                                            wire:click="eliminarIngreso({{ $ingreso->id }})"
+                                            wire:confirm="¿Estás seguro de eliminar este ingreso permanentemente?"
+                                            title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
