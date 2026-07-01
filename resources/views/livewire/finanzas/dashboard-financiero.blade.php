@@ -80,8 +80,8 @@
         <div class="col-lg-3 col-6">
             <div class="small-box bg-success">
                 <div class="inner">
-                    <h3>$ {{ number_format($ingresos, 2) }}</h3>
-                    <p>Total Ingresos + facturacion</p>
+                    <h3>$ {{ number_format($ingresos, 0) }}</h3>
+                    <p>Total Ingresos + facturación</p>
                 </div>
                 <div class="icon">
                     <i class="fas fa-arrow-up"></i>
@@ -92,7 +92,7 @@
         <div class="col-lg-3 col-6">
             <div class="small-box bg-danger">
                 <div class="inner">
-                    <h3>$ {{ number_format($gastos, 2) }}</h3>
+                    <h3>$ {{ number_format($gastos, 0) }}</h3>
                     <p>Total Gastos</p>
                 </div>
                 <div class="icon">
@@ -104,7 +104,7 @@
         <div class="col-lg-3 col-6">
             <div class="small-box {{ $saldoNeto >= 0 ? 'bg-info' : 'bg-warning' }}">
                 <div class="inner">
-                    <h3>$ {{ number_format($saldoNeto, 2) }}</h3>
+                    <h3>$ {{ number_format($saldoNeto, 0) }}</h3>
                     <p>Saldo Neto</p>
                 </div>
                 <div class="icon">
@@ -116,7 +116,7 @@
         <div class="col-lg-3 col-6">
             <div class="small-box bg-purple">
                 <div class="inner">
-                    <h3>$ {{ number_format($ingresosRegistrados, 2) }}</h3>
+                    <h3>$ {{ number_format($ingresosRegistrados, 0) }}</h3>
                     <p>Total Ingresos</p>
                 </div>
                 <div class="icon">
@@ -125,27 +125,32 @@
             </div>
         </div>
     </div>
-    <!-- Después de las tarjetas de resumen, agrega esta tarjeta -->
+    <!-- Saldo acomulado -->
     <div class="row">
         <div class="col-lg-12">
             <div class="small-box bg-gradient-purple">
                 <div class="inner">
                     <h3>$ {{ number_format($saldoAcumulado, 2) }}</h3>
-                    <p>💰 Saldo Acumulado (Bolsillo)
+                    <p>
+                        💰 Saldo Acumulado (Bolsillo Fijo)
                         <small class="text-light">
-                            <i class="fas fa-info-circle" title="Saldo que se arrastra mes a mes"></i>
+                            <i class="fas fa-info-circle"
+                                title="Este valor es fijo y se mantiene igual para todos los meses"></i>
                         </small>
                     </p>
-                    @if ($saldoAnterior > 0)
-                        <small class="text-light">
-                            <i class="fas fa-arrow-up text-success"></i>
-                            Saldo anterior: $ {{ number_format($saldoAnterior, 2) }}
-                        </small>
-                    @endif
+                    <small class="text-light">
+                        <i class="fas fa-check-circle text-success"></i>
+                        Valor total acumulado de todos los meses
+                    </small>
                 </div>
                 <div class="icon">
                     <i class="fas fa-piggy-bank"></i>
                 </div>
+                {{-- <!-- Botón para recalcular manualmente -->
+                <button wire:click="calcularYGuardarSaldoAcumulado" class="btn btn-sm btn-light"
+                    style="position: absolute; bottom: 10px; right: 10px;">
+                    <i class="fas fa-sync-alt"></i> Recalcular
+                </button> --}}
             </div>
         </div>
     </div>
@@ -417,8 +422,8 @@
                                                 <td>
                                                     <span class="badge"
                                                         style="background-color: {{ $gasto->color ?? '#ffc107' }}; 
-                     width: 10px; height: 10px; display: inline-block; 
-                     border-radius: 50%;"></span>
+                                                    width: 10px; height: 10px; display: inline-block; 
+                                                    border-radius: 50%;"></span>
                                                     {{ $gasto->concepto }}
                                                 </td>
                                                 <td>{{ $gasto->categoria }}</td>

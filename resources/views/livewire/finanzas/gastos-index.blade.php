@@ -49,8 +49,11 @@
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
                                 <input type="text" class="form-control @error('valor') is-invalid @enderror"
-                                    wire:model="valor" placeholder="0" x-data
-                                    x-on:input="$event.target.value = $event.target.value.replace(/[^0-9]/g, '')">
+                                    wire:model="valor" x-data
+                                    x-on:input="
+                                        let value = $event.target.value.replace(/\D/g, '');
+                                        $event.target.value = Number(value).toLocaleString('es-CO');
+                                    ">
                                 @error('valor')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

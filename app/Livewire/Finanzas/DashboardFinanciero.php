@@ -29,7 +29,7 @@ class DashboardFinanciero extends Component
         $this->anoSeleccionado = Carbon::now()->year;
         $this->rangoFechas = $this->obtenerRangoFechas();
 
-        $this->calcularYGuardarSaldoAcumulado();
+        // $this->calcularYGuardarSaldoAcumulado();
     }
 
     public function cambiarMes($direccion)
@@ -47,7 +47,7 @@ class DashboardFinanciero extends Component
         $this->rangoFechas = $this->obtenerRangoFechas();
         $this->mostrarReportePDF = false;
 
-        $this->calcularYGuardarSaldoAcumulado();
+        // $this->calcularYGuardarSaldoAcumulado();
     }
 
     private function obtenerRangoFechas()
@@ -61,21 +61,21 @@ class DashboardFinanciero extends Component
         ];
     }
 
-    private function calcularYGuardarSaldoAcumulado()
+    // Cambiar de private a public
+    public function calcularYGuardarSaldoAcumulado()
     {
-        $mesAnterior = Carbon::create($this->anoSeleccionado, $this->mesSeleccionado, 1)->subMonth();
-        $saldoAnterior = SaldoAcumulado::where('ano', $mesAnterior->year)
-            ->where('mes', $mesAnterior->month)
-            ->first();
+        // Calcular ingresos totales de todos los tiempos
+        $ingresosTotales = Pago::sum('monto') +
+            Ingreso::where('estado', '!=', 'anulado')->sum('monto');
 
-        $saldoInicial = $saldoAnterior ? $saldoAnterior->saldo_acumulado : 0;
+        // Calcular gastos totales de todos los tiempos
+        $gastosTotales = Gasto::where('estado', 'pagado')->sum('valor') +
+            GastoRecurrente::where('pagado', true)->sum('valor');
 
-        $ingresosMes = $this->calcularIngresosDelMes();
-        $gastosMes = $this->calcularGastosDelMes();
+        // El saldo acumulado es ingresos - gastos totales
+        $saldoAcumulado = $ingresosTotales - $gastosTotales;
 
-        $saldoNetoMes = $ingresosMes - $gastosMes;
-        $saldoAcumulado = $saldoInicial + $saldoNetoMes;
-
+        // Guardar en el mes actual, pero siempre con el mismo valor
         SaldoAcumulado::updateOrCreate(
             [
                 'ano' => $this->anoSeleccionado,
@@ -85,6 +85,9 @@ class DashboardFinanciero extends Component
                 'saldo_acumulado' => $saldoAcumulado
             ]
         );
+
+        // Mensaje de confirmación
+        session()->flash('message', 'Saldo acumulado actualizado: $' . number_format($saldoAcumulado, 2));
     }
 
     private function calcularIngresosDelMes()
@@ -142,21 +145,17 @@ class DashboardFinanciero extends Component
 
     public function getSaldoAcumuladoProperty()
     {
-        $saldo = SaldoAcumulado::where('ano', $this->anoSeleccionado)
-            ->where('mes', $this->mesSeleccionado)
+        // Obtener el último saldo acumulado registrado (sin importar el mes)
+        $ultimoSaldo = SaldoAcumulado::orderBy('ano', 'desc')
+            ->orderBy('mes', 'desc')
             ->first();
 
-        return $saldo ? $saldo->saldo_acumulado : 0;
+        return $ultimoSaldo ? $ultimoSaldo->saldo_acumulado : 0;
     }
-
     public function getSaldoAnteriorProperty()
     {
-        $mesAnterior = Carbon::create($this->anoSeleccionado, $this->mesSeleccionado, 1)->subMonth();
-        $saldo = SaldoAcumulado::where('ano', $mesAnterior->year)
-            ->where('mes', $mesAnterior->month)
-            ->first();
-
-        return $saldo ? $saldo->saldo_acumulado : 0;
+        // Mostrar el mismo saldo acumulado (es un valor fijo)
+        return $this->saldo_acumulado;
     }
 
     public function getIngresosPorDiaProperty()
@@ -244,48 +243,29 @@ class DashboardFinanciero extends Component
 
     public function getFacturasPendientesProperty()
     {
-        return Factura::where('estado', 'pendiente')
-            ->where(function ($query) {
-                $query->whereBetween('fecha_emision', [
-                    $this->rangoFechas['inicio'],
-                    $this->rangoFechas['fin']
-                ])
-                    ->orWhereBetween('fecha_vencimiento', [
-                        $this->rangoFechas['inicio'],
-                        $this->rangoFechas['fin']
-                    ]);
-            })
-            ->sum('saldo_pendiente');
+        // Pendientes = Total facturas - Facturas pagadas
+        $totalFacturas = $this->total_facturas;
+        $facturasPagadas = $this->facturas_pagadas;
+
+        return $totalFacturas - $facturasPagadas;
     }
 
     public function getTotalFacturasProperty()
     {
-        return Factura::where(function ($query) {
-            $query->whereBetween('fecha_emision', [
-                $this->rangoFechas['inicio'],
-                $this->rangoFechas['fin']
-            ])
-                ->orWhereBetween('fecha_vencimiento', [
-                    $this->rangoFechas['inicio'],
-                    $this->rangoFechas['fin']
-                ]);
-        })->sum('monto_total');
+        // Total de dinero en facturas GENERADAS este mes (por fecha_emision)
+        return Factura::whereBetween('fecha_emision', [
+            $this->rangoFechas['inicio'],
+            $this->rangoFechas['fin']
+        ])->sum('monto_total');
     }
 
     public function getFacturasPagadasProperty()
     {
-        return Factura::where('estado', 'pagada')
-            ->where(function ($query) {
-                $query->whereBetween('fecha_emision', [
-                    $this->rangoFechas['inicio'],
-                    $this->rangoFechas['fin']
-                ])
-                    ->orWhereBetween('fecha_vencimiento', [
-                        $this->rangoFechas['inicio'],
-                        $this->rangoFechas['fin']
-                    ]);
-            })
-            ->sum('monto_total');
+        // Total PAGADO en el mes actual (basado en la tabla pagos - fecha_pago)
+        return Pago::whereBetween('fecha_pago', [
+            $this->rangoFechas['inicio'],
+            $this->rangoFechas['fin']
+        ])->sum('monto');
     }
 
     /**

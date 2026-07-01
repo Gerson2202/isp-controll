@@ -491,7 +491,7 @@
 
                             min: 0,
 
-                            max: 20,
+                            max: 30,
 
                             ticks: {
 
