@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Cliente;
 use Illuminate\Http\Request;
 use App\Models\Conversacion;
 use Carbon\Carbon;
@@ -12,6 +13,10 @@ class ConversacionesController extends Controller
     public function index()
     {
         return view('conversaciones.index');
+    }
+    public function avisos()
+    {
+        return view('conversaciones.avisos');
     }
 
     public function storeIncoming(Request $request)

@@ -655,7 +655,7 @@ return [
 
             ],
         ],
-        // Conversaciones
+        // Comunicaciones
         [
             'text' => 'Comunicaciones',
             'icon' => 'fas fa-comments',
@@ -664,6 +664,11 @@ return [
                     'text' => 'Conversaciones',
                     'route' => 'conversacionesIndex',
                     'icon' => 'fas fa-comment-dots',
+                ],
+                [
+                    'text' => 'Avisos a Clientes',
+                    'route' => 'avisosClientesIndex',
+                    'icon' => 'fas fa-bullhorn',
                 ],
             ],
         ],

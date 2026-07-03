@@ -5,6 +5,7 @@ namespace App\Livewire\Facturacion;
 use App\Services\ComprobanteImageGenerator;
 
 use App\Models\Empresa;
+use App\Models\EnvioMasivoLog;
 use Illuminate\Support\Facades\Http;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -15,6 +16,8 @@ use App\Services\MikroTikService;
 use Illuminate\Support\Facades\DB;
 use Spatie\Browsershot\Browsershot;
 use App\Models\SaldoAcumulado;
+use Illuminate\Support\Facades\Log; // ← Agregar esta
+
 use Carbon\Carbon;
 use Exception;
 
@@ -175,16 +178,17 @@ class RegistrarPago extends Component
                     $mensaje = 'Pago registrado exitosamente';
                 }
             });
-            // 🔥 AGREGAR ESTAS LÍNEAS - ACTUALIZAR SALDO ACUMULADO
+
+            // Actualizar saldo acumulado
             $fecha = Carbon::parse($this->fecha_pago);
             SaldoAcumulado::recalcularMes($fecha->year, $fecha->month);
+
             $this->dispatch(
                 'notify',
                 type: 'success',
                 message: $mensaje
             );
             $this->mostrarComprobante = true;
-
 
             // Generar imagen con GD Library
             $rutaRelativa = 'comprobantes/pago-' . $this->pagoRegistrado->id . '.png';
@@ -195,7 +199,6 @@ class RegistrarPago extends Component
                 mkdir($directorio, 0777, true);
             }
 
-            // Usar GD en lugar de Browsershot
             $generador = new ComprobanteImageGenerator();
             $generador->generate(
                 $this->facturaSeleccionada,
@@ -208,25 +211,69 @@ class RegistrarPago extends Component
             $imagenData = file_get_contents($rutaCompleta);
             $imagenBase64 = 'data:image/png;base64,' . base64_encode($imagenData);
 
-            // // Enviar a n8n (esto sigue igual)
-            // URL EN LOCAL SOLO SE CAMBIA ACA Y LO DEMAS SIGUE FUNCIONANDO CORRECTO
-            // Http::post('http://localhost:5678/webhook-test/pago-factura', [
+            // Enviar a n8n
+            $response = Http::timeout(60)->post(
+                'https://automatizacion-isprotik1-n8n.ijnhto.easypanel.host/webhook/pago-factura',
+                [
+                    'cliente' => $this->facturaSeleccionada->contrato->cliente->nombre ?? '',
+                    'telefono' => $this->formatearTelefono(
+                        $this->facturaSeleccionada->contrato->cliente->telefono ?? ''
+                    ),
+                    'factura' => $this->facturaSeleccionada->numero_factura,
+                    'monto' => $this->pagoRegistrado->monto,
+                    'metodo_pago' => $this->pagoRegistrado->metodo_pago,
+                    'fecha_pago' => $this->pagoRegistrado->fecha_pago,
+                    'usuario' => auth()->user()->name,
+                    'imagen' => $imagenBase64
+                ]
+            );
 
-            // Http::timeout(60)->post(
-            //     'https://automatizacion-isprotik1-n8n.ijnhto.easypanel.host/webhook/pago-factura',
-            //     [
-            //         'cliente' => $this->facturaSeleccionada->contrato->cliente->nombre ?? '',
-            //         'telefono' => $this->formatearTelefono(
-            //             $this->facturaSeleccionada->contrato->cliente->telefono ?? ''
-            //         ),
-            //         'factura' => $this->facturaSeleccionada->numero_factura,
-            //         'monto' => $this->pagoRegistrado->monto,
-            //         'metodo_pago' => $this->pagoRegistrado->metodo_pago,
-            //         'fecha_pago' => $this->pagoRegistrado->fecha_pago,
-            //         'usuario' => auth()->user()->name,
-            //         'imagen' => $imagenBase64
-            //     ]
-            // );
+            // 🔥🔥🔥 NUEVO: Registrar en envio_masivo_logs 🔥🔥🔥
+            $cliente = $this->facturaSeleccionada->contrato->cliente;
+
+            if ($response->successful()) {
+                EnvioMasivoLog::create([
+                    'cliente_id' => $cliente->id,
+                    'factura_id' => $this->facturaSeleccionada->id,
+                    'estado' => 'enviado',
+                    'plantilla_usada' => 'comprobante_pago',
+                    'tipo_envio' => 'comprobante',
+                    'fecha_envio' => now(),
+                    'ip_cliente' => request()->ip(),
+                    'response_data' => [
+                        'factura_id' => $this->facturaSeleccionada->id,
+                        'monto' => $this->pagoRegistrado->monto,
+                        'metodo_pago' => $this->pagoRegistrado->metodo_pago,
+                        'fecha_pago' => $this->pagoRegistrado->fecha_pago,
+                        'n8n_response' => $response->json(),
+                    ],
+                ]);
+
+                Log::info('Comprobante enviado y registrado en log', [
+                    'cliente_id' => $cliente->id,
+                    'factura_id' => $this->facturaSeleccionada->id,
+                ]);
+            } else {
+                EnvioMasivoLog::create([
+                    'cliente_id' => $cliente->id,
+                    'factura_id' => $this->facturaSeleccionada->id,
+                    'estado' => 'error',
+                    'plantilla_usada' => 'comprobante_pago',
+                    'tipo_envio' => 'comprobante',
+                    'fecha_envio' => now(),
+                    'ip_cliente' => request()->ip(),
+                    'error_message' => 'Error al enviar comprobante: ' . $response->status(),
+                    'response_data' => [
+                        'status' => $response->status(),
+                        'body' => $response->body(),
+                    ],
+                ]);
+
+                Log::error('Error al enviar comprobante a n8n', [
+                    'cliente_id' => $cliente->id,
+                    'status' => $response->status(),
+                ]);
+            }
 
             $this->reset(['monto', 'metodo_pago', 'fecha_pago']);
         } catch (\Illuminate\Validation\ValidationException $e) {

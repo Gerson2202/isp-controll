@@ -345,7 +345,8 @@ Route::middleware([
     Route::post('/chat-ask', [AIChatController::class, 'ask']);
     // Ruta de envio ala vista conversaciones
     Route::get('/conversaciones', [ConversacionesController::class, 'index'])->name('conversacionesIndex');
-   
+    Route::get('/avisos', [ConversacionesController::class, 'avisos'])->name('avisosClientesIndex');
+
     // RUTAS Finanzas
     // 1. Dashboard Financiero
     Route::get('/finanzas/dashboard', function () {return view('finanzas.dashboard'); })->name('finanzas.dashboard');

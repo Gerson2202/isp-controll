@@ -25,9 +25,13 @@ Route::prefix('whatsapp')->group(function () {
     Route::post('/resumen-whatsapp', [WhatsappController::class, 'resumenWhatsapp']);
 });
 
+// RUTAS PARA GUARDAR LA CONVERSACIONES
+
 // Ruta Para recibir mensaje inicial de whatsApp desde n8n y guardarlo en la BD
 Route::post('/webhook/chat/incoming', [ConversacionesController::class, 'storeIncoming']);
 // Ruta Para recibir mensaje del segundo WeebhooK con mensaje de la IA desde n8n y guardarlo en la BD
 Route::post('/webhook/chat/outgoing', [ConversacionesController::class, 'storeOutgoing']);
 //  Ruta para guardar los mensajes en envio de comprobantes
 Route::post('/webhook/chat/system-message', [ConversacionesController::class, 'storeSystemMessage']);
+
+// FIN  RUTAS PARA GUARDAR LA CONVERSACIONES
