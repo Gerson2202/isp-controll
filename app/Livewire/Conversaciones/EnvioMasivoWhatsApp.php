@@ -22,8 +22,7 @@ class EnvioMasivoWhatsApp extends Component
     public $pendientesPorEnviar = 0;
     public $fechaUltimoEnvio = null;
     public $mensajesEnviadosEsteMes = 0;
-    public $puedeEnviar = false; 
-
+    public $puedeEnviar = false;
 
     public $webhookUrl = 'https://automatizacion-isprotik1-n8n.ijnhto.easypanel.host/webhook/mesaje-aviso';
 
@@ -31,50 +30,63 @@ class EnvioMasivoWhatsApp extends Component
     {
         $this->contarClientesPendientes();
         $this->verificarEnvioDiario();
-        $this->verificarPermisoEnvio(); // ← Dato para que se habilite el boton de enviar 
-
+        $this->verificarPermisoEnvio();
     }
 
-    /**
-     * Verifica si el usuario puede enviar mensajes (solo día 4 del mes)
-     */
     public function verificarPermisoEnvio()
     {
         $hoy = Carbon::now();
         $this->puedeEnviar = $hoy->day == 4;
     }
+
     /**
-     * Obtiene los clientes con facturas pendientes que NO han recibido recordatorio este mes
+     * 🔥 NUEVA CONSULTA: Mismos clientes que se van a cortar
+     * Obtiene los clientes con facturas pendientes VENCIDAS que NO han recibido recordatorio este mes
      */
     public function contarClientesPendientes()
     {
+        // 🔥 Subconsulta: última factura por contrato (más segura por ID)
         $sub = Factura::selectRaw('MAX(id) as max_id')
             ->groupBy('contrato_id');
 
         $inicioMes = Carbon::now()->startOfMonth();
 
-        $this->clientesPendientes = Factura::with(['contrato.cliente'])
+        // 🔥 MISMA CONSULTA QUE EL CORTE
+        $this->clientesPendientes = Factura::with(['contrato.cliente', 'contrato.plan.nodo'])
             ->joinSub($sub, 'ultimas', function ($join) {
                 $join->on('facturas.id', '=', 'ultimas.max_id');
             })
             ->where('facturas.estado', 'pendiente')
+
+            // 🔥 NUEVA CONDICIÓN CLAVE: fecha vencida
+            ->whereDate('facturas.fecha_emision', '<', now())
+
+            // ✅ CONTRATO ACTIVO
+            ->whereHas('contrato', function ($q) {
+                $q->where('estado', 'activo');
+            })
+
+            // ✅ CLIENTE ACTIVO + CON IP (mismo que el corte)
+            ->whereHas('contrato.cliente', function ($q) {
+                $q->where('estado', 'activo')
+                    ->whereNotNull('ip');
+            })
+
             ->get()
             ->filter(function ($factura) use ($inicioMes) {
                 $clienteId = $factura->contrato->cliente->id ?? null;
 
-                // Si no tiene cliente_id, lo incluimos (por si acaso)
                 if (!$clienteId) {
                     return true;
                 }
 
-                // 🔥 Verificar si ya recibió RECORDATORIO este mes (NO comprobante)
+                // 🔥 Verificar si ya recibió RECORDATORIO este mes
                 $yaRecibioRecordatorio = EnvioMasivoLog::where('cliente_id', $clienteId)
                     ->where('estado', 'enviado')
-                    ->where('plantilla_usada', 'recordatorio_pago') // ← SOLO recordatorios
+                    ->where('plantilla_usada', 'recordatorio_pago')
                     ->where('fecha_envio', '>=', $inicioMes)
                     ->exists();
 
-                // Solo incluimos si NO ha recibido recordatorio este mes
                 return !$yaRecibioRecordatorio;
             })
             ->map(function ($factura) {
@@ -82,28 +94,29 @@ class EnvioMasivoWhatsApp extends Component
                     'cliente_id' => $factura->contrato->cliente->id ?? null,
                     'nombre' => $factura->contrato->cliente->nombre ?? 'Sin nombre',
                     'telefono' => $factura->contrato->cliente->telefono ?? 'Sin teléfono',
-                    'monto' => '$' . number_format($factura->monto_total, 0, ',', '.'),
+                    'monto' => number_format($factura->monto_total, 0, ',', '.'),
                     'monto_raw' => $factura->monto_total,
+                    // 🔥 Datos extra útiles para el corte
+                    'ip' => $factura->contrato->cliente->ip ?? null,
+                    'contrato_id' => $factura->contrato->id ?? null,
+                    'fecha_emision' => $factura->fecha_emision,
                 ];
             })
-            ->values() // Reindexar el array
+            ->values()
             ->toArray();
 
         $this->totalClientes = count($this->clientesPendientes);
-
-        // Contar mensajes enviados este mes
         $this->contarMensajesEsteMes();
     }
 
     /**
-     * Cuenta cuántos mensajes se han enviado en el mes actual (TODOS los tipos)
+     * Cuenta cuántos mensajes se han enviado en el mes actual
      */
     public function contarMensajesEsteMes()
     {
         $inicioMes = Carbon::now()->startOfMonth();
 
         if (Schema::hasTable('envio_masivo_logs')) {
-            // 🔥🔥🔥 Cuenta TODOS los mensajes del mes (recordatorios + comprobantes)
             $this->mensajesEnviadosEsteMes = EnvioMasivoLog::where('estado', 'enviado')
                 ->where('fecha_envio', '>=', $inicioMes)
                 ->count();
@@ -119,10 +132,9 @@ class EnvioMasivoWhatsApp extends Component
     {
         $inicioMes = Carbon::now()->startOfMonth();
 
-        // 🔥 SOLO verificar RECORDATORIOS (NO comprobantes)
         return EnvioMasivoLog::where('cliente_id', $clienteId)
             ->where('estado', 'enviado')
-            ->where('plantilla_usada', 'recordatorio_pago') // ← SOLO recordatorios
+            ->where('plantilla_usada', 'recordatorio_pago')
             ->where('fecha_envio', '>=', $inicioMes)
             ->exists();
     }
@@ -142,17 +154,16 @@ class EnvioMasivoWhatsApp extends Component
     }
 
     /**
-     * Verifica cuántos clientes únicos han recibido mensaje HOY (TODOS los tipos)
+     * Verifica cuántos clientes únicos han recibido mensaje HOY
      */
     public function verificarEnvioDiario()
     {
         $hoy = Carbon::today();
 
         if (Schema::hasTable('envio_masivo_logs')) {
-            // 🔥🔥🔥 Cuenta TODOS los mensajes enviados hoy (recordatorios + comprobantes)
             $this->enviadosHoy = EnvioMasivoLog::whereDate('fecha_envio', $hoy)
                 ->where('estado', 'enviado')
-                ->count(); // ← Simple count, sin distinct ni filtros
+                ->count();
 
             $ultimoEnvio = EnvioMasivoLog::where('estado', 'enviado')
                 ->latest()
@@ -176,11 +187,9 @@ class EnvioMasivoWhatsApp extends Component
         $this->progreso = 0;
 
         try {
-            // Recargar clientes pendientes (con filtro mensual)
             $this->contarClientesPendientes();
             $this->verificarEnvioDiario();
 
-            // Verificar si ya se alcanzó el límite diario
             if ($this->enviadosHoy >= $this->limiteDiario) {
                 $this->dispatch(
                     'notify',
@@ -191,13 +200,12 @@ class EnvioMasivoWhatsApp extends Component
                 return;
             }
 
-            // Calcular cuántos clientes podemos enviar hoy
             $limiteRestante = $this->limiteDiario - $this->enviadosHoy;
 
             $clientesDisponibles = array_slice(
                 $this->clientesPendientes,
-                0, // Siempre empezamos desde 0 porque ya filtramos los que recibieron este mes
-                $limiteRestante // Solo los que caben en el límite
+                0,
+                $limiteRestante
             );
 
             $totalAEnviar = count($clientesDisponibles);
@@ -212,7 +220,7 @@ class EnvioMasivoWhatsApp extends Component
                 return;
             }
 
-            // 📦 DATOS OPTIMIZADOS - SOLO LO NECESARIO PARA N8N
+            // 📦 DATOS OPTIMIZADOS PARA N8N
             $datosParaN8N = [
                 'clientes' => array_map(function ($cliente) {
                     return [
@@ -225,7 +233,7 @@ class EnvioMasivoWhatsApp extends Component
                 'total' => $totalAEnviar,
             ];
 
-            Log::info('Enviando clientes a n8n', [
+            Log::info('Enviando clientes a n8n (mismos que se cortarán)', [
                 'total' => $totalAEnviar,
                 'enviados_hoy' => $this->enviadosHoy,
                 'limite_restante' => $limiteRestante,
@@ -261,7 +269,6 @@ class EnvioMasivoWhatsApp extends Component
                     message: "✅ Datos enviados a n8n. Total: {$totalAEnviar} clientes."
                 );
 
-                // Recargar contadores
                 $this->contarClientesPendientes();
                 $this->verificarEnvioDiario();
             } else {
@@ -294,7 +301,6 @@ class EnvioMasivoWhatsApp extends Component
                 throw new \Exception("Cliente no encontrado en la lista");
             }
 
-            // Verificar si ya recibió recordatorio este mes
             if (isset($cliente['cliente_id']) && $cliente['cliente_id']) {
                 if ($this->clienteYaRecibioMensajeEsteMes($cliente['cliente_id'])) {
                     $this->dispatch(
@@ -307,7 +313,6 @@ class EnvioMasivoWhatsApp extends Component
                 }
             }
 
-            // 📦 Enviar SOLO este cliente al webhook principal
             $datosPrueba = [
                 'clientes' => [
                     [
@@ -333,7 +338,6 @@ class EnvioMasivoWhatsApp extends Component
                 throw new \Exception("Error HTTP: " . $response->status() . " - " . $response->body());
             }
 
-            // Guardar log de prueba
             if (Schema::hasTable('envio_masivo_logs') && isset($cliente['cliente_id']) && $cliente['cliente_id']) {
                 EnvioMasivoLog::create([
                     'cliente_id' => $cliente['cliente_id'],
@@ -351,7 +355,6 @@ class EnvioMasivoWhatsApp extends Component
                 message: "✅ Prueba enviada para: {$cliente['nombre']}"
             );
 
-            // Recargar contadores
             $this->contarClientesPendientes();
             $this->verificarEnvioDiario();
         } catch (\Exception $e) {
@@ -371,7 +374,6 @@ class EnvioMasivoWhatsApp extends Component
      */
     public function resetearContadorMensual()
     {
-        // Verificar si es administrador
         if (!auth()->user() || !auth()->user()->hasRole('admin')) {
             $this->dispatch('notify', type: 'error', message: 'No tienes permiso para esta acción.');
             return;
