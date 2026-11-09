@@ -17,12 +17,13 @@ class ClienteFactory extends Factory
     public function definition(): array
     {
         return [
-            'nombre' => $this->faker->name(),  // Nombre del cliente
+            'nombre' => $this->faker->name(),
             'telefono' => '573215852059',
-            'direccion' => $this->faker->address(),  // Dirección
-            'correo' => $this->faker->unique()->safeEmail(),  // Correo electrónico
-            'cedula' => $this->faker->unique()->numerify('###########'),  // Cédula (números aleatorios)
-            'estado' => 'cortado',
+            'direccion' => $this->faker->address(),
+            'correo' => $this->faker->unique()->safeEmail(),
+            'cedula' => $this->faker->unique()->numerify('###########'),
+            'estado' => 'activo',
+            'ip' => '192.168.5.' . $this->faker->unique()->numberBetween(1, 254),
         ];
     }
 }

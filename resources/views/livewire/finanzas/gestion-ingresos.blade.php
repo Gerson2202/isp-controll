@@ -116,7 +116,7 @@
                                 <option value="">Seleccione un método de pago</option>
                                 <option value="Transferencia">Transferencia</option>
                                 <option value="Efectivo">Efectivo</option>
-                                <option value="Datáfono">Datáfono</option>
+                                {{-- <option value="Datáfono">Datáfono</option> --}}
                             </select>
 
                             @error('metodo_pago')
@@ -247,6 +247,7 @@
                             <th>Concepto</th>
                             <th>Tipo</th>
                             <th>Monto</th>
+                            <th>Metodo de pago</th>
                             <th>Cliente</th>
                             <th>Estado</th>
                             <th width="140" class="text-center">Acciones</th>
@@ -282,6 +283,9 @@
                                 <td>
                                     <strong class="text-success">$
                                         {{ number_format($ingreso->monto, 0, ',', '.') }}</strong>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold">{{ $ingreso->metodo_pago}}</span>
                                 </td>
                                 <td>
                                     @if ($ingreso->cliente)
@@ -323,34 +327,13 @@
                                                 <i class="fas fa-check"></i>
                                             </button>
                                         @endif
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="btn-group w-100" role="group">
-                                        <button class="btn btn-sm btn-warning"
-                                            wire:click="editarIngreso({{ $ingreso->id }})" title="Editar">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        @if ($ingreso->estado == 'confirmado')
-                                            <button class="btn btn-sm btn-danger"
-                                                wire:click="cambiarEstado({{ $ingreso->id }}, 'anulado')"
-                                                wire:confirm="¿Estás seguro de anular este ingreso?" title="Anular">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        @else
-                                            <button class="btn btn-sm btn-success"
-                                                wire:click="cambiarEstado({{ $ingreso->id }}, 'confirmado')"
-                                                title="Confirmar">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                        @endif
                                         <!-- 🔥 BOTÓN DE ELIMINAR AGREGADO -->
-                                        <button class="btn btn-sm btn-danger"
+                                        {{-- <button class="btn btn-sm btn-danger"
                                             wire:click="eliminarIngreso({{ $ingreso->id }})"
                                             wire:confirm="¿Estás seguro de eliminar este ingreso permanentemente?"
                                             title="Eliminar">
                                             <i class="fas fa-trash"></i>
-                                        </button>
+                                        </button> --}}
                                     </div>
                                 </td>
                             </tr>

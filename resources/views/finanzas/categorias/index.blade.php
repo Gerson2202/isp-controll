@@ -1,5 +1,5 @@
 @extends('adminlte::page')
-@section('title', 'Inventario Unificado')
+@section('title', 'Categoria')
 
 @section('content_header')
 <h1 class="ml-3">

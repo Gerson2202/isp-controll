@@ -59,7 +59,18 @@
                                 @enderror
                             </div>
                         </div>
-
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Método de Pago</label>
+                            <select class="form-select @error('metodo_pago') is-invalid @enderror"
+                                wire:model="metodo_pago">
+                                <option value="efectivo">💵 Efectivo</option>
+                                <option value="transferencia">🏦 Transferencia</option>
+                                {{-- <option value="datafono">💳 Datáfono</option> --}}
+                            </select>
+                            @error('metodo_pago')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">
                                 <i class="fas fa-calendar me-1 text-primary"></i> Fecha *
@@ -195,6 +206,7 @@
                                     <th>Categoría</th>
                                     <th>Concepto</th>
                                     <th>Valor</th>
+                                    <th>Método</th>
                                     <th>Estado</th>
                                     <th width="140" class="text-center">Acciones</th>
                                 </tr>
@@ -220,6 +232,11 @@
                                         </td>
                                         <td>
                                             <strong>$ {{ number_format($gasto->valor, 0, ',', '.') }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border px-2 py-1">
+                                                {{ ucfirst($gasto->metodo_pago) }}
+                                            </span>
                                         </td>
                                         <td>
                                             <span

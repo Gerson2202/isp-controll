@@ -14,13 +14,19 @@ class Gasto extends Model
         'tipo',
         'estado',
         'descripcion',
-        'user_id'
+        'user_id',
+        'metodo_pago',
+        'gasto_recurrente_id',
     ];
 
     protected $casts = [
         'fecha_gasto' => 'date'
     ];
 
+    public function gastoRecurrente()
+    {
+        return $this->belongsTo(GastoRecurrente::class);
+    }
     public function categoria()
     {
         // Le indicamos explícitamente que la columna en la DB lleva la "s" -> 'categorias_gasto_id'

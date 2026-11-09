@@ -63,9 +63,9 @@
                                 </label>
                                 <select class="form-select @error('frecuencia') is-invalid @enderror"
                                     wire:model="frecuencia">
-                                    <option value="mensual">📅 Mensual</option>
-                                    <option value="quincenal">📆 Quincenal</option>
-                                    <option value="anual">📊 Anual</option>
+                                    <option value="mensual">📅 Mensual (1 pago/mes)</option>
+                                    <option value="quincenal">📆 Quincenal (2 pagos/mes)</option>
+                                    <option value="semanal">📊 Semanal (4 pagos/mes)</option>
                                 </select>
                                 @error('frecuencia')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -101,7 +101,8 @@
                                     <input class="form-check-input" type="checkbox" role="switch" wire:model="activo"
                                         id="flexSwitchCheckDefault">
                                     <label class="form-check-label fw-semibold" for="flexSwitchCheckDefault">
-                                        <i class="fas fa-circle {{ $activo ? 'text-success' : 'text-danger' }} me-1"></i>
+                                        <i
+                                            class="fas fa-circle {{ $activo ? 'text-success' : 'text-danger' }} me-1"></i>
                                         {{ $activo ? 'Activo' : 'Inactivo' }}
                                     </label>
                                 </div>
@@ -165,8 +166,8 @@
                                 <span class="input-group-text bg-white border-end-0">
                                     <i class="fas fa-search text-muted"></i>
                                 </span>
-                                <input type="text" class="form-control border-start-0"
-                                    placeholder="Buscar..." wire:model.live.debounce.300ms="buscar">
+                                <input type="text" class="form-control border-start-0" placeholder="Buscar..."
+                                    wire:model.live.debounce.300ms="buscar">
                             </div>
                         </div>
                     </div>
@@ -178,34 +179,37 @@
                         <div class="col-md-4">
                             <div class="p-2 bg-white rounded shadow-sm text-center">
                                 <small class="text-muted d-block">Total Gastos Base</small>
-                                <strong class="text-primary">$ {{ number_format($totalGastosBase, 0, ',', '.') }}</strong>
+                                <strong class="text-primary">$
+                                    {{ number_format($totalGastosBase, 0, ',', '.') }}</strong>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="p-2 bg-white rounded shadow-sm text-center">
                                 <small class="text-muted d-block">Pagados en {{ $nombreMes }}</small>
-                                <strong class="text-success">$ {{ number_format($totalPagadosMes ?? 0, 0, ',', '.') }}</strong>
+                                <strong class="text-success">$
+                                    {{ number_format($totalPagadosMes ?? 0, 0, ',', '.') }}</strong>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="p-2 bg-white rounded shadow-sm text-center">
-                                <small class="text-muted d-block">Pendientes en {{ $nombreMes }}</small>
-                                <strong class="text-danger">$ {{ number_format(($totalGastosBase - ($totalPagadosMes ?? 0)), 0, ',', '.') }}</strong>
+                                <small class="text-muted d-block">Por pagar</small>
+                                <strong class="text-danger">$
+                                    {{ number_format($totalPendiente, 0, ',', '.') }}</strong>
                             </div>
                         </div>
                     </div>
                     <div class="row mt-2">
                         <div class="col-12">
                             <div class="btn-group w-100" role="group">
-                                <button wire:click="$set('filtroEstado', 'todos')" 
+                                <button wire:click="$set('filtroEstado', 'todos')"
                                     class="btn btn-sm {{ $filtroEstado == 'todos' ? 'btn-primary' : 'btn-outline-secondary' }}">
                                     Todos
                                 </button>
-                                <button wire:click="$set('filtroEstado', 'pagados')" 
+                                <button wire:click="$set('filtroEstado', 'pagados')"
                                     class="btn btn-sm {{ $filtroEstado == 'pagados' ? 'btn-success' : 'btn-outline-secondary' }}">
-                                    <i class="fas fa-check-circle me-1"></i> Pagados
+                                    <i class="fas fa-check-circle me-1"></i> Completados
                                 </button>
-                                <button wire:click="$set('filtroEstado', 'pendientes')" 
+                                <button wire:click="$set('filtroEstado', 'pendientes')"
                                     class="btn btn-sm {{ $filtroEstado == 'pendientes' ? 'btn-warning' : 'btn-outline-secondary' }}">
                                     <i class="fas fa-clock me-1"></i> Pendientes
                                 </button>
@@ -223,94 +227,124 @@
                                     <th>Categoría</th>
                                     <th>Concepto</th>
                                     <th>Valor</th>
-                                    <th>Día</th>
-                                    <th>Estado</th>
-                                    <th class="text-center">Pago {{ $nombreMes }}</th>
-                                    <th width="100" class="text-center">Acciones</th>
+                                    <th>Frecuencia</th>
+                                    <th>Estado en {{ $nombreMes }}</th>
+                                    <th width="140" class="text-center">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($gastosPaginated as $item)
                                     <tr>
+
+                                        {{-- Categoría --}}
                                         <td>
                                             <span class="badge px-3 py-2"
                                                 style="background: {{ $item->categoria?->color ?? '#6c757d' }}; color: #fff;">
                                                 {{ $item->categoria?->nombre ?? 'Sin Categoría' }}
                                             </span>
                                         </td>
+
+                                        {{-- Concepto --}}
                                         <td>
-                                            <span class="fw-semibold">{{ $item->concepto }}</span>
+                                            <span class="fw-semibold {{ !$item->activo ? 'text-muted' : '' }}">
+                                                {{ $item->concepto }}
+                                            </span>
+
                                             @if ($item->descripcion)
-                                                <small class="d-block text-muted">{{ $item->descripcion }}</small>
+                                                <small class="d-block text-muted">
+                                                    {{ $item->descripcion }}
+                                                </small>
                                             @endif
                                         </td>
+
+                                        {{-- Valor --}}
                                         <td>
-                                            <strong>$ {{ number_format($item->valor, 0, ',', '.') }}</strong>
+                                            <strong class="{{ !$item->activo ? 'text-muted' : '' }}">
+                                                $ {{ number_format($item->valor, 0, ',', '.') }}
+                                            </strong>
                                         </td>
+
+                                        {{-- Frecuencia --}}
                                         <td>
-                                            <span class="badge bg-secondary">
-                                                <i class="fas fa-calendar-day me-1"></i>
-                                                {{ $item->dia_ejecucion }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm {{ $item->activo ? 'btn-success' : 'btn-danger' }} w-100"
-                                                wire:click="cambiarEstado({{ $item->id }})">
-                                                <i class="fas {{ $item->activo ? 'fa-check-circle' : 'fa-times-circle' }} me-1"></i>
-                                                {{ $item->activo ? 'Activo' : 'Inactivo' }}
-                                            </button>
-                                        </td>
-                                        <td>
-                                            @if($item->activo)
-                                                @if($item->pagado_este_mes)
-                                                    <div class="text-center">
-                                                        <span class="badge bg-success py-2 px-3">
-                                                            <i class="fas fa-check-circle me-1"></i> Pagado
-                                                        </span>
-                                                        <small class="d-block text-muted">
-                                                            {{ $item->fecha_pago_mes ? $item->fecha_pago_mes->format('d/m/Y') : '' }}
-                                                        </small>
-                                                        <button class="btn btn-sm btn-secondary mt-1" 
-                                                            wire:click="anularPago({{ $item->registro_pago?->id ?? 0 }})"
-                                                            wire:confirm="¿Anular el pago de '{{ $item->concepto }}'?"
-                                                            title="Anular pago">
-                                                            <i class="fas fa-undo"></i> Anular
-                                                        </button>
-                                                    </div>
-                                                @else
-                                                    <button class="btn btn-sm btn-warning w-100"
-                                                        wire:click="marcarComoPagado({{ $item->id }})"
-                                                        wire:confirm="¿Marcar '{{ $item->concepto }}' como pagado en {{ $nombreMes }}?">
-                                                        <i class="fas fa-hand-holding-usd me-1"></i> Marcar Pagado
-                                                    </button>
-                                                @endif
-                                            @else
-                                                <span class="badge bg-secondary py-2 px-3">
-                                                    <i class="fas fa-pause-circle me-1"></i> Inactivo
+                                            @if ($item->frecuencia === 'mensual')
+                                                <span class="badge {{ !$item->activo ? 'bg-secondary' : 'bg-info' }}">
+                                                    📅 Mensual
+                                                </span>
+                                            @elseif($item->frecuencia === 'quincenal')
+                                                <span class="badge {{ !$item->activo ? 'bg-secondary' : 'bg-info' }}">
+                                                    📆 Quincenal
+                                                </span>
+                                            @elseif($item->frecuencia === 'semanal')
+                                                <span class="badge {{ !$item->activo ? 'bg-secondary' : 'bg-info' }}">
+                                                    📊 Semanal
                                                 </span>
                                             @endif
                                         </td>
+
+                                        {{-- Estado de pagos --}}
                                         <td>
-                                            <div class="btn-group w-100" role="group">
+                                            <div class="d-flex gap-2 align-items-center flex-wrap">
+
+                                                <small class="{{ !$item->activo ? 'text-muted' : 'text-muted' }}">
+                                                    <i class="fas fa-check-circle text-success"></i>
+                                                    {{ $item->pagos_realizados }}/{{ $item->limite_pagos }}
+                                                </small>
+
+                                                @if ($item->activo)
+                                                    @if ($item->pagos_pendientes > 0)
+                                                        <span class="badge bg-warning text-dark">
+                                                            {{ $item->pagos_pendientes }}
+                                                            pendiente{{ $item->pagos_pendientes > 1 ? 's' : '' }}
+                                                        </span>
+                                                    @else
+                                                        <span class="badge bg-success">
+                                                            ✓ Completado
+                                                        </span>
+                                                    @endif
+                                                @else
+                                                    <span class="badge bg-secondary">
+                                                        Inactivo
+                                                    </span>
+                                                @endif
+
+                                            </div>
+                                        </td>
+
+                                        {{-- Acciones --}}
+                                        <td>
+                                            <div class="d-flex gap-1 justify-content-center flex-wrap">
+
+                                                {{-- Solo mostrar Pagar si está activo --}}
+                                                @if ($item->activo && $item->puede_pagar)
+                                                    <button class="btn btn-sm btn-success"
+                                                        wire:click="abrirModalPago({{ $item->id }})"
+                                                        title="Registrar pago">
+                                                        <i class="fas fa-plus"></i> Pagar
+                                                    </button>
+                                                @endif
+
+                                                {{-- Editar siempre visible --}}
                                                 <button class="btn btn-sm btn-warning"
                                                     wire:click="editar({{ $item->id }})" title="Editar">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-danger"
-                                                    wire:click="eliminar({{ $item->id }})"
-                                                    wire:confirm="¿Estás seguro de eliminar este gasto recurrente?"
-                                                    title="Eliminar">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
+
                                             </div>
                                         </td>
+
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="text-center py-5">
+                                        <td colspan="6" class="text-center py-5">
                                             <i class="fas fa-sync-alt fa-3x text-muted mb-3 d-block"></i>
-                                            <p class="text-muted mb-0">No hay gastos recurrentes registrados</p>
-                                            <small class="text-muted">Comienza creando un nuevo gasto recurrente</small>
+
+                                            <p class="text-muted mb-0">
+                                                No hay gastos recurrentes registrados
+                                            </p>
+
+                                            <small class="text-muted">
+                                                Comienza creando un nuevo gasto recurrente
+                                            </small>
                                         </td>
                                     </tr>
                                 @endforelse
@@ -323,7 +357,8 @@
                 <div class="card-footer bg-white border-top">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="text-muted small">
-                            Mostrando {{ $gastosPaginated->firstItem() ?? 0 }} - {{ $gastosPaginated->lastItem() ?? 0 }} de
+                            Mostrando {{ $gastosPaginated->firstItem() ?? 0 }} -
+                            {{ $gastosPaginated->lastItem() ?? 0 }} de
                             {{ $gastosPaginated->total() }}
                         </div>
                         <div>
@@ -334,4 +369,56 @@
             </div>
         </div>
     </div>
+
+    {{-- MODAL DE PAGO --}}
+    @if ($mostrarModalPago)
+        <div class="modal d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-credit-card me-2"></i> Registrar Pago
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white"
+                            wire:click="cerrarModalPago()"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-calendar me-1"></i> Fecha del Pago
+                                </label>
+                                <input type="date" class="form-control" wire:model="fecha_pago_modal">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-credit-card me-1"></i> Método de Pago
+                                </label>
+                                <select class="form-select" wire:model="metodo_pago_seleccionado">
+                                    <option value="efectivo">💵 Efectivo</option>
+                                    <option value="transferencia">🏦 Transferencia</option>
+                                    {{-- <option value="datafono">🔢 Datáfono</option> --}}
+                                </select>
+                            </div>
+
+                            <div class="alert alert-info" role="alert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Nota:</strong> Este pago será registrado en la tabla de gastos con la fecha
+                                especificada.
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" wire:click="cerrarModalPago()">
+                            <i class="fas fa-times me-2"></i> Cancelar
+                        </button>
+                        <button type="button" class="btn btn-primary" wire:click="guardarPago()">
+                            <i class="fas fa-save me-2"></i> Guardar Pago
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

@@ -330,12 +330,18 @@ class DashboardFinanciero extends Component
     public function getPagosFacturasProperty()
     {
         return Pago::select(
+            'pagos.id as pago_id',
             'pagos.fecha_pago as fecha',
             'pagos.monto as valor',
+            'pagos.metodo_pago',
             DB::raw("CONCAT('Pago de factura #', facturas.numero_factura) as concepto"),
-            'facturas.estado as estado_factura'
+            'facturas.estado as estado_factura',
+            'clientes.nombre as nombre_cliente',
+            'clientes.id as cliente_id'
         )
             ->join('facturas', 'pagos.factura_id', '=', 'facturas.id')
+            ->join('contratos', 'facturas.contrato_id', '=', 'contratos.id')
+            ->join('clientes', 'contratos.cliente_id', '=', 'clientes.id')
             ->whereBetween('pagos.fecha_pago', [
                 $this->rangoFechas['inicio'],
                 $this->rangoFechas['fin']
@@ -353,6 +359,7 @@ class DashboardFinanciero extends Component
             'gastos.valor',
             'gastos.concepto',
             'categorias_gastos.nombre as categoria',
+            'gastos.metodo_pago',
             DB::raw("'Normal' as tipo_gasto"),
             'gastos.estado'
         )
@@ -368,6 +375,7 @@ class DashboardFinanciero extends Component
             'gastos_recurrentes.valor',
             DB::raw("CONCAT(gastos_recurrentes.concepto, ' (Recurrente)') as concepto"),
             'categorias_gastos.nombre as categoria',
+            DB::raw("NULL as metodo_pago"),
             DB::raw("'Recurrente' as tipo_gasto"),
             DB::raw("'pagado' as estado")
         )
@@ -376,14 +384,55 @@ class DashboardFinanciero extends Component
             ->where('gastos_recurrentes.mes', $this->mesSeleccionado)
             ->where('gastos_recurrentes.pagado', true);
 
-        $gastos = $gastosNormales->union($gastosRecurrentes)
+        return $gastosNormales->union($gastosRecurrentes)
             ->orderBy('fecha', 'desc')
             ->limit(15)
             ->get();
-
-        return $gastos;
     }
+    //  Resumen por Método de Pago EN GASTOS 
 
+    public function getGastosPorMetodoPagoProperty()
+    {
+        return Gasto::select(
+            'metodo_pago',
+            DB::raw('SUM(valor) as total'),
+            DB::raw('COUNT(*) as cantidad')
+        )
+            ->whereBetween('fecha_gasto', [$this->rangoFechas['inicio'], $this->rangoFechas['fin']])
+            ->where('estado', 'pagado')
+            ->groupBy('metodo_pago')
+            ->get();
+    }
+    //  Resumen por Método de Pago EN INGRESOS 
+
+    public function getIngresosPorMetodoPagoProperty()
+    {
+        return Ingreso::select(
+            'metodo_pago',
+            DB::raw('SUM(monto) as total'),
+            DB::raw('COUNT(*) as cantidad')
+        )
+            ->whereBetween('fecha_ingreso', [$this->rangoFechas['inicio'], $this->rangoFechas['fin']])
+            ->where('estado', '!=', 'anulado')
+            ->groupBy('metodo_pago')
+            ->get();
+    }
+    public function getFacturasPorMetodoPagoProperty()
+    {
+        return DB::table('pagos')
+            ->select(
+                'metodo_pago',
+                DB::raw('SUM(monto) as total'),
+                DB::raw('COUNT(*) as cantidad')
+            )
+            ->whereBetween('fecha_pago', [
+                $this->rangoFechas['inicio'],
+                $this->rangoFechas['fin']
+            ])
+            ->groupBy('metodo_pago')
+            ->orderByDesc('total')
+            ->get();
+    }
     /**
      * Detalle de gastos recurrentes - solo gastos base
      */
@@ -499,6 +548,133 @@ class DashboardFinanciero extends Component
         return Carbon::create($this->anoSeleccionado, $this->mesSeleccionado, 1)->translatedFormat('F Y');
     }
 
+    // FUNCION PARA DATOS DE SALDO NETO POR METODOS DE PAGO
+    public function getDesgloseMetodosPagoProperty()
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | 1. PAGOS DE FACTURAS
+        |--------------------------------------------------------------------------
+        | Usamos fecha_pago, igual que en ingresos_del_mes
+        */
+        $pagosFacturas = DB::table('pagos')
+            ->select(
+                'metodo_pago',
+                DB::raw('SUM(monto) as total')
+            )
+            ->whereBetween('fecha_pago', [
+                $this->rangoFechas['inicio'],
+                $this->rangoFechas['fin']
+            ])
+            ->groupBy('metodo_pago')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 2. INGRESOS GENERALES
+        |--------------------------------------------------------------------------
+        */
+        $ingresosGenerales = DB::table('ingresos')
+            ->select(
+                'metodo_pago',
+                DB::raw('SUM(monto) as total')
+            )
+            ->whereBetween('fecha_ingreso', [
+                $this->rangoFechas['inicio'],
+                $this->rangoFechas['fin']
+            ])
+            ->where('estado', '!=', 'anulado')
+            ->groupBy('metodo_pago')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 3. UNIR INGRESOS POR MÉTODO
+        |--------------------------------------------------------------------------
+        */
+        $ingresosTotales = collect();
+
+        foreach ($pagosFacturas as $pago) {
+            $ingresosTotales[$pago->metodo_pago] =
+                ($ingresosTotales[$pago->metodo_pago] ?? 0)
+                + $pago->total;
+        }
+
+        foreach ($ingresosGenerales as $ingreso) {
+            $ingresosTotales[$ingreso->metodo_pago] =
+                ($ingresosTotales[$ingreso->metodo_pago] ?? 0)
+                + $ingreso->total;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 4. GASTOS
+        |--------------------------------------------------------------------------
+        | IMPORTANTE:
+        | Solo gastos pagados, igual que gastos_del_mes
+        */
+        $gastosNormales = DB::table('gastos')
+            ->select(
+                'metodo_pago',
+                DB::raw('SUM(valor) as total')
+            )
+            ->whereBetween('fecha_gasto', [
+                $this->rangoFechas['inicio'],
+                $this->rangoFechas['fin']
+            ])
+            ->where('estado', 'pagado')
+            ->groupBy('metodo_pago')
+            ->get();
+
+        $gastosTotales = collect();
+
+        foreach ($gastosNormales as $gasto) {
+            $gastosTotales[$gasto->metodo_pago] =
+                ($gastosTotales[$gasto->metodo_pago] ?? 0)
+                + $gasto->total;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | 5. GASTOS RECURRENTES
+        |--------------------------------------------------------------------------
+        | Si los recurrentes tienen método_pago, también deben entrar aquí.
+        |--------------------------------------------------------------------------
+        */
+
+        $gastosRecurrentes = GastoRecurrente::where(
+            'ano',
+            $this->anoSeleccionado
+        )
+            ->where('mes', $this->mesSeleccionado)
+            ->where('pagado', true)
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 6. CALCULAR NETO POR MÉTODO
+        |--------------------------------------------------------------------------
+        */
+
+        $metodos = collect(
+            $ingresosTotales->keys()
+        )
+            ->merge($gastosTotales->keys())
+            ->unique();
+
+        $desgloseNeto = [];
+
+        foreach ($metodos as $metodo) {
+
+            $ingreso = (float) ($ingresosTotales[$metodo] ?? 0);
+
+            $gasto = (float) ($gastosTotales[$metodo] ?? 0);
+
+            $desgloseNeto[$metodo] = $ingreso - $gasto;
+        }
+
+        return collect($desgloseNeto);
+    }
     public function render()
     {
         $ingresosList = Ingreso::whereBetween('fecha_ingreso', [

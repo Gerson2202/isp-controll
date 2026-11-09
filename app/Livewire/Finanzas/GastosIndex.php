@@ -4,7 +4,7 @@ namespace App\Livewire\Finanzas;
 
 use App\Models\Gasto;
 use App\Models\CategoriaGasto;
-use App\Models\SaldoAcumulado; // <-- Agrega esta línea
+use App\Models\SaldoAcumulado;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
@@ -27,7 +27,22 @@ class GastosIndex extends Component
     public $tipo = 'variable';
     public $estado = 'pagado';
     public $descripcion;
+    public $metodo_pago = 'efectivo';
 
+    public function updatingBuscar()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingMes()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingAnio()
+    {
+        $this->resetPage();
+    }
     protected function rules()
     {
         return [
@@ -37,7 +52,7 @@ class GastosIndex extends Component
             'fecha_gasto' => 'required|date',
             'tipo' => 'required|in:fijo,variable',
             'estado' => 'required|in:pagado,pendiente',
-            'descripcion' => 'nullable|string|max:500'
+            'descripcion' => 'nullable|string|max:500',
         ];
     }
 
@@ -62,23 +77,33 @@ class GastosIndex extends Component
 
     public function guardar()
     {
-        // Limpiar formato del valor
-        if ($this->valor) {
-            $this->valor = str_replace(['.', ','], '', $this->valor);
+        if ($this->valor !== null && $this->valor !== '') {
+
+            // El usuario escribe:
+            // 20.000
+            // 100.000
+            // 1.500.000
+
+            // Quitamos los puntos de miles
+            $this->valor = str_replace('.', '', $this->valor);
+
+            // Convertimos a número
+            $this->valor = (float) $this->valor;
         }
 
         $this->validate();
 
         // Guardar fecha original si es edición
         $fechaOriginal = null;
+
         if ($this->gasto_id) {
             $gastoOriginal = Gasto::find($this->gasto_id);
+
             if ($gastoOriginal) {
                 $fechaOriginal = $gastoOriginal->fecha_gasto;
             }
         }
 
-        // Guardar o actualizar el gasto
         Gasto::updateOrCreate(
             ['id' => $this->gasto_id],
             [
@@ -89,26 +114,38 @@ class GastosIndex extends Component
                 'tipo' => $this->tipo,
                 'estado' => $this->estado,
                 'descripcion' => $this->descripcion,
-                'user_id' => auth()->id()
+                'metodo_pago' => $this->metodo_pago,
+                'user_id' => auth()->id(),
             ]
         );
 
-        // Recalcular saldo para la fecha del gasto
         $fecha = Carbon::parse($this->fecha_gasto);
-        SaldoAcumulado::recalcularMes($fecha->year, $fecha->month);
 
-        // Si cambió la fecha, recalcular también el mes anterior
+        SaldoAcumulado::recalcularMes(
+            $fecha->year,
+            $fecha->month
+        );
+
         if ($fechaOriginal && $fechaOriginal != $this->fecha_gasto) {
+
             $fechaAnt = Carbon::parse($fechaOriginal);
-            SaldoAcumulado::recalcularMes($fechaAnt->year, $fechaAnt->month);
+
+            SaldoAcumulado::recalcularMes(
+                $fechaAnt->year,
+                $fechaAnt->month
+            );
         }
+
+        $esEdicion = $this->gasto_id ? true : false;
 
         $this->limpiar();
 
         $this->dispatch(
             'notify',
             type: 'success',
-            message: $this->gasto_id ? 'Gasto actualizado correctamente' : 'Gasto registrado correctamente'
+            message: $esEdicion
+                ? 'Gasto actualizado correctamente'
+                : 'Gasto registrado correctamente'
         );
     }
 
@@ -119,11 +156,22 @@ class GastosIndex extends Component
         $this->gasto_id = $gasto->id;
         $this->categorias_gasto_id = $gasto->categorias_gasto_id;
         $this->concepto = $gasto->concepto;
-        $this->valor = $gasto->valor;
+
+        // Mostrar el valor con separador de miles
+        // BD: 20000.00
+        // Input: 20.000
+        $this->valor = number_format(
+            (float) $gasto->valor,
+            0,
+            ',',
+            '.'
+        );
+
         $this->fecha_gasto = $gasto->fecha_gasto->format('Y-m-d');
         $this->tipo = $gasto->tipo;
         $this->estado = $gasto->estado;
         $this->descripcion = $gasto->descripcion;
+        $this->metodo_pago = $gasto->metodo_pago;
 
         $this->dispatch(
             'notify',
@@ -135,15 +183,21 @@ class GastosIndex extends Component
     public function eliminar($id)
     {
         try {
+
             $gasto = Gasto::findOrFail($id);
+
             $concepto = $gasto->concepto;
             $fechaGasto = $gasto->fecha_gasto;
-            
+
             $gasto->delete();
 
             // Recalcular saldo después de eliminar
             $fecha = Carbon::parse($fechaGasto);
-            SaldoAcumulado::recalcularMes($fecha->year, $fecha->month);
+
+            SaldoAcumulado::recalcularMes(
+                $fecha->year,
+                $fecha->month
+            );
 
             $this->dispatch(
                 'notify',
@@ -151,6 +205,7 @@ class GastosIndex extends Component
                 message: 'Gasto "' . $concepto . '" eliminado correctamente'
             );
         } catch (\Exception $e) {
+
             $this->dispatch(
                 'notify',
                 type: 'error',
@@ -166,13 +221,14 @@ class GastosIndex extends Component
             'categorias_gasto_id',
             'concepto',
             'valor',
-            'descripcion'
+            'descripcion',
         ]);
 
         $this->fecha_gasto = now()->format('Y-m-d');
         $this->tipo = 'variable';
         $this->estado = 'pagado';
-        
+        $this->metodo_pago = 'efectivo';
+
         $this->resetValidation();
     }
 
@@ -182,39 +238,62 @@ class GastosIndex extends Component
             ->orderBy('nombre')
             ->get();
 
-        $gastos = Gasto::with(['categoria', 'usuario'])
+        $query = Gasto::with(['categoria', 'usuario'])
             ->when($this->buscar, function ($query) {
-                $query->where('concepto', 'like', '%' . $this->buscar . '%')
-                      ->orWhere('descripcion', 'like', '%' . $this->buscar . '%');
+                $query->where(function ($q) {
+                    $q->where(
+                        'concepto',
+                        'like',
+                        '%' . $this->buscar . '%'
+                    )
+                        ->orWhere(
+                            'descripcion',
+                            'like',
+                            '%' . $this->buscar . '%'
+                        );
+                });
             })
             ->when($this->mes, function ($query) {
                 $query->whereMonth('fecha_gasto', $this->mes);
             })
             ->when($this->anio, function ($query) {
                 $query->whereYear('fecha_gasto', $this->anio);
-            })
+            });
+
+        // TODOS los registros que cumplen los filtros
+        $totalGastos = (clone $query)->sum('valor');
+
+        $totalPagado = (clone $query)
+            ->where('estado', 'pagado')
+            ->sum('valor');
+
+        $totalPendiente = (clone $query)
+            ->where('estado', 'pendiente')
+            ->sum('valor');
+
+        // Solo aquí se limita a 15 por página
+        $gastos = $query
             ->orderBy('fecha_gasto', 'desc')
             ->paginate(15);
 
-        // Calcular totales
-        $totalGastos = $gastos->sum('valor');
-        $totalPagado = $gastos->where('estado', 'pagado')->sum('valor');
-        $totalPendiente = $gastos->where('estado', 'pendiente')->sum('valor');
-
-        // Obtener meses disponibles
-        $mesesDisponibles = Gasto::selectRaw('YEAR(fecha_gasto) as anio, MONTH(fecha_gasto) as mes')
+        $mesesDisponibles = Gasto::selectRaw(
+            'YEAR(fecha_gasto) as anio, MONTH(fecha_gasto) as mes'
+        )
             ->distinct()
             ->orderBy('anio', 'desc')
             ->orderBy('mes', 'desc')
             ->get();
 
-        return view('livewire.finanzas.gastos-index', compact(
-            'gastos', 
-            'categorias', 
-            'totalGastos', 
-            'totalPagado', 
-            'totalPendiente',
-            'mesesDisponibles'
-        ));
+        return view(
+            'livewire.finanzas.gastos-index',
+            compact(
+                'gastos',
+                'categorias',
+                'totalGastos',
+                'totalPagado',
+                'totalPendiente',
+                'mesesDisponibles'
+            )
+        );
     }
 }

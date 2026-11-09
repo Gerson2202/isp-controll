@@ -35,6 +35,17 @@ return new class extends Migration
                 ->nullOnDelete();
             $table->string('numero_documento')->nullable();
             $table->string('beneficiario')->nullable();
+            // nuevos camapos
+            $table->enum('metodo_pago', [
+                'efectivo',
+                'transferencia',
+                'datafono'
+            ])->default('efectivo');
+            //  Campo para identificar  gasto  recurrente
+            $table->foreignId('gasto_recurrente_id')
+                ->nullable()
+                ->constrained('gastos_recurrentes')
+                ->nullOnDelete();
             $table->timestamps();
         });
     }

@@ -101,11 +101,50 @@
             </div>
         </div>
 
+        <!-- TARJETA DE SALDO NETO CON DESGLOSE -->
+        <!-- TARJETA DE SALDO NETO CON DESGLOSE POR MÉTODO -->
         <div class="col-lg-3 col-6">
-            <div class="small-box {{ $saldoNeto >= 0 ? 'bg-info' : 'bg-warning' }}">
+            <div class="small-box {{ $saldoNeto >= 0 ? 'bg-info' : 'bg-warning' }}" style="min-height: 145px;">
                 <div class="inner">
-                    <h3>$ {{ number_format($saldoNeto, 0) }}</h3>
-                    <p>Saldo Neto</p>
+                    <h3 class="mb-1">$ {{ number_format($saldoNeto, 0) }}</h3>
+                    <p class="mb-2 font-weight-bold">Saldo Neto</p>
+
+                    @php
+                        $desglose = $this->desglose_metodos_pago;
+
+                        // Sumamos de forma flexible agrupando por tipo de método
+                        $efectivo = collect($desglose)
+                            ->filter(fn($val, $key) => str_contains(strtolower($key), 'efectivo'))
+                            ->sum();
+                        $transferencia = collect($desglose)
+                            ->filter(
+                                fn($val, $key) => str_contains(strtolower($key), 'transferencia') ||
+                                    str_contains(strtolower($key), 'banco') ||
+                                    str_contains(strtolower($key), 'nequi') ||
+                                    str_contains(strtolower($key), 'daviplata'),
+                            )
+                            ->sum();
+                        $otros = collect($desglose)
+                            ->filter(
+                                fn($val, $key) => !str_contains(strtolower($key), 'efectivo') &&
+                                    !str_contains(strtolower($key), 'transferencia') &&
+                                    !str_contains(strtolower($key), 'banco') &&
+                                    !str_contains(strtolower($key), 'nequi') &&
+                                    !str_contains(strtolower($key), 'daviplata'),
+                            )
+                            ->sum();
+                    @endphp
+
+                    <div class="border-top pt-1 mt-1 text-white" style="font-size: 80%; line-height: 1.2;">
+                        <div><i class="fas fa-wallet mr-1"></i> Efectivo: <strong>$
+                                {{ number_format($efectivo, 0) }}</strong></div>
+                        <div><i class="fas fa-university mr-1"></i> Banco/Transf: <strong>$
+                                {{ number_format($transferencia, 0) }}</strong></div>
+                        @if ($otros != 0)
+                            <div><i class="fas fa-ellipsis-h mr-1"></i> Otros: <strong>$
+                                    {{ number_format($otros, 0) }}</strong></div>
+                        @endif
+                    </div>
                 </div>
                 <div class="icon">
                     <i class="fas fa-balance-scale"></i>
@@ -154,6 +193,7 @@
             </div>
         </div>
     </div>
+
     <!-- GRÁFICOS DE EVOLUCIÓN -->
     <div class="row">
         <div class="col-md-6">
@@ -300,11 +340,11 @@
                         <span class="font-weight-bold text-danger">$
                             {{ number_format($facturasPendientes, 2) }}</span>
                     </div>
-                    <div class="d-flex justify-content-between py-2">
+                    {{-- <div class="d-flex justify-content-between py-2">
                         <span>Gastos Recurrentes</span>
                         <span class="font-weight-bold text-warning">$
                             {{ number_format($gastosRecurrentes, 2) }}</span>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>
@@ -323,13 +363,13 @@
                                 <i class="fas fa-fire text-danger"></i> Top 5 Gastos
                             </a>
                         </li>
-                        <li class="nav-item">
+                        {{-- <li class="nav-item">
                             <a class="nav-link" id="custom-tabs-four-profile-tab" data-toggle="pill"
                                 href="#custom-tabs-four-profile" role="tab"
                                 aria-controls="custom-tabs-four-profile" aria-selected="false">
                                 <i class="fas fa-sync-alt text-warning"></i> Gastos Recurrentes
                             </a>
-                        </li>
+                        </li> --}}
                         <li class="nav-item">
                             <a class="nav-link" id="custom-tabs-four-messages-tab" data-toggle="pill"
                                 href="#custom-tabs-four-messages" role="tab"
@@ -341,7 +381,7 @@
                             <a class="nav-link" id="custom-tabs-four-settings-tab" data-toggle="pill"
                                 href="#custom-tabs-four-settings" role="tab"
                                 aria-controls="custom-tabs-four-settings" aria-selected="false">
-                                <i class="fas fa-money-bill-wave text-danger"></i> Todos los Gastos
+                                <i class="fas fa-money-bill-wave text-danger"></i> Gastos
                             </a>
                         </li>
                         <!-- 🔥 NUEVO TAB DE INGRESOS -->
@@ -471,12 +511,60 @@
                         <!-- TAB 3: PAGOS DE FACTURAS -->
                         <div class="tab-pane fade" id="custom-tabs-four-messages" role="tabpanel"
                             aria-labelledby="custom-tabs-four-messages-tab">
+
+                            <!-- Resumen por Método de Pago (Agregado) -->
+                            <div class="row mb-4">
+                                @foreach ($this->facturas_por_metodo_pago ?? $this->ingresos_por_metodo_pago as $metodo)
+                                    @php
+                                        $metodoLower = strtolower($metodo->metodo_pago ?? '');
+                                        $iconoMetodo = match (true) {
+                                            str_contains($metodoLower, 'efectivo') => 'fa-money-bill-alt text-success',
+                                            str_contains($metodoLower, 'tarjeta') ||
+                                                str_contains($metodoLower, 'credito') ||
+                                                str_contains($metodoLower, 'debito')
+                                                => 'fa-credit-card text-primary',
+                                            str_contains($metodoLower, 'transferencia') ||
+                                                str_contains($metodoLower, 'banco')
+                                                => 'fa-university text-info',
+                                            str_contains($metodoLower, 'nequi') ||
+                                                str_contains($metodoLower, 'daviplata') ||
+                                                str_contains($metodoLower, 'qr')
+                                                => 'fa-mobile-alt text-warning',
+                                            default => 'fa-wallet text-secondary',
+                                        };
+                                    @endphp
+                                    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+                                        <div class="info-box bg-light shadow-sm border-left-success">
+                                            <span class="info-box-icon bg-white elevation-1"><i
+                                                    class="fas {{ $iconoMetodo }}"></i></span>
+                                            <div class="info-box-content">
+                                                <span class="info-box-text text-truncate font-weight-bold"
+                                                    title="{{ $metodo->metodo_pago ?: 'No especificado' }}">
+                                                    {{ $metodo->metodo_pago ?: 'No especificado' }}
+                                                </span>
+                                                <span class="info-box-number text-dark">
+                                                    $ {{ number_format($metodo->total, 2) }}
+                                                </span>
+                                                <span class="progress-description text-muted font-italic"
+                                                    style="font-size: 85%;">
+                                                    {{ $metodo->cantidad }}
+                                                    {{ $metodo->cantidad == 1 ? 'transacción' : 'transacciones' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <!-- Tabla de Pagos de Facturas -->
                             <div class="table-responsive">
                                 <table class="table table-hover table-striped">
                                     <thead>
                                         <tr>
                                             <th>Concepto</th>
                                             <th>Fecha</th>
+                                            <th>Cliente</th>
+                                            <th>Metodo</th>
                                             <th class="text-right">Valor</th>
                                         </tr>
                                     </thead>
@@ -488,13 +576,23 @@
                                                     {{ $pago->concepto }}
                                                 </td>
                                                 <td>{{ \Carbon\Carbon::parse($pago->fecha)->format('d/m/Y') }}</td>
+                                                <td>
+                                                    <a href="{{ route('clientes.show', $pago->cliente_id) }}"
+                                                        target="_blank" class="text-dark">
+                                                        {{ $pago->nombre_cliente }}
+                                                    </a>
+                                                </td>
+                                                <td>
+                                                    <span
+                                                        class="badge badge-secondary">{{ ucfirst($pago->metodo_pago) }}</span>
+                                                </td>
                                                 <td class="text-right font-weight-bold text-success">
                                                     + $ {{ number_format($pago->valor, 2) }}
                                                 </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="3" class="text-center text-muted py-4">
+                                                <td colspan="5" class="text-center text-muted py-4">
                                                     <i class="fas fa-info-circle"></i> No hay pagos de facturas en este
                                                     mes
                                                 </td>
@@ -508,167 +606,303 @@
                         <!-- TAB 4: TODOS LOS GASTOS (SIN RECURRENTES) -->
                         <div class="tab-pane fade" id="custom-tabs-four-settings" role="tabpanel"
                             aria-labelledby="custom-tabs-four-settings-tab">
-                            <div class="table-responsive">
-                                <table class="table table-hover table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Concepto</th>
-                                            <th>Categoría</th>
-                                            <th>Fecha</th>
-                                            <th class="text-right">Valor</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php
-                                            $totalGastosNormales = 0;
-                                        @endphp
-                                        @forelse($gastosMovimientos as $gasto)
-                                            @if ($gasto->tipo_gasto != 'Recurrente')
-                                                @php
-                                                    $totalGastosNormales += $gasto->valor;
-                                                @endphp
-                                                <tr>
-                                                    <td>
-                                                        <i class="fas fa-money-bill-wave text-danger"></i>
-                                                        {{ $gasto->concepto }}
-                                                    </td>
-                                                    <td>{{ $gasto->categoria }}</td>
-                                                    <td>{{ \Carbon\Carbon::parse($gasto->fecha)->format('d/m/Y') }}
-                                                    </td>
-                                                    <td class="text-right font-weight-bold text-danger">
-                                                        - $ {{ number_format($gasto->valor, 2) }}
-                                                    </td>
-                                                </tr>
-                                            @endif
-                                        @empty
-                                            <tr>
-                                                <td colspan="4" class="text-center text-muted py-4">
-                                                    <i class="fas fa-info-circle"></i> No hay gastos normales
-                                                    registrados en este mes
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                    @if ($totalGastosNormales > 0)
-                                        <tfoot>
-                                            <tr class="bg-light">
-                                                <th colspan="3" class="text-right">Total Gastos Normales:</th>
-                                                <th class="text-right text-danger">
-                                                    $ {{ number_format($totalGastosNormales, 2) }}
-                                                </th>
-                                            </tr>
-                                        </tfoot>
-                                    @endif
-                                </table>
+
+                            <!-- Resumen por Método de Pago -->
+                            <div class="row mb-4">
+                                @foreach ($this->gastos_por_metodo_pago as $metodo)
+                                    @php
+                                        $metodoLower = strtolower($metodo->metodo_pago ?? '');
+                                        $iconoMetodo = match (true) {
+                                            str_contains($metodoLower, 'efectivo') => 'fa-money-bill-alt text-success',
+                                            str_contains($metodoLower, 'tarjeta') ||
+                                                str_contains($metodoLower, 'credito') ||
+                                                str_contains($metodoLower, 'debito')
+                                                => 'fa-credit-card text-primary',
+                                            str_contains($metodoLower, 'transferencia') ||
+                                                str_contains($metodoLower, 'banco')
+                                                => 'fa-university text-info',
+                                            str_contains($metodoLower, 'nequi') ||
+                                                str_contains($metodoLower, 'daviplata') ||
+                                                str_contains($metodoLower, 'qr')
+                                                => 'fa-mobile-alt text-warning',
+                                            default => 'fa-wallet text-secondary',
+                                        };
+                                    @endphp
+                                    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+                                        <div class="info-box bg-light shadow-sm border-left-info">
+                                            <span class="info-box-icon bg-white elevation-1"><i
+                                                    class="fas {{ $iconoMetodo }}"></i></span>
+                                            <div class="info-box-content">
+                                                <span class="info-box-text text-truncate font-weight-bold"
+                                                    title="{{ $metodo->metodo_pago ?: 'No especificado' }}">
+                                                    {{ $metodo->metodo_pago ?: 'No especificado' }}
+                                                </span>
+                                                <span class="info-box-number text-dark">
+                                                    $ {{ number_format($metodo->total, 2) }}
+                                                </span>
+                                                <span class="progress-description text-muted font-italic"
+                                                    style="font-size: 85%;">
+                                                    {{ $metodo->cantidad }}
+                                                    {{ $metodo->cantidad == 1 ? 'transacción' : 'transacciones' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
+
+                            <!-- Tabla de Gastos Normales -->
+                            <div class="card card-outline card-secondary shadow-sm">
+                                <div class="card-header bg-white py-3">
+                                    <h3 class="card-title font-weight-bold text-secondary m-0">
+                                        <i class="fas fa-list-ul mr-2"></i> Detalle de Gastos Normales
+                                    </h3>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-striped text-nowrap m-0 align-middle">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Concepto</th>
+                                                    <th>Categoría</th>
+                                                    <th>Método</th>
+                                                    <th>Fecha</th>
+                                                    <th class="text-right">Valor</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @php
+                                                    $totalGastosNormales = 0;
+                                                @endphp
+                                                @forelse($gastosMovimientos as $gasto)
+                                                    @if ($gasto->tipo_gasto != 'Recurrente')
+                                                        @php
+                                                            $totalGastosNormales += $gasto->valor;
+                                                        @endphp
+                                                        <tr>
+                                                            <td class="font-weight-normal">
+                                                                <i class="fas fa-money-bill-wave text-danger mr-1"></i>
+                                                                {{ $gasto->concepto }}
+                                                            </td>
+                                                            <td>
+                                                                <span
+                                                                    class="badge badge-secondary px-2 py-1 text-white font-weight-normal"
+                                                                    style="font-size: 90%;">{{ $gasto->categoria }}</span>
+                                                            </td>
+                                                            <td>
+                                                                <span
+                                                                    class="badge badge-info text-white">{{ $gasto->metodo_pago ?: 'No especificado' }}</span>
+                                                            </td>
+                                                            <td>
+                                                                {{ \Carbon\Carbon::parse($gasto->fecha)->format('d/m/Y') }}
+                                                            </td>
+                                                            <td class="text-right font-weight-bold text-danger">
+                                                                - $ {{ number_format($gasto->valor, 2) }}
+                                                            </td>
+                                                        </tr>
+                                                    @endif
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="5" class="text-center text-muted py-4">
+                                                            <i class="fas fa-info-circle mr-1"></i> No hay gastos
+                                                            normales registrados en este mes
+                                                        </td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                            @if ($totalGastosNormales > 0)
+                                                <tfoot>
+                                                    <tr class="bg-light font-weight-bold">
+                                                        <td colspan="4" class="text-right text-dark">Total Gastos
+                                                            Normales:</td>
+                                                        <td class="text-right text-danger font-weight-bold"
+                                                            style="font-size: 1.1rem;">
+                                                            $ {{ number_format($totalGastosNormales, 2) }}
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            @endif
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                         <!-- TAB 5: INGRESOS -->
                         <div class="tab-pane fade" id="custom-tabs-four-ingresos" role="tabpanel"
                             aria-labelledby="custom-tabs-four-ingresos-tab">
-                            <div class="table-responsive">
-                                <table class="table table-hover table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Concepto</th>
-                                            <th>Tipo</th>
-                                            <th>Fecha</th>
-                                            <th>Cliente</th>
-                                            <th>Método Pago</th>
-                                            <th>Estado</th>
-                                            <th class="text-right">Monto</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php
-                                            $ingresosList = App\Models\Ingreso::whereBetween('fecha_ingreso', [
-                                                $rangoFechas['inicio'],
-                                                $rangoFechas['fin'],
-                                            ])
-                                                ->where('estado', '!=', 'anulado')
-                                                ->orderBy('fecha_ingreso', 'desc')
-                                                ->limit(15)
-                                                ->get();
-                                        @endphp
-                                        @forelse($ingresosList as $ingreso)
-                                            <tr>
-                                                <td>
-                                                    <i class="fas fa-arrow-up text-success"></i>
-                                                    {{ $ingreso->concepto }}
-                                                    @if ($ingreso->descripcion)
-                                                        <small
-                                                            class="d-block text-muted">{{ $ingreso->descripcion }}</small>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <span class="badge badge-success px-3 py-2">
-                                                        @if ($ingreso->tipo == 'instalacion')
-                                                            <i class="fas fa-tools me-1"></i> Instalación
-                                                        @elseif($ingreso->tipo == 'servicio_extra')
-                                                            <i class="fas fa-wrench me-1"></i> Servicio Extra
-                                                        @elseif($ingreso->tipo == 'venta_producto')
-                                                            <i class="fas fa-box me-1"></i> Venta Producto
-                                                        @elseif($ingreso->tipo == 'consultoria')
-                                                            <i class="fas fa-clipboard-list me-1"></i> Consultoría
-                                                        @else
-                                                            <i class="fas fa-ellipsis-h me-1"></i> Otro
-                                                        @endif
-                                                    </span>
-                                                </td>
-                                                <td>{{ $ingreso->fecha_ingreso->format('d/m/Y') }}</td>
-                                                <td>
-                                                    @if ($ingreso->cliente)
-                                                        <span class="badge bg-info px-3 py-2">
-                                                            <i class="fas fa-user me-1"></i>
-                                                            {{ $ingreso->cliente->nombre }}
-                                                        </span>
-                                                    @else
-                                                        <span class="text-muted">N/A</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($ingreso->metodo_pago)
-                                                        <span
-                                                            class="badge bg-secondary">{{ $ingreso->metodo_pago }}</span>
-                                                    @else
-                                                        <span class="text-muted">N/A</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if ($ingreso->estado == 'confirmado')
-                                                        <span class="badge bg-success px-3 py-2">
-                                                            <i class="fas fa-check-circle me-1"></i> Confirmado
-                                                        </span>
-                                                    @else
-                                                        <span class="badge bg-danger px-3 py-2">
-                                                            <i class="fas fa-times-circle me-1"></i> Anulado
-                                                        </span>
-                                                    @endif
-                                                </td>
-                                                <td class="text-right font-weight-bold text-success">
-                                                    + $ {{ number_format($ingreso->monto, 2) }}
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="7" class="text-center text-muted py-4">
-                                                    <i class="fas fa-info-circle"></i> No hay ingresos registrados en
-                                                    este mes
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                    @if ($ingresosList->count() > 0)
-                                        <tfoot>
-                                            <tr class="bg-light">
-                                                <th colspan="6" class="text-right">Total Ingresos:</th>
-                                                <th class="text-right text-success">
-                                                    $ {{ number_format($ingresosList->sum('monto'), 2) }}
-                                                </th>
-                                            </tr>
-                                        </tfoot>
-                                    @endif
-                                </table>
+
+                            <!-- Resumen por Método de Pago -->
+                            <div class="row mb-4">
+                                @foreach ($this->ingresos_por_metodo_pago as $metodo)
+                                    @php
+                                        $metodoLower = strtolower($metodo->metodo_pago ?? '');
+                                        $iconoMetodo = match (true) {
+                                            str_contains($metodoLower, 'efectivo') => 'fa-money-bill-alt text-success',
+                                            str_contains($metodoLower, 'tarjeta') ||
+                                                str_contains($metodoLower, 'credito') ||
+                                                str_contains($metodoLower, 'debito')
+                                                => 'fa-credit-card text-primary',
+                                            str_contains($metodoLower, 'transferencia') ||
+                                                str_contains($metodoLower, 'banco')
+                                                => 'fa-university text-info',
+                                            str_contains($metodoLower, 'nequi') ||
+                                                str_contains($metodoLower, 'daviplata') ||
+                                                str_contains($metodoLower, 'qr')
+                                                => 'fa-mobile-alt text-warning',
+                                            default => 'fa-wallet text-secondary',
+                                        };
+                                    @endphp
+                                    <div class="col-lg-3 col-md-6 col-sm-6 col-12">
+                                        <div class="info-box bg-light shadow-sm border-left-success">
+                                            <span class="info-box-icon bg-white elevation-1"><i
+                                                    class="fas {{ $iconoMetodo }}"></i></span>
+                                            <div class="info-box-content">
+                                                <span class="info-box-text text-truncate font-weight-bold"
+                                                    title="{{ $metodo->metodo_pago ?: 'No especificado' }}">
+                                                    {{ $metodo->metodo_pago ?: 'No especificado' }}
+                                                </span>
+                                                <span class="info-box-number text-dark">
+                                                    $ {{ number_format($metodo->total, 2) }}
+                                                </span>
+                                                <span class="progress-description text-muted font-italic"
+                                                    style="font-size: 85%;">
+                                                    {{ $metodo->cantidad }}
+                                                    {{ $metodo->cantidad == 1 ? 'transacción' : 'transacciones' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
+
+                            <!-- Tabla de Ingresos -->
+                            <div class="card card-outline card-success shadow-sm">
+                                <div class="card-header bg-white py-3">
+                                    <h3 class="card-title font-weight-bold text-success m-0">
+                                        <i class="fas fa-list-ul mr-2"></i> Detalle de Ingresos
+                                    </h3>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-striped text-nowrap m-0 align-middle">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Concepto</th>
+                                                    <th>Tipo</th>
+                                                    <th>Fecha</th>
+                                                    <th>Cliente</th>
+                                                    <th>Método Pago</th>
+                                                    <th>Estado</th>
+                                                    <th class="text-right">Monto</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @php
+                                                    $ingresosList = App\Models\Ingreso::whereBetween('fecha_ingreso', [
+                                                        $rangoFechas['inicio'],
+                                                        $rangoFechas['fin'],
+                                                    ])
+                                                        ->where('estado', '!=', 'anulado')
+                                                        ->orderBy('fecha_ingreso', 'desc')
+                                                        ->limit(15)
+                                                        ->get();
+                                                @endphp
+                                                @forelse($ingresosList as $ingreso)
+                                                    <tr>
+                                                        <td>
+                                                            <i class="fas fa-arrow-up text-success mr-1"></i>
+                                                            {{ $ingreso->concepto }}
+                                                            @if ($ingreso->descripcion)
+                                                                <small
+                                                                    class="d-block text-muted">{{ $ingreso->descripcion }}</small>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            <span
+                                                                class="badge badge-success px-2 py-1 text-white font-weight-normal"
+                                                                style="font-size: 90%;">
+                                                                @if ($ingreso->tipo == 'instalacion')
+                                                                    <i class="fas fa-tools mr-1"></i> Instalación
+                                                                @elseif($ingreso->tipo == 'servicio_extra')
+                                                                    <i class="fas fa-wrench mr-1"></i> Servicio Extra
+                                                                @elseif($ingreso->tipo == 'venta_producto')
+                                                                    <i class="fas fa-box mr-1"></i> Venta Producto
+                                                                @elseif($ingreso->tipo == 'consultoria')
+                                                                    <i class="fas fa-clipboard-list mr-1"></i>
+                                                                    Consultoría
+                                                                @else
+                                                                    <i class="fas fa-ellipsis-h mr-1"></i> Otro
+                                                                @endif
+                                                            </span>
+                                                        </td>
+                                                        <td>{{ $ingreso->fecha_ingreso->format('d/m/Y') }}</td>
+                                                        <td>
+                                                            @if ($ingreso->cliente)
+                                                                <span
+                                                                    class="badge badge-info px-2 py-1 text-white font-weight-normal"
+                                                                    style="font-size: 90%;">
+                                                                    <i class="fas fa-user mr-1"></i>
+                                                                    {{ $ingreso->cliente->nombre }}
+                                                                </span>
+                                                            @else
+                                                                <span class="text-muted">N/A</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if ($ingreso->metodo_pago)
+                                                                <span
+                                                                    class="badge badge-secondary text-white font-weight-normal"
+                                                                    style="font-size: 90%;">{{ $ingreso->metodo_pago }}</span>
+                                                            @else
+                                                                <span class="text-muted">N/A</span>
+                                                            @endif
+                                                        </td>
+                                                        <td>
+                                                            @if ($ingreso->estado == 'confirmado')
+                                                                <span
+                                                                    class="badge badge-success text-white font-weight-normal"
+                                                                    style="font-size: 90%;">
+                                                                    <i class="fas fa-check-circle mr-1"></i> Confirmado
+                                                                </span>
+                                                            @else
+                                                                <span
+                                                                    class="badge badge-danger text-white font-weight-normal"
+                                                                    style="font-size: 90%;">
+                                                                    <i class="fas fa-times-circle mr-1"></i> Anulado
+                                                                </span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="text-right font-weight-bold text-success">
+                                                            + $ {{ number_format($ingreso->monto, 2) }}
+                                                        </td>
+                                                    </tr>
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="7" class="text-center text-muted py-4">
+                                                            <i class="fas fa-info-circle mr-1"></i> No hay ingresos
+                                                            registrados en este mes
+                                                        </td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                            @if ($ingresosList->count() > 0)
+                                                <tfoot>
+                                                    <tr class="bg-light font-weight-bold">
+                                                        <td colspan="6" class="text-right text-dark">Total
+                                                            Ingresos:</td>
+                                                        <td class="text-right text-success font-weight-bold"
+                                                            style="font-size: 1.1rem;">
+                                                            $ {{ number_format($ingresosList->sum('monto'), 2) }}
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            @endif
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>

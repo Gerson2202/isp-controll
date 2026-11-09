@@ -216,10 +216,17 @@ class GestionIngresos extends Component
 
     public function limpiarMonto($valor)
     {
-        if (is_string($valor)) {
-            $valor = str_replace(['.', ','], '', $valor);
+        if ($valor === null || $valor === '') {
+            return null;
         }
-        return number_format((float) $valor, 2, '.', '');
+
+        // Eliminar puntos de miles
+        $valor = str_replace('.', '', $valor);
+
+        // Eliminar comas
+        $valor = str_replace(',', '', $valor);
+
+        return (float) $valor;
     }
 
     public function editarIngreso($id)
@@ -230,7 +237,7 @@ class GestionIngresos extends Component
         $this->ingresoEditando = $ingreso->id;
 
         $this->concepto = $ingreso->concepto;
-        $this->monto = $ingreso->monto;
+        $this->monto = number_format((float) $ingreso->monto, 0, ',', '.');
         $this->fecha_ingreso = $ingreso->fecha_ingreso->format('Y-m-d');
         $this->tipo = $ingreso->tipo;
 
@@ -252,10 +259,10 @@ class GestionIngresos extends Component
         $montoLimpio = $this->limpiarMonto($this->monto);
 
         $ingreso = Ingreso::findOrFail($this->ingresoEditando);
-        
+
         // Guardar fecha original antes de actualizar
         $fechaOriginal = $ingreso->fecha_ingreso->format('Y-m-d');
-        
+
         $ingreso->update([
             'concepto' => $this->concepto,
             'monto' => $montoLimpio,
@@ -269,7 +276,7 @@ class GestionIngresos extends Component
 
         // 🔥 ACTUALIZAR SALDO ACUMULADO PARA LA NUEVA FECHA
         $this->actualizarSaldoAcumulado($this->fecha_ingreso);
-        
+
         // 🔥 SI CAMBIÓ LA FECHA, ACTUALIZAR TAMBIÉN EL MES ANTERIOR
         if ($fechaOriginal != $this->fecha_ingreso) {
             $this->actualizarSaldoAcumulado($fechaOriginal);
@@ -329,7 +336,7 @@ class GestionIngresos extends Component
             $ingreso = Ingreso::findOrFail($id);
             $fechaIngreso = $ingreso->fecha_ingreso->format('Y-m-d');
             $concepto = $ingreso->concepto;
-            
+
             $ingreso->delete();
 
             // 🔥 ACTUALIZAR SALDO ACUMULADO DESPUÉS DE ELIMINAR
@@ -355,14 +362,14 @@ class GestionIngresos extends Component
     private function actualizarSaldoAcumulado($fecha)
     {
         if (!$fecha) return;
-        
+
         $fechaCarbon = Carbon::parse($fecha);
         $ano = $fechaCarbon->year;
         $mes = $fechaCarbon->month;
-        
+
         // Recalcular saldo para este mes
         SaldoAcumulado::recalcularMes($ano, $mes);
-        
+
         // También recalcular los meses siguientes para mantener consistencia
         $this->recalcularMesesSiguientes($ano, $mes);
     }
@@ -372,13 +379,13 @@ class GestionIngresos extends Component
      */
     private function recalcularMesesSiguientes($ano, $mes)
     {
-        $mesesSiguientes = SaldoAcumulado::where(function($query) use ($ano, $mes) {
-                $query->where('ano', '>', $ano)
-                      ->orWhere(function($q) use ($ano, $mes) {
-                          $q->where('ano', $ano)
-                            ->where('mes', '>', $mes);
-                      });
-            })
+        $mesesSiguientes = SaldoAcumulado::where(function ($query) use ($ano, $mes) {
+            $query->where('ano', '>', $ano)
+                ->orWhere(function ($q) use ($ano, $mes) {
+                    $q->where('ano', $ano)
+                        ->where('mes', '>', $mes);
+                });
+        })
             ->orderBy('ano')
             ->orderBy('mes')
             ->get();
@@ -404,7 +411,7 @@ class GestionIngresos extends Component
             'cliente_nombre',
             'searchCliente'
         ]);
-        
+
         $this->fecha_ingreso = Carbon::now()->format('Y-m-d');
         $this->mostrarFormulario = false;
         $this->showClienteList = false;

@@ -111,7 +111,7 @@
                                             <select wire:model="metodo_pago" class="form-select">
                                                 <option value="efectivo">Efectivo</option>
                                                 <option value="transferencia">Transferencia</option>
-                                                <option value="tarjeta">Tarjeta</option>
+                                                {{-- <option value="tarjeta">Tarjeta</option> --}}
                                             </select>
                                         </div>
                                         <div class="mb-3">
