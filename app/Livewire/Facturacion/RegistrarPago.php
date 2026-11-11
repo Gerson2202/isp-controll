@@ -3,9 +3,8 @@
 namespace App\Livewire\Facturacion;
 
 use App\Services\ComprobanteImageGenerator;
-
 use App\Models\Empresa;
-use App\Models\EnvioMasivoLog;
+use App\Models\EnvioMasivoLog; // 1. Agregar este modelo
 use Illuminate\Support\Facades\Http;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -16,8 +15,7 @@ use App\Services\MikroTikService;
 use Illuminate\Support\Facades\DB;
 use Spatie\Browsershot\Browsershot;
 use App\Models\SaldoAcumulado;
-use Illuminate\Support\Facades\Log; // ← Agregar esta
-
+use Illuminate\Support\Facades\Log; // 2. Agregar esta facade
 use Carbon\Carbon;
 use Exception;
 
@@ -34,9 +32,12 @@ class RegistrarPago extends Component
     public $fecha_pago;
     public $pagoRegistrado = null;
     public $mostrarComprobante = false;
-    public $empresa; // ✅ Del segundo archivo
+    public $empresa;
+    // Propiedades nuevas para controlar el modal de edición de precio
+    public $mostrarModalEditar = false;
+    public $nuevo_monto;
 
-    public function mount() // ✅ Del segundo archivo
+    public function mount()
     {
         $this->empresa = Empresa::first();
     }
@@ -57,31 +58,22 @@ class RegistrarPago extends Component
         $this->mostrarComprobante = false;
         $this->pagoRegistrado = null;
     }
+
     private function formatearTelefono($telefono)
     {
-        // 1. quitar todo lo que no sea número
         $telefono = preg_replace('/\D+/', '', $telefono);
-
-        // 2. normalizar prefijo Colombia
-        // casos comunes:
-        // 57XXXXXXXXXX
-        // 0057XXXXXXXXXX
-        // 321XXXXXXXX (sin 57)
 
         if (str_starts_with($telefono, '0057')) {
             $telefono = substr($telefono, 4);
         }
 
-        // si viene sin 57 y tiene 10 dígitos (Colombia móvil)
         if (strlen($telefono) === 10) {
             $telefono = '57' . $telefono;
         }
 
-        // si viene con más de 12 dígitos, recortamos basura final (opcional defensivo)
-        $telefono = substr($telefono, 0, 12);
-
-        return $telefono;
+        return substr($telefono, 0, 12);
     }
+
     public function registrarPago()
     {
         try {
@@ -211,16 +203,16 @@ class RegistrarPago extends Component
             $imagenData = file_get_contents($rutaCompleta);
             $imagenBase64 = 'data:image/png;base64,' . base64_encode($imagenData);
 
-            // Enviar a n8n
+            // 3. Enviar a n8n capturando la respuesta
             $response = Http::timeout(60)->post(
-                'https://automatizacion-isprotik1-n8n.ijnhto.easypanel.host/webhook/pago-factura',
+                'https://automatizacion-isprotik1-n8n.ijnhto.easypanel.host/webhook/pago-factura-fernet',
                 [
                     'cliente' => $this->facturaSeleccionada->contrato->cliente->nombre ?? '',
                     'telefono' => $this->formatearTelefono(
                         $this->facturaSeleccionada->contrato->cliente->telefono ?? ''
                     ),
                     'factura' => $this->facturaSeleccionada->numero_factura,
-                    'monto' => $this->pagoRegistrado->monto,
+                    'monto' => number_format($this->pagoRegistrado->monto, 0, ',', '.'),
                     'metodo_pago' => $this->pagoRegistrado->metodo_pago,
                     'fecha_pago' => $this->pagoRegistrado->fecha_pago,
                     'usuario' => auth()->user()->name,
@@ -228,7 +220,7 @@ class RegistrarPago extends Component
                 ]
             );
 
-            // 🔥🔥🔥 NUEVO: Registrar en envio_masivo_logs 🔥🔥🔥
+            // 4. Registrar en envio_masivo_logs y laravel.log
             $cliente = $this->facturaSeleccionada->contrato->cliente;
 
             if ($response->successful()) {
@@ -304,8 +296,11 @@ class RegistrarPago extends Component
     public function getFacturasProperty()
     {
         return Factura::where('estado', 'pendiente')
-            ->whereHas('contrato.cliente', function ($q) {
-                $q->whereNull('deleted_at'); // 👈 SOLO clientes activos
+            ->whereHas('contrato', function ($q) {
+                $q->where('estado', 'activo')
+                    ->whereHas('cliente', function ($subQ) {
+                        $subQ->whereNull('deleted_at');
+                    });
             })
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
@@ -318,7 +313,92 @@ class RegistrarPago extends Component
             ->with('contrato.cliente')
             ->paginate(10);
     }
+    // ----funciones al agregar la opcion editar ---
+    // Método para disparar el botón de la tabla
+    public function editarFacturaDesdeTabla($facturaId)
+    {
+        $this->facturaSeleccionada = Factura::with('contrato.cliente')->find($facturaId);
 
+        if (!$this->facturaSeleccionada) {
+            $this->dispatch('notify', type: 'error', message: 'La factura no existe.');
+            return;
+        }
+
+        $this->nuevo_monto = $this->facturaSeleccionada->monto_total;
+        $this->mostrarModalEditar = true;
+    }
+
+    public function cerrarModalEditar()
+    {
+        $this->mostrarModalEditar = false;
+        $this->facturaSeleccionada = null; // <-- Añade esta línea para limpiar la selección
+        $this->reset(['nuevo_monto']);
+    }
+
+    public function guardarMontoEditado()
+    {
+        try {
+            if (!$this->facturaSeleccionada) {
+                throw new Exception('No hay ninguna factura seleccionada.');
+            }
+
+            // 1. Validar que la factura NO tenga pagos registrados
+            if ($this->facturaSeleccionada->pagos()->exists()) {
+                throw new Exception('No se puede editar el monto porque esta factura ya cuenta con pagos o abonos registrados.');
+            }
+
+            $this->validate([
+                'nuevo_monto' => 'required|numeric|min:1'
+            ]);
+
+            $contrato = $this->facturaSeleccionada->contrato;
+
+            if (!$contrato) {
+                throw new Exception('La factura no tiene un contrato asociado.');
+            }
+
+            // 2. Validar que coincida con el precio oficial del contrato
+            if ((float)$this->nuevo_monto !== (float)$contrato->precio) {
+                throw new Exception("El valor ingresado no coincide con la tarifa del contrato (\$" . number_format($contrato->precio, 2) . "). Debe actualizar primero el contrato del cliente antes de editar la factura.");
+            }
+
+            $montoAnterior = $this->facturaSeleccionada->monto_total;
+
+            DB::transaction(function () use ($montoAnterior) {
+                $this->facturaSeleccionada->update([
+                    'monto_total' => $this->nuevo_monto,
+                    'saldo_pendiente' => $this->nuevo_monto
+                ]);
+
+                // Registrar auditoría en Tickets
+                $cliente = $this->facturaSeleccionada->contrato->cliente ?? null;
+
+                Ticket::create([
+                    'tipo_reporte' => 'modificacion_precio',
+                    'situacion' => "Monto de la Factura N° {$this->facturaSeleccionada->numero_factura} modificado de $" . number_format($montoAnterior, 2) . " a $" . number_format($this->nuevo_monto, 2) . " por usuario: " . auth()->user()->name,
+                    'estado' => 'cerrado',
+                    'fecha_cierre' => now(),
+                    'cliente_id' => $cliente ? $cliente->id : null,
+                    'solucion' => 'Precio actualizado tras verificación con el contrato',
+                    'user_id' => auth()->id()
+                ]);
+
+                // Recalcular saldo acumulado del mes
+                if ($this->facturaSeleccionada->fecha_emision) {
+                    $fecha = Carbon::parse($this->facturaSeleccionada->fecha_emision);
+                    SaldoAcumulado::recalcularMes($fecha->year, $fecha->month);
+                }
+            });
+
+            $this->cerrarModalEditar();
+
+            $this->dispatch('notify', type: 'success', message: 'Monto de la factura actualizado correctamente.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (Exception $e) {
+            $this->dispatch('notify', type: 'error', message: $e->getMessage());
+        }
+    }
     public function render()
     {
         return view('livewire.facturacion.registrar-pago', [

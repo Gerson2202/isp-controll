@@ -67,11 +67,17 @@
                                         </td>
                                         <td data-label="Total">${{ number_format($factura->monto_total, 2) }}</td>
                                         <td data-label="Acciones">
+                                            <!-- Botón para Registrar Pago -->
                                             <button wire:click="seleccionarFactura({{ $factura->id }})"
                                                 class="btn btn-sm btn-success">
                                                 <i class="fas fa-dollar-sign me-1"></i> Registrar Pago
                                             </button>
 
+                                            <!-- Nuevo Botón para Editar Precio directamente desde la tabla -->
+                                            <button wire:click="editarFacturaDesdeTabla({{ $factura->id }})"
+                                                class="btn btn-sm btn-warning" title="Editar precio de factura">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -90,7 +96,7 @@
                 @endif
 
                 <!-- Modal para registrar pago -->
-                @if ($facturaSeleccionada && !$mostrarComprobante)
+                @if ($facturaSeleccionada && !$mostrarComprobante && !$mostrarModalEditar)
                     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
                         <div class="modal-dialog">
                             <div class="modal-content">
@@ -278,6 +284,49 @@
                                             <i class="fas fa-copy me-2"></i>Copiar
                                         </button>
                                     @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Modal para Editar Precio de Factura -->
+                @if ($mostrarModalEditar && $facturaSeleccionada)
+                    <div class="modal fade show d-block" tabindex="-1"
+                        style="background-color: rgba(0,0,0,0.6); z-index: 1060;">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header  text-dark">
+                                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Corregir Precio de Factura
+                                    </h5>
+                                    <button type="button" class="btn-close" wire:click="cerrarModalEditar"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="alert alert-info py-2 small">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Tarifa oficial en el Contrato:
+                                        <strong>${{ number_format($facturaSeleccionada->contrato->precio ?? 0, 2) }}</strong>
+                                    </div>
+
+                                    <form wire:submit.prevent="guardarMontoEditado">
+                                        <div class="mb-3">
+                                            <label class="form-label">Nuevo Monto para Factura N°
+                                                {{ $facturaSeleccionada->numero_factura }}</label>
+                                            <input type="number" wire:model="nuevo_monto" class="form-control"
+                                                step="0.01" placeholder="Ej: 50000">
+                                            @error('nuevo_monto')
+                                                <span class="text-danger small">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <button type="button" class="btn btn-secondary"
+                                                wire:click="cerrarModalEditar">Cancelar</button>
+                                            <button type="submit" class="btn btn-warning">
+                                                <i class="fas fa-save me-1"></i> Guardar y Actualizar
+                                            </button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         </div>
